@@ -1,0 +1,3715 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#133629">
+</head>
+<body>
+<title>Sempoa Mahjong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&family=Young+Serif&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&text=%E8%90%AC%E6%9D%B1%E5%8D%97%E8%A5%BF%E5%8C%97%E7%99%BD%E7%99%BC%E4%B8%AD%E4%B8%80%E4%BA%8C%E4%B8%89%E5%9B%9B%E4%BA%94%E5%85%AD%E4%B8%83%E5%85%AB%E4%B9%9D&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --felt: #133629;
+  --felt-2: #184234;
+  --felt-3: #1f4f3e;
+  --line: rgba(214, 232, 220, 0.14);
+  --line-2: rgba(214, 232, 220, 0.26);
+  --text: #eaf1e8;
+  --muted: #a3bcb0;
+  --faint: #7c998c;
+  --brass: #dcb45a;
+  --brass-2: #f0cf7e;
+  --brass-ink: #2a1f06;
+  --ivory: #f1ead6;
+  --ivory-hi: #fbf7ec;
+  --ivory-edge: #d3c6a3;
+  --back: #3d8f6d;
+  --ink: #1a1c1a;
+  --pin: #1d4f9c;
+  --sou: #1b7a47;
+  --crimson: #a3302a;
+  --safe: #86d6a8;
+  --ok: #c3d77c;
+  --mid: #e6bd5c;
+  --risk: #e8894b;
+  --f-display: "Young Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-num: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-glyph: "Noto Serif TC", "Songti TC", "PingFang TC", "Hiragino Mincho ProN", serif;
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+html, body { background: var(--felt); }
+body {
+  margin: 0;
+  color: var(--text);
+  font: 15px/1.45 var(--f-body);
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(0,0,0,0.18), transparent 50%),
+    var(--felt);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brass-2); outline-offset: 2px; border-radius: 6px; }
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 12px 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-size: 19px; letter-spacing: 0.01em; }
+.eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* ---------- top ---------- */
+.top { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand .seal {
+  width: 34px; height: 34px; border-radius: 9px; flex: none;
+  display: grid; place-items: center;
+  background: var(--brass); color: var(--brass-ink);
+  box-shadow: 0 3px 0 #a9852f;
+}
+.brand h1 { font-family: var(--f-display); font-size: 21px; white-space: nowrap; }
+.top .spacer { flex: 1; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line-2); font-size: 13px; white-space: nowrap;
+}
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 10px 12px; border-radius: var(--r);
+  background: rgba(220, 180, 90, 0.12); border: 1px solid rgba(220, 180, 90, 0.35);
+  font-size: 14px;
+}
+.banner p { margin: 0; flex: 1 1 220px; }
+
+/* ---------- tiles ---------- */
+.t { container-type: inline-size; display: inline-block; width: 100%; flex: none; }
+.t.sm { width: 26px; } .t.md { width: 34px; } .t.lg { width: 58px; } .t.xs { width: 20px; }
+.tile {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 3 / 4;
+  border-radius: 14cqi;
+  background: linear-gradient(180deg, var(--ivory-hi), var(--ivory) 70%);
+  box-shadow:
+    inset 0 -2px 0 var(--ivory-edge),
+    0 1.5px 0 #e6dcc0,
+    0 4px 0 var(--back),
+    0 6px 8px rgba(0,0,0,0.35);
+  color: var(--ink);
+  line-height: 1;
+  user-select: none; -webkit-user-select: none;
+}
+.tile svg { display: block; width: 100%; height: 100%; }
+.tile b { font-family: var(--f-num); font-weight: 600; font-size: 46cqi; }
+.tile i { font-style: normal; font-family: var(--f-glyph); font-size: 30cqi; margin-top: 5cqi; }
+.s-m i { color: var(--crimson); }
+.s-p b, .s-p i { color: var(--pin); }
+.s-s b, .s-s i { color: var(--sou); }
+.s-z b { font-family: var(--f-glyph); font-weight: 700; font-size: 56cqi; }
+.h6 b { color: var(--sou); }
+.h7 b { color: var(--crimson); }
+.h5 b { color: transparent; width: 52cqi; height: 66cqi; border: 5cqi solid var(--pin); border-radius: 8cqi; font-size: 0; }
+.t.dim .tile { filter: saturate(0.4) brightness(0.8); }
+
+/* ---------- panels ---------- */
+.panel {
+  background: var(--felt-2);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sec-head .spacer { flex: 1; }
+
+/* ---------- rack ---------- */
+.rack {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
+  gap: 12px 6px;
+  padding: 4px 2px 10px;
+}
+.slot {
+  appearance: none; border: 0; background: none; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  transition: transform 120ms ease;
+}
+.slot .q { width: 70%; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+.slot .q::after { content: ""; display: block; height: 100%; width: calc(var(--q, 0) * 100%); background: var(--muted); border-radius: 3px; }
+.slot.best .q::after { background: var(--brass); }
+.slot.worse .q::after { background: var(--faint); }
+.slot.sel { transform: translateY(-8px); }
+.slot.sel .tile { box-shadow: 0 0 0 2px var(--brass-2), 0 4px 0 var(--back), 0 10px 14px rgba(0,0,0,0.4); }
+.slot.best .tile::before {
+  content: ""; position: absolute; top: -7px; left: 50%; width: 8px; height: 8px;
+  transform: translateX(-50%) rotate(45deg); background: var(--brass); border-radius: 2px;
+}
+.slot.drawn { margin-left: 0; }
+.melds { display: flex; flex-wrap: wrap; gap: 10px; }
+.meld { display: flex; gap: 2px; padding: 4px 6px 7px; border-radius: 10px; background: rgba(0,0,0,0.16); }
+.status-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+.pill.gold { background: var(--brass); color: var(--brass-ink); border-color: transparent; }
+.pill.safe { color: var(--safe); border-color: color-mix(in srgb, var(--safe) 45%, transparent); }
+.pill.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.pill.mid { color: var(--mid); border-color: color-mix(in srgb, var(--mid) 45%, transparent); }
+.pill.risk { color: var(--risk); border-color: color-mix(in srgb, var(--risk) 45%, transparent); }
+.rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none; border: 1px solid var(--line-2); background: var(--felt-3);
+  padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--brass); color: var(--brass-ink); border-color: transparent; box-shadow: 0 3px 0 #a9852f; }
+.btn.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #a9852f; }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 6px 10px; min-height: 34px; font-size: 13px; border-radius: 10px; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* ---------- advice ---------- */
+.rec { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.rec .what { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rec .what strong { font-family: var(--f-display); font-size: 24px; font-weight: 400; line-height: 1.15; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+.stat { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.16); display: flex; flex-direction: column; gap: 2px; }
+.stat .v { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; }
+.stat .v.gold { color: var(--brass-2); }
+.stat .k { font-size: 12px; color: var(--muted); }
+.need { display: flex; flex-wrap: wrap; gap: 8px; }
+.need .n { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+.need .n .num { color: var(--muted); }
+.need .n.zero { opacity: 0.45; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--f-num); font-size: 10px; fill: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+#advice { display: flex; flex-direction: column; gap: 14px; }
+.opts { display: flex; flex-direction: column; }
+.opt {
+  appearance: none; border: 0; background: none; text-align: left; width: 100%;
+  display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+  padding: 10px 2px; border-top: 1px solid var(--line);
+}
+.opt:first-child { border-top: 0; }
+.opt .l1 { font-weight: 600; font-size: 14px; }
+.opt .l2 { font-size: 12.5px; color: var(--muted); }
+.opt .r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.opt .r .num { font-size: 15px; font-weight: 600; }
+.opt-detail { padding: 2px 2px 12px 48px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.progress { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--brass); width: 0; transition: width 200ms; }
+
+/* ---------- photo ---------- */
+.photo-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; padding: 3px; border-radius: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--line); }
+.seg button { appearance: none; border: 0; background: none; padding: 6px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--felt-3); color: var(--text); box-shadow: 0 0 0 1px var(--line-2); }
+.photo-msg { font-size: 13.5px; color: var(--muted); }
+.photo-msg.work { color: var(--brass-2); }
+.readout { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.18); font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+.readout ul { margin: 0; padding-left: 18px; }
+
+/* ---------- table memory ---------- */
+.seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.seat { border-radius: 14px; background: rgba(0,0,0,0.14); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.seat.alert { box-shadow: inset 0 0 0 1.5px var(--mid); }
+.seat .hd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+.seat .hd strong { font-weight: 600; }
+.seat .hd .spacer { flex: 1; }
+.pond { display: flex; flex-wrap: wrap; gap: 7px 3px; min-height: 30px; }
+.pond button { appearance: none; border: 0; background: none; padding: 0 0 4px; }
+.pond button.sel .tile { box-shadow: 0 0 0 2px var(--brass-2), 0 4px 0 var(--back); }
+.toggle { appearance: none; border: 1px solid var(--line-2); background: transparent; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.toggle[aria-pressed="true"] { background: var(--mid); color: #2a1d02; border-color: transparent; }
+
+/* ---------- sempoa tracker ---------- */
+.abacus { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px 4px; }
+.bead-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+.bead-cell .t { width: min(100%, 30px); }
+.beads { display: grid; grid-template-columns: repeat(2, 6px); gap: 2px; }
+.beads i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--line-2); }
+.beads i.h { background: var(--brass); border-color: var(--brass); }
+.beads i.v { background: var(--muted); border-color: var(--muted); }
+.bead-cell .num { font-size: 11px; color: var(--muted); }
+.bead-cell.over .num { color: var(--risk); font-weight: 600; }
+.bead-cell.zero .t { opacity: 0.4; }
+.bead-key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.bead-key i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; border: 1px solid var(--line-2); }
+
+/* ---------- history ---------- */
+.hist { display: flex; flex-direction: column; gap: 10px; }
+.hturn { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: start; }
+.hturn .tn { font-family: var(--f-num); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.hevents { display: flex; flex-wrap: wrap; gap: 6px; }
+.hev { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,0.18); font-size: 12.5px; }
+.hev.me { background: rgba(220,180,90,0.16); }
+.hev img { width: 34px; height: 26px; object-fit: cover; border-radius: 4px; }
+
+/* ---------- settings ---------- */
+details.panel > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after { content: "+"; margin-left: auto; font-family: var(--f-num); color: var(--muted); }
+details.panel[open] > summary::after { content: "−"; }
+.form { display: grid; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
+.field label, .field .lbl { color: var(--muted); }
+.field select, .field input[type="number"] {
+  background: var(--felt); border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 10px; min-height: 42px;
+}
+.check { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--brass); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* ---------- bottom bar + keypad sheet ---------- */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(15, 44, 34, 0.0), rgba(15, 44, 34, 0.94) 22%);
+}
+.dock .inner { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: 1.3fr 1fr auto; gap: 8px; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: #10301f; border-top: 1px solid var(--line-2);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.45);
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  max-height: 82vh; overflow-y: auto;
+}
+.sheet .inner { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.zones { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.zones button { flex: none; }
+.pad { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 9px 5px; }
+.key { appearance: none; border: 0; background: none; padding: 0 0 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.key .num { font-size: 10.5px; color: var(--muted); line-height: 1; }
+.key:active .tile { transform: translateY(2px); }
+.suit-lbl { grid-column: 1 / -1; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-top: 2px; }
+.draft { display: flex; gap: 4px; align-items: center; min-height: 40px; flex-wrap: wrap; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 40; background: var(--ivory); color: var(--ink); font-weight: 600; font-size: 14px;
+  padding: 9px 14px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  max-width: calc(100% - 32px);
+}
+.note-line { font-size: 12px; color: var(--faint); }
+/* ---------- Majé: ronde, bunga, pola, klaim ---------- */
+.round-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.mini { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.mini select { background: var(--felt); border: 1px solid var(--line-2); border-radius: 10px; padding: 6px 8px; min-height: 36px; font-size: 14px; color: var(--text); }
+.flowers { display: flex; gap: 6px; }
+.flower {
+  appearance: none; border: 1px solid var(--line-2); background: transparent; border-radius: 10px;
+  min-width: 40px; min-height: 36px; padding: 2px 6px; display: inline-flex; align-items: center; gap: 3px;
+  font-size: 17px; color: var(--muted);
+}
+.flower svg { display: block; }
+.flower:not([aria-pressed="true"]) svg { opacity: 0.55; }
+.seat .hd .wind { display: inline-flex; align-items: center; gap: 5px; }
+.flower small { font-family: var(--f-num); font-size: 10px; }
+.flower[aria-pressed="true"] { background: var(--ivory); color: var(--ink); border-color: transparent; }
+.flower.match[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--brass); }
+.routes { display: flex; flex-direction: column; }
+.route { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.route:first-child { border-top: 0; }
+.route .nm { font-weight: 600; font-size: 14px; }
+.route .sub { font-size: 12.5px; color: var(--muted); }
+.route .d { font-family: var(--f-num); font-weight: 600; text-align: right; }
+.route .d small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+.route.top .nm { color: var(--brass-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.claim { border-radius: 14px; padding: 12px; background: rgba(220,180,90,0.10); border: 1px solid rgba(220,180,90,0.4); display: flex; flex-direction: column; gap: 10px; }
+.claim .copt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.claim .copt p { margin: 0; flex: 1 1 200px; font-size: 13.5px; }
+.win { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 6px; }
+.win strong { font-family: var(--f-display); font-weight: 400; font-size: 24px; }
+.win ul, .pts { margin: 0; padding-left: 18px; font-size: 14px; }
+.waits { display: flex; flex-direction: column; gap: 6px; }
+.wait { display: flex; align-items: center; gap: 10px; font-size: 13.5px; flex-wrap: wrap; }
+.mode { font-weight: 700; letter-spacing: 0.08em; }
+.mode-attack { color: var(--safe); }
+.mode-careful { color: var(--mid); }
+.mode-fold { color: var(--risk); }
+.opp-read { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.opp-safe { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.live-controls { display: flex; flex-direction: column; gap: 10px; }
+.seg.wrap { flex-wrap: wrap; }
+.live-stage { position: relative; border-radius: 14px; overflow: hidden; background: #000; }
+.live-stage video, .live-stage img { display: block; width: 100%; height: auto; }
+.live-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rules { display: grid; gap: 14px; font-size: 14px; }
+.rules ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.ptable { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 16px; }
+.ptable div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.ptable b { font-family: var(--f-num); color: var(--brass-2); font-weight: 600; }
+@media (min-width: 640px) {
+  .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .abacus { gap: 10px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
+    <span class="spacer"></span>
+    <span class="chip num" id="turnChip">Giliran 1</span>
+  </header>
+
+  <div class="banner" id="exampleBanner" hidden>
+    <p>Ini contoh game supaya kamu bisa lihat cara kerjanya. Semua angka di bawah dihitung dari tile contoh ini.</p>
+    <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
+  </div>
+
+  <section class="panel" aria-labelledby="handTitle">
+    <div class="sec-head">
+      <h2 id="handTitle">Tangan kamu</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="handCount"></span>
+    </div>
+    <div class="round-row" id="roundRow">
+      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
+    </div>
+    <div class="melds" id="myMelds"></div>
+    <div class="rack" id="rack"></div>
+    <div class="status-line" id="statusLine"></div>
+    <div class="rack-actions" id="rackActions" hidden></div>
+  </section>
+
+  <section class="panel" aria-labelledby="adviceTitle" id="advicePanel">
+    <div class="sec-head">
+      <h2 id="adviceTitle">Saran &amp; peluang</h2>
+      <span class="spacer"></span>
+      <span class="muted small" id="drawsInfo"></span>
+    </div>
+    <div id="advice"></div>
+  </section>
+
+  <section class="panel" id="livePanel" aria-labelledby="liveTitle">
+    <div class="sec-head">
+      <h2 id="liveTitle">Kamera live</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="liveFps"></span>
+    </div>
+    <div class="live-controls" id="liveControls">
+      <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
+      <div class="live-stage" id="liveStage" hidden>
+        <video id="liveVideo" playsinline muted autoplay></video>
+        <img id="liveImage" alt="Foto yang dideteksi" hidden>
+        <canvas id="liveCanvas" aria-hidden="true"></canvas>
+      </div>
+      <div class="photo-row">
+        <button class="btn primary" type="button" id="liveStart">Mulai kamera</button>
+        <button class="btn" type="button" id="liveStop" hidden>Stop</button>
+        <button class="btn" type="button" id="liveFromPhoto">Deteksi dari foto</button>
+        <input type="file" id="liveFile" accept="image/*" hidden>
+        <label class="check small"><input type="checkbox" id="liveAuto" checked> Catat otomatis</label>
+      </div>
+      <div class="photo-row">
+        <button class="btn small" type="button" id="liveSnap" disabled>Simpan foto latihan</button>
+        <button class="btn small" type="button" id="liveZip" disabled>Unduh foto latihan (0)</button>
+      </div>
+    </div>
+    <p class="photo-msg" id="liveMsg"></p>
+    <div class="readout" id="liveRead" hidden></div>
+    <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="photoTitle">
+    <div class="sec-head">
+      <h2 id="photoTitle">Baca dari foto</h2>
+    </div>
+    <div class="photo-row">
+      <div class="seg" role="group" aria-label="Yang difoto">
+        <button type="button" id="scopeHand" aria-pressed="false">Tangan saya</button>
+        <button type="button" id="scopeTable" aria-pressed="true">Seluruh meja</button>
+      </div>
+    </div>
+    <div class="photo-row">
+      <button class="btn primary" type="button" id="camBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Foto sekarang
+      </button>
+      <button class="btn" type="button" id="galBtn" disabled>Pilih dari galeri</button>
+      <button class="btn ghost" type="button" id="stopBtn" hidden>Berhenti</button>
+      <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="galInput" accept="image/*" multiple hidden>
+    </div>
+    <p class="photo-msg" id="photoMsg">Menyiapkan pembaca foto…</p>
+    <div class="readout" id="readout" hidden></div>
+  </section>
+
+  <section class="panel" aria-labelledby="tableTitle">
+    <div class="sec-head">
+      <h2 id="tableTitle">Ingatan meja</h2>
+      <span class="spacer"></span>
+      <span class="muted small">Kanan = pemain sesudah kamu</span>
+    </div>
+    <div class="seats" id="seats"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="abacusTitle">
+    <div class="sec-head">
+      <h2 id="abacusTitle">Sempoa tile</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="unseenTotal"></span>
+    </div>
+    <div class="bead-key">
+      <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
+      <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
+      <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
+    </div>
+    <div class="abacus" id="abacus"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="histTitle">
+    <div class="sec-head">
+      <h2 id="histTitle">Langkah sebelumnya</h2>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" id="undoTop">Urungkan</button>
+    </div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <details class="panel" id="rulesPanel">
+    <summary><h2>Aturan Majé</h2></summary>
+    <div class="rules">
+      <ul>
+        <li>Hu (Mahjong): 4 sets + 1 pair (14 tile), <b>minimal 3 poin</b>. Tangan tanpa pola (Chicken Hand) bernilai 0.</li>
+        <li>Claim: Chi hanya dari pemain kiri (pemain sebelum kamu). Pong dan Kong dari siapa saja.</li>
+        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. Kalau dua orang Hu tile yang sama, yang di kanan pembuang yang menang.</li>
+        <li>Flower langsung dibuka, lalu ambil tile ganti dari dead wall. Kong: umumkan, lalu ambil tile ganti.</li>
+        <li>Self-draw: ketiga lawan bayar. Discard win: hanya pembuang yang bayar.</li>
+        <li>Dealer tetap kalau menang; kalau tidak, pindah ke pemain berikutnya. Rounds: East, South, West, North.</li>
+      </ul>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Common Winning Hand</div>
+        <div class="ptable">
+          <div>Chicken Hand <b>0</b></div><div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
+          <div>Sequence Hand / All Chows <b>1</b></div><div>No Orphan / All Simples <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
+          <div>Mix Orphans <b>3</b></div><div>Pure Orphans <b>5</b></div><div>Half Flush <b>3</b></div><div>Full Flush <b>7</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Additional Point</div>
+        <div class="ptable">
+          <div>Robbing a Kong <b>1</b></div><div>Suitable Flower <b>1/Flower</b></div><div>No Flower <b>1</b></div>
+          <div>Self Draw <b>1</b></div><div>Last Tile <b>1</b></div><div>Concealed Hand <b>1</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Special / High-Value Hands</div>
+        <div class="ptable">
+          <div>7 Pairs <b>4</b></div><div>Little Dragon <b>5</b></div><div>Great Dragon <b>8</b></div><div>Little Wind <b>10</b></div>
+          <div>All Honor <b>10</b></div><div>Kong Hand / 4 Kongs <b>12</b></div><div>Great Wind <b>13</b></div><div>13 Orphans <b>13</b></div>
+          <div>Heavenly Gates / Nine Gates <b>15</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Aturan meja (sudah dikonfirmasi)</div>
+        <ul>
+          <li>Chi hanya dari pemain kiri.</li>
+          <li>Versi yang lebih besar menggantikan versi kecilnya, tidak ditumpuk: Full Flush menggantikan Half Flush · Pure Orphans menggantikan Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand menggantikan All Pongs · All Honor menggantikan Half Flush, Mix Orphans, dan All Pongs · Heavenly Gates menggantikan Full Flush.</li>
+          <li>Pola dari jenis berbeda tetap dijumlah, mis. Little Dragon 5 + Half Flush 3 = 8.</li>
+        </ul>
+      </div>
+      <p class="note-line">Concealed Hand yang menang tarik sendiri dihitung Self Draw. Robbing a Kong dan Last Tile tidak dihitung otomatis. Pair di Sequence Hand dibaca sebagai tile 2–8 (sesuai kata "simple" di buku).</p>
+    </div>
+  </details>
+
+  <details class="panel" id="settings">
+    <summary><h2>Pengaturan</h2></summary>
+    <div class="form">
+      <div class="field">
+        <label for="preset">Jenis permainan</label>
+        <select id="preset">
+          <option value="maje">Majé House Rules · Hong Kong</option>
+          <option value="riichi">Riichi Jepang · 13 tile</option>
+          <option value="tw">Taiwan · 16 tile</option>
+          <option value="custom">Atur sendiri</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sets">Jumlah sets untuk Hu (+1 pair)</label>
+        <select id="sets"><option value="4">4 sets · tangan 13 tile</option><option value="5">5 sets · tangan 16 tile</option></select>
+      </div>
+      <label class="check"><input type="checkbox" id="scoring"> Hitung poin (tabel Majé)</label>
+      <div class="field">
+        <label for="minPoints">Poin minimum untuk menang</label>
+        <select id="minPoints"><option value="3">3 poin · standar Majé</option><option value="2">2 poin</option><option value="1">1 poin</option><option value="0">0 · Chicken Hand boleh</option></select>
+      </div>
+      <label class="check"><input type="checkbox" id="sevenPairs"> Hitung 7 Pairs</label>
+      <label class="check"><input type="checkbox" id="orphans"> Hitung 13 Orphans</label>
+      <div class="field">
+        <label for="wallStart">Tile di dinding saat ronde mulai (setelah bagi tile)</label>
+        <input type="number" id="wallStart" min="20" max="120" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="wallLeft">Sisa tile di dinding sekarang (kosongkan = perkiraan otomatis)</label>
+        <input type="number" id="wallLeft" min="0" max="140" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="tier">Cara baca foto</label>
+        <select id="tier"><option value="default">Standar · lebih cepat</option><option value="complex">Teliti · lebih lama, lebih akurat</option></select>
+      </div>
+      <div class="row" id="resetRow">
+        <button class="btn" type="button" id="resetBtn">Mulai game baru</button>
+      </div>
+      <p class="note-line">Catatan game tersimpan di browser HP ini saja. Ganti HP atau hapus data browser berarti catatan hilang.</p>
+    </div>
+  </details>
+
+  <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
+</div>
+
+<div class="dock" id="dock">
+  <div class="inner">
+    <button class="btn primary" type="button" id="dockPad">+ Ketik tile</button>
+    <button class="btn" type="button" id="dockCam">Foto</button>
+    <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-label="Ketik tile">
+  <div class="inner">
+    <div class="sec-head">
+      <h2>Ketik tile</h2>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" id="sheetUndo">Urungkan</button>
+      <button class="btn small primary" type="button" id="sheetClose">Selesai</button>
+    </div>
+    <div class="zones" id="zones" role="group" aria-label="Masukkan ke"></div>
+    <div id="meldBox" hidden>
+      <div class="row" style="margin-bottom:8px">
+        <span class="muted small">Set milik</span>
+        <div class="seg" role="group" aria-label="Set milik" id="meldWho"></div>
+      </div>
+      <div class="row">
+        <div class="draft" id="draft"><span class="muted small">Ketuk 3 atau 4 tile di bawah</span></div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label class="check small"><input type="checkbox" id="closedKong"> Kong tertutup (semua dari tangan)</label>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn small" type="button" id="draftClear">Kosongkan</button>
+        <button class="btn small primary" type="button" id="draftSave" disabled>Simpan set</button>
+      </div>
+    </div>
+    <p class="muted small" id="zoneHint"></p>
+    <div class="pad" id="pad"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+/* Sempoa Mahjong — mesin hitung.
+ * Tile id 0..33: 0-8 = 1m-9m (wan), 9-17 = 1p-9p (tong), 18-26 = 1s-9s (tiao),
+ * 27-33 = 1z-7z (East, South, West, North, White, Green, Red Dragon). Nama mengikuti buku Majé.
+ * Poin mengikuti Majé House Rules (Hong Kong). Semua fungsi murni; dipakai di halaman dan di tes node.
+ */
+(function (root) {
+  'use strict';
+
+  var SUITS = ['m', 'p', 's', 'z'];
+  var SUIT_NAMES = ['Characters', 'Dots', 'Bamboo'];
+  var SUIT_ONE = ['Character', 'Dot', 'Bamboo'];
+  var HONOR_NAMES = ['East', 'South', 'West', 'North', 'White Dragon', 'Green Dragon', 'Red Dragon'];
+  var DRAGON_SHORT = ['White', 'Green', 'Red'];
+  var HONOR_GLYPHS = ['東', '南', '西', '北', '白', '發', '中'];
+  var INF = 99;
+
+  function tileStr(i) {
+    return i < 27 ? (i % 9 + 1) + SUITS[Math.floor(i / 9)] : (i - 26) + 'z';
+  }
+
+  function tileName(i) {
+    if (i >= 27) return HONOR_NAMES[i - 27];
+    var n = i % 9 + 1, s = Math.floor(i / 9);
+    return n + ' ' + (n === 1 ? SUIT_ONE[s] : SUIT_NAMES[s]);
+  }
+
+  var ALIASES = {
+    east: 27, timur: 27, '東': 27, 'e': 27,
+    south: 28, selatan: 28, '南': 28,
+    west: 29, barat: 29, '西': 29, 'w': 29,
+    north: 30, utara: 30, '北': 30, 'n': 30,
+    white: 31, putih: 31, haku: 31, '白': 31, 'wd': 31,
+    green: 32, hijau: 32, hatsu: 32, '發': 32, '发': 32, 'gd': 32,
+    red: 33, merah: 33, chun: 33, '中': 33, 'rd': 33
+  };
+
+  // "3p", "0m" (lima merah), "東", "east" -> id, atau -1 kalau tidak dikenal
+  function parseTile(s) {
+    if (typeof s === 'number') return s >= 0 && s < 34 ? Math.floor(s) : -1;
+    if (s == null) return -1;
+    var t = String(s).trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(ALIASES, t)) return ALIASES[t];
+    var m = /^([0-9])\s*([mpsz])/.exec(t);
+    if (!m) return -1;
+    var n = +m[1], suit = m[2];
+    if (suit === 'z') return n >= 1 && n <= 7 ? 26 + n : -1;
+    if (n === 0) n = 5;
+    return SUITS.indexOf(suit) * 9 + n - 1;
+  }
+
+  // "123m456p11z" -> [0,1,2,12,13,14,27,27]
+  function parseHand(str) {
+    var out = [], digits = [];
+    for (var k = 0; k < str.length; k++) {
+      var ch = str[k];
+      if (ch >= '0' && ch <= '9') digits.push(+ch);
+      else if ('mpsz'.indexOf(ch) >= 0) {
+        for (var d = 0; d < digits.length; d++) {
+          var id = parseTile(digits[d] + ch);
+          if (id >= 0) out.push(id);
+        }
+        digits = [];
+      }
+    }
+    return out;
+  }
+
+  function toCounts(list) {
+    var c = new Array(34).fill(0);
+    for (var i = 0; i < list.length; i++) if (list[i] >= 0) c[list[i]]++;
+    return c;
+  }
+
+  function countsToList(c) {
+    var out = [];
+    for (var i = 0; i < 34; i++) for (var k = 0; k < c[i]; k++) out.push(i);
+    return out;
+  }
+
+  function handString(list) {
+    var groups = { m: [], p: [], s: [], z: [] };
+    list.slice().sort(function (a, b) { return a - b; }).forEach(function (i) {
+      var s = tileStr(i);
+      groups[s[1]].push(s[0]);
+    });
+    return ['m', 'p', 's', 'z'].map(function (k) {
+      return groups[k].length ? groups[k].join('') + k : '';
+    }).join('');
+  }
+
+  function isHonor(t) { return t >= 27; }
+  function isTermOrHonor(t) { return t >= 27 || t % 9 === 0 || t % 9 === 8; }
+  function isSimple(t) { return t < 27 && t % 9 >= 1 && t % 9 <= 7; }
+  function suitOf(t) { return t < 27 ? Math.floor(t / 9) : 3; }
+
+  /* ---------- Shanten ---------- */
+
+  // Opsi dekomposisi satu kelompok: [set, calon-set, pasangan-kepala].
+  // Hanya opsi yang tidak kalah di semua komponen (dengan kepala yang sama) yang disimpan.
+  var suitMemo = new Map();
+  var honorMemo = new Map();
+
+  function pareto(list) {
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i], dominated = false;
+      for (var j = 0; j < list.length; j++) {
+        if (i === j) continue;
+        var b = list[j];
+        if (b[2] === a[2] && b[0] >= a[0] && b[1] >= a[1] &&
+            (b[0] > a[0] || b[1] > a[1] || j < i)) { dominated = true; break; }
+      }
+      if (!dominated) out.push(a);
+    }
+    return out;
+  }
+
+  function suitOptions(c, off) {
+    var key = 0;
+    for (var i = 0; i < 9; i++) key = key * 5 + c[off + i];
+    var hit = suitMemo.get(key);
+    if (hit) return hit;
+    var a = c.slice(off, off + 9);
+    var seen = {}, res = [];
+    function rec(i, m, t, p) {
+      while (i < 9 && a[i] === 0) i++;
+      if (i >= 9) {
+        var k = m * 100 + t * 10 + p;
+        if (!seen[k]) { seen[k] = 1; res.push([m, t, p]); }
+        return;
+      }
+      if (a[i] >= 3) { a[i] -= 3; rec(i, m + 1, t, p); a[i] += 3; }
+      if (i <= 6 && a[i + 1] && a[i + 2]) {
+        a[i]--; a[i + 1]--; a[i + 2]--; rec(i, m + 1, t, p); a[i]++; a[i + 1]++; a[i + 2]++;
+      }
+      if (a[i] >= 2) {
+        a[i] -= 2;
+        if (p === 0) rec(i, m, t, 1);
+        rec(i, m, t + 1, p);
+        a[i] += 2;
+      }
+      if (i <= 7 && a[i + 1]) { a[i]--; a[i + 1]--; rec(i, m, t + 1, p); a[i]++; a[i + 1]++; }
+      if (i <= 6 && a[i + 2]) { a[i]--; a[i + 2]--; rec(i, m, t + 1, p); a[i]++; a[i + 2]++; }
+      a[i]--; rec(i, m, t, p); a[i]++;
+    }
+    rec(0, 0, 0, 0);
+    res = pareto(res);
+    suitMemo.set(key, res);
+    return res;
+  }
+
+  function honorOptions(c) {
+    var key = 0;
+    for (var i = 27; i < 34; i++) key = key * 5 + c[i];
+    var hit = honorMemo.get(key);
+    if (hit) return hit;
+    var res = [[0, 0, 0]];
+    for (var h = 27; h < 34; h++) {
+      var n = c[h];
+      if (n < 2) continue;
+      var opts = n === 2 ? [[0, 1, 0], [0, 0, 1], [0, 0, 0]]
+        : n === 3 ? [[1, 0, 0], [0, 0, 1], [0, 1, 0]]
+        : [[1, 0, 0], [0, 1, 1], [1, 0, 0]];
+      var next = [];
+      for (var x = 0; x < res.length; x++) {
+        for (var y = 0; y < opts.length; y++) {
+          var p = res[x][2] + opts[y][2];
+          if (p > 1) continue;
+          next.push([res[x][0] + opts[y][0], res[x][1] + opts[y][1], p]);
+        }
+      }
+      res = pareto(next);
+    }
+    honorMemo.set(key, res);
+    return res;
+  }
+
+  // DP gabungan kelompok -> shanten untuk S set + 1 pasangan.
+  function shantenFromGroups(groups, S) {
+    var W = 2 * (S + 1);
+    var dp = [0];
+    for (var z = 1; z < W; z++) dp.push(-1);
+    for (var g = 0; g < groups.length; g++) {
+      var opts = groups[g];
+      var nd = [];
+      for (var q = 0; q < W; q++) nd.push(-1);
+      for (var idx = 0; idx < W; idx++) {
+        var cur = dp[idx];
+        if (cur < 0) continue;
+        var M = idx >> 1, P = idx & 1;
+        for (var o = 0; o < opts.length; o++) {
+          var op = opts[o];
+          if (P + op[2] > 1) continue;
+          var nm = M + op[0]; if (nm > S) nm = S;
+          var ni = nm * 2 + P + op[2];
+          var nt = cur + op[1]; if (nt > S) nt = S;
+          if (nt > nd[ni]) nd[ni] = nt;
+        }
+      }
+      dp = nd;
+    }
+    var best = INF;
+    for (var i2 = 0; i2 < W; i2++) {
+      if (dp[i2] < 0) continue;
+      var m2 = i2 >> 1, p2 = i2 & 1;
+      var t2 = Math.min(dp[i2], S - m2);
+      var v = 2 * S - 2 * m2 - t2 - p2;
+      if (v < best) best = v;
+    }
+    return best;
+  }
+
+  // Shanten bentuk standar: S set + 1 pasangan dari tile tertutup.
+  function shantenStd(c, S) {
+    return shantenFromGroups([suitOptions(c, 0), suitOptions(c, 9), suitOptions(c, 18), honorOptions(c)], S);
+  }
+
+  function shantenChiitoi(c) {
+    var pairs = 0, kinds = 0;
+    for (var i = 0; i < 34; i++) {
+      if (c[i] >= 1) kinds++;
+      if (c[i] >= 2) pairs++;
+    }
+    return 6 - pairs + Math.max(0, 7 - kinds);
+  }
+
+  var ORPHANS = [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33];
+  function shantenKokushi(c) {
+    var kinds = 0, pair = 0;
+    for (var k = 0; k < ORPHANS.length; k++) {
+      var n = c[ORPHANS[k]];
+      if (n >= 1) kinds++;
+      if (n >= 2) pair = 1;
+    }
+    return 13 - kinds - pair;
+  }
+
+  // cfg: { sets, melds:[[ids]] (set terbuka saya), sevenPairs, thirteenOrphans,
+  //        scoring, minPoints, seatWind, roundWind, flowers, flowerMatch }
+  function openCount(cfg) { return cfg.melds ? cfg.melds.length : (cfg.openMelds || 0); }
+  function setsNeeded(cfg) { return Math.max(0, (cfg.sets || 4) - openCount(cfg)); }
+  function minPts(cfg) { return cfg.scoring ? (cfg.minPoints || 0) : 0; }
+
+  function shanten(c, cfg) {
+    var S = setsNeeded(cfg);
+    var best = shantenStd(c, S);
+    var closed13 = (cfg.sets || 4) === 4 && openCount(cfg) === 0;
+    if (closed13 && cfg.sevenPairs) best = Math.min(best, shantenChiitoi(c));
+    if (closed13 && cfg.thirteenOrphans) best = Math.min(best, shantenKokushi(c));
+    return best;
+  }
+
+  function handSize(c) {
+    var n = 0;
+    for (var i = 0; i < 34; i++) n += c[i];
+    return n;
+  }
+
+  // 'draw' = sedang menunggu tarikan (3S+1), 'discard' = harus buang (3S+2), 'bad' = jumlah tidak pas
+  function handPhase(c, cfg) {
+    var n = handSize(c), S = setsNeeded(cfg);
+    if (n === 3 * S + 1) return 'draw';
+    if (n === 3 * S + 2) return 'discard';
+    return 'bad';
+  }
+
+  /* ---------- Dekomposisi dengan batasan pola ---------- */
+
+  var RULES = {};
+  var ruleSeq = 0;
+  function defRule(name, spec) { spec.id = ++ruleSeq; spec.name = name; RULES[name] = spec; return spec; }
+  function yes() { return true; }
+  function no() { return false; }
+  defRule('allChows', { tileOk: function (t) { return t < 27; }, chowOk: yes, pongOk: no, pairOk: isSimple });
+  defRule('allSimples', { tileOk: isSimple, chowOk: function (t) { return t % 9 >= 1 && t % 9 <= 5; }, pongOk: isSimple, pairOk: isSimple });
+  defRule('chowsSimples', { tileOk: isSimple, chowOk: function (t) { return t % 9 >= 1 && t % 9 <= 5; }, pongOk: no, pairOk: isSimple });
+  defRule('allPongs', { tileOk: yes, chowOk: no, pongOk: yes, pairOk: yes });
+  [0, 1, 2].forEach(function (s) {
+    defRule('flush' + s, { tileOk: function (t) { return t >= 27 || suitOf(t) === s; }, chowOk: yes, pongOk: yes, pairOk: yes });
+  });
+  defRule('outside', { tileOk: yes, chowOk: function (t) { return t % 9 === 0 || t % 9 === 6; }, pongOk: isTermOrHonor, pairOk: isTermOrHonor });
+
+  var ruleMemo = new Map();
+  function ruleOptions(c, g, rule) {
+    var off = g * 9, n = g < 3 ? 9 : 7, key = 0, a = new Array(n);
+    for (var i = 0; i < n; i++) {
+      var v = rule.tileOk(off + i) ? c[off + i] : 0;
+      a[i] = v; key = key * 5 + v;
+    }
+    var mk = (rule.id * 4 + g) * 1953125 + key;
+    var hit = ruleMemo.get(mk);
+    if (hit) return hit;
+    var suit = g < 3, seen = {}, res = [];
+    function chowAt(i) { return suit && i >= 0 && i <= 6 && rule.chowOk(off + i); }
+    function rec(i, m, t, p) {
+      while (i < n && a[i] === 0) i++;
+      if (i >= n) {
+        var k = m * 100 + t * 10 + p;
+        if (!seen[k]) { seen[k] = 1; res.push([m, t, p]); }
+        return;
+      }
+      var tile = off + i;
+      if (a[i] >= 3 && rule.pongOk(tile)) { a[i] -= 3; rec(i, m + 1, t, p); a[i] += 3; }
+      if (chowAt(i) && a[i + 1] && a[i + 2]) {
+        a[i]--; a[i + 1]--; a[i + 2]--; rec(i, m + 1, t, p); a[i]++; a[i + 1]++; a[i + 2]++;
+      }
+      if (a[i] >= 2) {
+        a[i] -= 2;
+        if (p === 0 && rule.pairOk(tile)) rec(i, m, t, 1);
+        if (rule.pongOk(tile)) rec(i, m, t + 1, p);
+        a[i] += 2;
+      }
+      if (suit && i <= 7 && a[i + 1] && (chowAt(i) || chowAt(i - 1))) { a[i]--; a[i + 1]--; rec(i, m, t + 1, p); a[i]++; a[i + 1]++; }
+      if (suit && i <= 6 && a[i + 2] && chowAt(i)) { a[i]--; a[i + 2]--; rec(i, m, t + 1, p); a[i]++; a[i + 2]++; }
+      a[i]--; rec(i, m, t, p); a[i]++;
+    }
+    rec(0, 0, 0, 0);
+    res = pareto(res);
+    ruleMemo.set(mk, res);
+    return res;
+  }
+
+  function shantenRule(c, S, rule) {
+    return shantenFromGroups([ruleOptions(c, 0, rule), ruleOptions(c, 1, rule), ruleOptions(c, 2, rule), ruleOptions(c, 3, rule)], S);
+  }
+
+  function meldType(m) {
+    if (m.length === 4) return 'kong';
+    if (m[0] === m[1]) return 'pong';
+    return 'chow';
+  }
+  function meldMin(m) { return Math.min.apply(null, m); }
+  function meldFitsRule(rule, m) {
+    for (var i = 0; i < m.length; i++) if (!rule.tileOk(m[i])) return false;
+    return meldType(m) === 'chow' ? rule.chowOk(meldMin(m)) : rule.pongOk(m[0]);
+  }
+
+  /* ---------- Jalur pola yang cukup poin ---------- */
+
+  // Nilai poin pong honor: naga 1, angin kursi 1, angin ronde 1 (bisa 2 kalau sama).
+  function honorValue(t, cfg) {
+    var v = 0;
+    if (t >= 31) v += 1;
+    if (t === 27 + (cfg.seatWind || 0)) v += 1;
+    if (t === 27 + (cfg.roundWind || 0)) v += 1;
+    return v;
+  }
+
+  // Nama pola untuk pong honor, pakai istilah Majé: Dragon, Seat Wind, Round Wind.
+  function honorRouteName(t, cfg) {
+    if (t >= 31) return 'Dragon (' + DRAGON_SHORT[t - 31] + ')';
+    var seat = t === 27 + (cfg.seatWind || 0), round = t === 27 + (cfg.roundWind || 0);
+    var w = HONOR_NAMES[t - 27];
+    if (seat && round) return 'Seat + Round Wind (' + w + ')';
+    return (seat ? 'Seat Wind (' : 'Round Wind (') + w + ')';
+  }
+
+  var RULE_ROUTES = [
+    { rule: 'allChows', name: 'Sequence Hand', pts: 1 },
+    { rule: 'allSimples', name: 'All Simples', pts: 1 },
+    { rule: 'chowsSimples', name: 'Sequence Hand + All Simples', pts: 2 },
+    { rule: 'allPongs', name: 'All Pongs', pts: 3 },
+    { rule: 'flush0', name: 'Half Flush Characters', pts: 3 },
+    { rule: 'flush1', name: 'Half Flush Dots', pts: 3 },
+    { rule: 'flush2', name: 'Half Flush Bamboo', pts: 3 },
+    { rule: 'outside', name: 'Mix Orphans', pts: 3 }
+  ];
+
+  var routeCache = new Map();
+  // Daftar jalur yang, kalau selesai, pasti mencapai poin minimum.
+  // g = poin minimal yang dijamin (pola + poin yang sudah pasti: tertutup, bunga, pong honor terbuka).
+  function buildRoutes(cfg) {
+    var melds = cfg.melds || [];
+    var key = JSON.stringify([cfg.scoring, cfg.minPoints, cfg.sets, melds, cfg.openMelds, cfg.sevenPairs, cfg.thirteenOrphans,
+      cfg.seatWind, cfg.roundWind, cfg.flowers, cfg.flowerMatch]);
+    var hit = routeCache.get(key);
+    if (hit) return hit;
+    var open = openCount(cfg) > 0, four = (cfg.sets || 4) === 4, S = setsNeeded(cfg), list = [];
+    if (!cfg.scoring) {
+      list.push({ kind: 'std', name: 'Tangan lengkap', pts: 0, g: 0 });
+      if (!open && four && cfg.sevenPairs) list.push({ kind: 'chiitoi', name: '7 Pairs', pts: 0, g: 0 });
+      if (!open && four && cfg.thirteenOrphans) list.push({ kind: 'kokushi', name: '13 Orphans', pts: 0, g: 0 });
+      routeCache.set(key, list);
+      return list;
+    }
+    var M = cfg.minPoints || 0;
+    var banked = 0, bankedHon = {};
+    melds.forEach(function (m) {
+      if (meldType(m) !== 'chow' && m[0] >= 27) { banked += honorValue(m[0], cfg); bankedHon[m[0]] = 1; }
+    });
+    var base = (open ? 0 : 1) + (cfg.flowerMatch || 0) + ((cfg.flowers || 0) === 0 ? 1 : 0) + banked;
+    function push(r) { r.g = r.pts + base; if (r.g >= M) list.push(r); }
+    push({ kind: 'std', name: 'Chicken Hand + Additional Point', pts: 0 });
+    RULE_ROUTES.forEach(function (rr) {
+      var rule = RULES[rr.rule];
+      for (var i = 0; i < melds.length; i++) if (!meldFitsRule(rule, melds[i])) return;
+      push({ kind: 'rule', rule: rule, name: rr.name, pts: rr.pts });
+    });
+    if (!open) {
+      [0, 1, 2].forEach(function (s) { push({ kind: 'straight', suit: s, name: 'Pure Straight ' + SUIT_NAMES[s], pts: 3 }); });
+      if (four && cfg.sevenPairs) push({ kind: 'chiitoi', name: '7 Pairs', pts: 4 });
+      if (four && cfg.thirteenOrphans) push({ kind: 'kokushi', name: '13 Orphans', pts: 13 });
+    }
+    var R = M - base;
+    if (R > 0) {
+      var hon = [];
+      for (var h = 27; h < 34; h++) {
+        var v = honorValue(h, cfg);
+        if (v > 0 && !bankedHon[h]) hon.push({ t: h, v: v });
+      }
+      (function rec(i, pick, sum) {
+        if (sum >= R) {
+          push({
+            kind: 'honor', honors: pick.map(function (x) { return x.t; }),
+            name: pick.map(function (x) { return honorRouteName(x.t, cfg); }).join(' + '),
+            pts: sum
+          });
+          return;
+        }
+        if (pick.length >= S) return;
+        for (var j = i; j < hon.length; j++) { pick.push(hon[j]); rec(j + 1, pick, sum + hon[j].v); pick.pop(); }
+      })(0, [], 0);
+    }
+    routeCache.set(key, list);
+    return list;
+  }
+
+  function routeDist(c, S, r, unseen) {
+    var cc, need, i;
+    switch (r.kind) {
+      case 'std': return shantenStd(c, S);
+      case 'rule': return shantenRule(c, S, r.rule);
+      case 'chiitoi': return shantenChiitoi(c);
+      case 'kokushi': return shantenKokushi(c);
+      case 'honor':
+        if (r.honors.length > S) return INF;
+        cc = c.slice(); need = 0;
+        for (i = 0; i < r.honors.length; i++) {
+          var h = r.honors[i], have = Math.min(3, cc[h]);
+          if (unseen && unseen[h] < 3 - have) return INF;
+          need += 3 - have; cc[h] -= have;
+        }
+        return need + shantenStd(cc, S - r.honors.length);
+      case 'straight':
+        if (S < 3) return INF;
+        cc = c.slice(); need = 0;
+        var b = r.suit * 9;
+        for (i = 0; i < 9; i++) {
+          if (cc[b + i] > 0) cc[b + i]--;
+          else { if (unseen && !unseen[b + i]) return INF; need++; }
+        }
+        return need + shantenStd(cc, S - 3);
+    }
+    return INF;
+  }
+
+  // Jarak ke tangan menang yang SAH (cukup poin). Sama dengan shanten kalau poin tidak dihitung.
+  function validDistance(c, cfg, unseen, routes) {
+    routes = routes || buildRoutes(cfg);
+    var S = setsNeeded(cfg), best = INF;
+    for (var i = 0; i < routes.length; i++) {
+      var d = routeDist(c, S, routes[i], unseen);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+
+  /* ---------- Hitung poin (Majé House Rules) ---------- */
+
+  var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1 };
+
+  function decompositions(c, S) {
+    var out = [], a = c.slice(), sets = [];
+    function rec(i, pair) {
+      while (i < 34 && a[i] === 0) i++;
+      if (i === 34) { if (sets.length === S) out.push({ pair: pair, sets: sets.slice() }); return; }
+      if (sets.length >= S) return;
+      if (a[i] >= 3) { a[i] -= 3; sets.push({ type: 'pong', t: i }); rec(i, pair); sets.pop(); a[i] += 3; }
+      if (i < 27 && i % 9 <= 6 && a[i + 1] && a[i + 2]) {
+        a[i]--; a[i + 1]--; a[i + 2]--; sets.push({ type: 'chow', t: i });
+        rec(i, pair);
+        sets.pop(); a[i]++; a[i + 1]++; a[i + 2]++;
+      }
+    }
+    for (var p = 0; p < 34; p++) {
+      if (a[p] >= 2) { a[p] -= 2; rec(0, p); a[p] += 2; }
+    }
+    return out;
+  }
+
+  function setTiles(s) {
+    if (s.type === 'chow') return [s.t, s.t + 1, s.t + 2];
+    if (s.type === 'kong') return [s.t, s.t, s.t, s.t];
+    return [s.t, s.t, s.t];
+  }
+
+  function addExtras(p, cfg, selfDraw, concealed, opts) {
+    if (selfDraw) p.push(['Self Draw', 1]);
+    else if (concealed) p.push(['Concealed Hand', 1]);
+    if ((cfg.flowers || 0) === 0) p.push(['No Flower', 1]);
+    for (var f = 0; f < (cfg.flowerMatch || 0); f++) p.push(['Suitable Flower', 1]);
+    if (opts && opts.lastTile) p.push(['Last Tile', 1]);
+    if (opts && opts.robKong) p.push(['Robbing a Kong', 1]);
+  }
+
+  function flushOf(tiles) {
+    var suits = {}, honors = 0, nums = 0;
+    tiles.forEach(function (t) { if (t >= 27) honors++; else { suits[suitOf(t)] = 1; nums++; } });
+    var ns = Object.keys(suits).length;
+    return { allHonor: nums === 0, one: ns === 1, hasHonor: honors > 0 };
+  }
+
+  function scoreStd(sets, pair, cfg, selfDraw, concealed, opts) {
+    var p = [], tiles = [pair, pair];
+    sets.forEach(function (s) { tiles = tiles.concat(setTiles(s)); });
+    var dragonP = 0, windP = 0, pongs = 0, kongs = 0, chows = 0;
+    var seatT = 27 + (cfg.seatWind || 0), roundT = 27 + (cfg.roundWind || 0), seatP = false, roundP = false;
+    sets.forEach(function (s) {
+      if (s.type === 'chow') { chows++; return; }
+      pongs++; if (s.type === 'kong') kongs++;
+      if (s.t >= 31) dragonP++;
+      else if (s.t >= 27) { windP++; if (s.t === seatT) seatP = true; if (s.t === roundT) roundP = true; }
+    });
+    var dragonPair = pair >= 31, windPair = pair >= 27 && pair < 31;
+    if (dragonP === 3) p.push(['Great Dragon', 8]);
+    else if (dragonP === 2 && dragonPair) p.push(['Little Dragon', 5]);
+    else for (var d = 0; d < dragonP; d++) p.push(['Dragon', 1]);
+    if (windP === 4) p.push(['Great Wind', 13]);
+    else if (windP === 3 && windPair) p.push(['Little Wind', 10]);
+    else {
+      if (seatP) p.push(['Seat Wind', 1]);
+      if (roundP) p.push(['Round Wind', 1]);
+    }
+    var fl = flushOf(tiles);
+    if (chows === sets.length && isSimple(pair)) p.push(['Sequence Hand', 1]);
+    if (tiles.every(isSimple)) p.push(['All Simples', 1]);
+    for (var su = 0; su < 3; su++) {
+      var b = su * 9, has = [false, false, false];
+      sets.forEach(function (s) { if (s.type === 'chow' && s.t >= b && s.t < b + 9 && (s.t - b) % 3 === 0) has[(s.t - b) / 3] = true; });
+      if (has[0] && has[1] && has[2]) { p.push(['Pure Straight', 3]); break; }
+    }
+    if (fl.allHonor) {
+      p.push(['All Honor', 10]);
+    } else {
+      if (kongs === 4) p.push(['Kong Hand', 12]);
+      else if (pongs === sets.length) p.push(['All Pongs', 3]);
+      var outside = isTermOrHonor(pair) && sets.every(function (s) { return setTiles(s).some(isTermOrHonor); });
+      if (outside) p.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
+      if (fl.one) p.push(fl.hasHonor ? ['Half Flush', 3] : ['Full Flush', 7]);
+    }
+    if (kongs === 4 && fl.allHonor) p.push(['Kong Hand', 12]);
+    addExtras(p, cfg, selfDraw, concealed, opts);
+    return p;
+  }
+
+  function total(p) { return p.reduce(function (a, x) { return a + x[1]; }, 0); }
+
+  // c = tile tertutup lengkap (3S+2) termasuk tile menang. Hasil: poin terbaik dan rinciannya.
+  function scoreHand(c, cfg, selfDraw, opts) {
+    var melds = (cfg.melds || []).map(function (m) { return { type: meldType(m), t: meldMin(m), open: true }; });
+    var concealed = melds.length === 0 && !(cfg.openMelds > 0);
+    var S = setsNeeded(cfg), best = null;
+    function consider(p) {
+      var pts = total(p);
+      if (!best || pts > best.points) best = { points: pts, patterns: p };
+    }
+    decompositions(c, S).forEach(function (d) {
+      consider(scoreStd(d.sets.concat(melds), d.pair, cfg, selfDraw, concealed, opts));
+    });
+    if (concealed && (cfg.sets || 4) === 4) {
+      var tiles = countsToList(c);
+      // 7 Pairs
+      var pairs = 0;
+      for (var i = 0; i < 34; i++) if (c[i] === 2) pairs++;
+      if (cfg.sevenPairs && pairs === 7) {
+        var p7 = [['7 Pairs', 4]], fl = flushOf(tiles);
+        if (fl.allHonor) p7.push(['All Honor', 10]);
+        else {
+          if (fl.one) p7.push(fl.hasHonor ? ['Half Flush', 3] : ['Full Flush', 7]);
+          if (tiles.every(isTermOrHonor)) p7.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
+          if (tiles.every(isSimple)) p7.push(['All Simples', 1]);
+        }
+        addExtras(p7, cfg, selfDraw, true, opts);
+        consider(p7);
+      }
+      if (cfg.thirteenOrphans && shantenKokushi(c) === -1) {
+        var pk = [['13 Orphans', 13]];
+        addExtras(pk, cfg, selfDraw, true, opts);
+        consider(pk);
+      }
+      // Heavenly Gates: 1112345678999 satu suit + satu tile suit itu
+      for (var su = 0; su < 3; su++) {
+        var b = su * 9, inSuit = 0;
+        for (var k = 0; k < 9; k++) inSuit += c[b + k];
+        if (inSuit !== 14) continue;
+        var ok = c[b] >= 3 && c[b + 8] >= 3;
+        for (var k2 = 1; k2 < 8 && ok; k2++) if (c[b + k2] < 1) ok = false;
+        if (ok) {
+          var pg = [['Heavenly Gates', 15]];
+          addExtras(pg, cfg, selfDraw, true, opts);
+          consider(pg);
+        }
+      }
+    }
+    if (!best) return { points: 0, patterns: [], complete: false };
+    if (!best.patterns.some(function (x) { return !EXTRA[x[0]]; })) best.patterns.unshift(['Chicken Hand', 0]);
+    best.complete = true;
+    return best;
+  }
+
+  function mainPattern(sc) {
+    var top = null;
+    sc.patterns.forEach(function (x) { if (!EXTRA[x[0]] && (!top || x[1] > top[1])) top = x; });
+    return top ? top[0] : 'Chicken Hand';
+  }
+
+  /* ---------- Hitungan tile ---------- */
+
+  // unseen[t] = 4 - di tangan - terlihat. Tile yang belum terlihat ada di dinding
+  // atau tangan lawan; dari sudut pandang kita, tarikan berikutnya acak di antara mereka.
+  function unseenCounts(handCounts, visibleCounts) {
+    var u = new Array(34), over = [];
+    for (var i = 0; i < 34; i++) {
+      var r = 4 - handCounts[i] - visibleCounts[i];
+      if (r < 0) { over.push(i); r = 0; }
+      u[i] = r;
+    }
+    return { unseen: u, over: over };
+  }
+
+  function sum(arr) { var s = 0; for (var i = 0; i < arr.length; i++) s += arr[i]; return s; }
+
+  // Tile yang menurunkan shanten kalau ditarik (hand 3S+1), tanpa memperhitungkan poin.
+  function ukeire(c, cfg, unseen, base) {
+    if (base == null) base = shanten(c, cfg);
+    var tiles = [], tot = 0;
+    for (var t = 0; t < 34; t++) {
+      if (c[t] >= 4) continue;
+      c[t]++;
+      var s = shanten(c, cfg);
+      c[t]--;
+      if (s < base) { tiles.push({ t: t, n: unseen[t] }); tot += unseen[t]; }
+    }
+    return { shanten: base, tiles: tiles, total: tot };
+  }
+
+  // Tile yang melengkapi tangan 3S+1, dengan poin kalau menang tarik sendiri / dari buangan.
+  function winningTiles(c, cfg, unseen) {
+    var out = [];
+    for (var t = 0; t < 34; t++) {
+      if (c[t] >= 4) continue;
+      c[t]++;
+      if (shanten(c, cfg) === -1) {
+        var ts = scoreHand(c, cfg, true), rn = scoreHand(c, cfg, false);
+        out.push({ t: t, n: unseen[t], tsumo: ts.points, ron: rn.points, ronPatterns: rn.patterns, tsumoPatterns: ts.patterns });
+      }
+      c[t]--;
+    }
+    return out;
+  }
+
+  // Tile berguna menuju menang SAH.
+  function validUkeire(c, cfg, unseen, routes, vd) {
+    var M = minPts(cfg), tiles = [], tot = 0;
+    if (vd === 0) {
+      winningTiles(c, cfg, unseen).forEach(function (w) {
+        if (w.tsumo >= M) { tiles.push({ t: w.t, n: w.n, tsumo: w.tsumo, ron: w.ron }); tot += w.n; }
+      });
+      return { tiles: tiles, total: tot };
+    }
+    if (vd >= INF) return { tiles: tiles, total: 0 };
+    for (var t = 0; t < 34; t++) {
+      if (c[t] >= 4) continue;
+      c[t]++;
+      var d = validDistance(c, cfg, unseen, routes);
+      c[t]--;
+      if (d < vd) { tiles.push({ t: t, n: unseen[t] }); tot += unseen[t]; }
+    }
+    return { tiles: tiles, total: tot };
+  }
+
+  // Ringkasan jalur untuk tangan 3S+1: jarak tiap jalur dan tile yang mendekatkannya.
+  function routeSummary(c, cfg, unseen, routes) {
+    var S = setsNeeded(cfg), rows = [], seenName = {};
+    routes.forEach(function (r) {
+      var d = routeDist(c, S, r, unseen);
+      if (d >= INF || d > 6) return;
+      var n = 0;
+      for (var t = 0; t < 34; t++) {
+        if (c[t] >= 4 || !unseen[t]) continue;
+        c[t]++;
+        if (routeDist(c, S, r, unseen) < d) n += unseen[t];
+        c[t]--;
+      }
+      rows.push({ name: r.name, g: r.g, d: d, uk: n, kind: r.kind });
+    });
+    rows.sort(function (a, b) { return a.d - b.d || b.uk - a.uk || b.g - a.g; });
+    return rows.filter(function (r) { if (seenName[r.name]) return false; seenName[r.name] = 1; return true; });
+  }
+
+  // P(minimal satu sukses dalam k tarikan) — hipergeometrik tanpa pengembalian.
+  function pAtLeastOne(U, K, k) {
+    if (K <= 0 || k <= 0 || U <= 0) return 0;
+    if (k > U) k = U;
+    var miss = 1;
+    for (var i = 0; i < k; i++) {
+      var num = U - K - i;
+      if (num <= 0) return 1;
+      miss *= num / (U - i);
+    }
+    return 1 - miss;
+  }
+
+  /* ---------- Baca lawan & risiko buangan ---------- */
+
+  function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+  function meldFeasible(ruleName, melds) {
+    var rule = RULES[ruleName];
+    for (var i = 0; i < melds.length; i++) if (!meldFitsRule(rule, melds[i])) return false;
+    return true;
+  }
+
+  // Perkiraan peluang lawan sudah siap (tenpai) dari jumlah buangan dan set terbukanya.
+  function tenpaiChance(nDiscards, nMelds, alert) {
+    if (nMelds >= 4) return 1;
+    var base = 0.75 / (1 + Math.exp(-(nDiscards - 10) / 2));
+    var mp = [0, 0.15, 0.4, 0.7][nMelds] || 0;
+    var p = 1 - (1 - base) * (1 - mp);
+    if (alert) p = Math.max(p, 0.95);
+    return clamp(p, 0.02, 0.99);
+  }
+
+  // Peluang tile t jadi tile penentu Hu lawan, kalau lawan sudah siap (sebelum membaca polanya).
+  // Aturan HK tidak punya furiten, jadi tile yang sudah dia buang tidak 100% aman.
+  function baseWait(t, pond, melds, known) {
+    if (pond.indexOf(t) >= 0) return { w: 0.012, why: 'sudah dibuang lawan ini' };
+    for (var i = 0; i < melds.length; i++) {
+      if (meldType(melds[i]) === 'pong' && melds[i][0] === t) return { w: 0.004, why: 'sudah dia Pong' };
+    }
+    if (t >= 27) {
+      var k = known[t];
+      if (k >= 4) return { w: 0, why: 'semua salinan terlihat' };
+      if (k === 3) return { w: 0.01, why: '3 salinan terlihat' };
+      if (k === 2) return { w: 0.03, why: '2 salinan terlihat' };
+      return { w: 0.05, why: 'honor yang belum banyak terlihat' };
+    }
+    var n = t % 9 + 1, b = t - (n - 1);
+    var w = (n === 1 || n === 9) ? 0.06 : (n === 2 || n === 8) ? 0.09 : 0.12;
+    var why = [];
+    function inPond(x) { return x >= 1 && x <= 9 && pond.indexOf(b + x - 1) >= 0; }
+    if (n <= 3) { if (inPond(n + 3)) { w *= 0.75; why.push('suji ' + (n + 3)); } }
+    else if (n >= 7) { if (inPond(n - 3)) { w *= 0.75; why.push('suji ' + (n - 3)); } }
+    else {
+      var lo = inPond(n - 3), hi = inPond(n + 3);
+      if (lo && hi) { w *= 0.75; why.push('suji ' + (n - 3) + '-' + (n + 3)); }
+      else if (lo || hi) { w *= 0.88; why.push('setengah suji'); }
+    }
+    function gone(x) { return x < 1 || x > 9 || known[b + x - 1] >= 4; }
+    if ((gone(n + 1) || gone(n + 2)) && (gone(n - 1) || gone(n - 2))) { w *= 0.5; why.push('tetangganya sudah habis'); }
+    if (known[t] >= 3) { w *= 0.7; why.push('3 salinan terlihat'); }
+    return { w: w, why: why.join(', ') || 'tile tengah, belum ada petunjuk' };
+  }
+
+  // opp: { pond:[ids], melds:[[ids]], alert, seatWind }; ctx: { roundWind, known, unseen, minPoints }
+  function readOpponent(opp, ctx) {
+    var pond = opp.pond || [], melds = opp.melds || [];
+    var reads = [], suitCount = [0, 0, 0], honorD = 0;
+    pond.forEach(function (t) { if (t < 27) suitCount[suitOf(t)]++; else honorD++; });
+    var late = pond.slice(-4);
+    var honorMelds = melds.filter(function (m) { return m[0] >= 27; }).length;
+    for (var s = 0; s < 3; s++) {
+      if (!meldFeasible('flush' + s, melds)) continue;
+      var conf = 0;
+      var meldIn = melds.filter(function (m) { return m.some(function (t) { return t < 27 && suitOf(t) === s; }); }).length;
+      // satu set terbuka saja bukti lemah; makin banyak set satu jenis, makin kuat
+      if (melds.length) conf += meldIn ? [0, 0.2, 0.4, 0.55, 0.6][Math.min(4, meldIn)] : (honorMelds ? 0.1 : 0);
+      if (pond.length >= 5) {
+        var others = pond.length - suitCount[s] - honorD;
+        if (suitCount[s] === 0 && others >= 4) conf += 0.35;
+        else if (suitCount[s] === 1 && others >= 5) conf += 0.15;
+        else if (suitCount[s] >= 3) conf -= 0.3;
+      }
+      if (late.some(function (t) { return t < 27 && suitOf(t) === s; })) conf -= 0.25;
+      conf = clamp(conf, 0, 0.9);
+      if (conf >= 0.25) {
+        var full = !honorMelds && honorD >= 2 && conf >= 0.5;
+        reads.push({ kind: 'flush', suit: s, conf: conf, name: (full ? 'Full Flush ' : 'Half Flush ') + SUIT_NAMES[s],
+          avoid: SUIT_NAMES[s] + (full ? '' : ' & Honors') });
+      }
+    }
+    var pongs = melds.filter(function (m) { return meldType(m) !== 'chow'; }).length;
+    if (pongs >= 2 && pongs === melds.length) {
+      reads.push({ kind: 'pongs', conf: Math.min(0.85, 0.35 + 0.15 * pongs), name: 'All Pongs', avoid: 'tile yang masih banyak sisa (bisa jadi pair/pong)' });
+    }
+    var dragonP = melds.filter(function (m) { return meldType(m) !== 'chow' && m[0] >= 31; }).map(function (m) { return m[0]; });
+    if (dragonP.length >= 2) {
+      var dleft = [31, 32, 33].filter(function (t) { return dragonP.indexOf(t) < 0; });
+      reads.push({ kind: 'honors', conf: 0.8, name: dragonP.length === 3 ? 'Great Dragon' : 'Little/Great Dragon', tiles: dleft,
+        avoid: dleft.map(function (t) { return HONOR_NAMES[t - 27]; }).join(', ') || 'Dragon' });
+    }
+    var windP = melds.filter(function (m) { return meldType(m) !== 'chow' && m[0] >= 27 && m[0] < 31; }).map(function (m) { return m[0]; });
+    if (windP.length >= 2) {
+      var wleft = [27, 28, 29, 30].filter(function (t) { return windP.indexOf(t) < 0; });
+      reads.push({ kind: 'honors', conf: windP.length >= 3 ? 0.8 : 0.45, name: windP.length >= 3 ? 'Little/Great Wind' : 'Wind', tiles: wleft,
+        avoid: wleft.map(function (t) { return HONOR_NAMES[t - 27]; }).join(', ') });
+    }
+    if (melds.length >= 2 && meldFeasible('outside', melds) && pond.length >= 4) {
+      var mid = pond.filter(function (t) { return t < 27 && t % 9 >= 2 && t % 9 <= 6; }).length;
+      if (mid / pond.length >= 0.6) reads.push({ kind: 'outside', conf: 0.45, name: 'Mix Orphans', avoid: '1, 9 & Honors' });
+    }
+    var oppCfg = { seatWind: opp.seatWind || 0, roundWind: ctx.roundWind || 0 };
+    var banked = 0;
+    melds.forEach(function (m) { if (meldType(m) !== 'chow' && m[0] >= 27) banked += honorValue(m[0], oppCfg); });
+    var threat = tenpaiChance(pond.length, melds.length, opp.alert);
+    var notes = [];
+    // Set terbuka tanpa poin dan tidak cocok pola besar: susah capai poin minimum lewat buangan.
+    if (melds.length && (ctx.minPoints || 0) >= 3 && banked === 0 && !opp.alert) {
+      var anyBig = [0, 1, 2].some(function (x) { return meldFeasible('flush' + x, melds); }) ||
+        meldFeasible('allPongs', melds) || meldFeasible('outside', melds);
+      if (!anyBig) { threat *= 0.6; notes.push('set terbukanya tidak cocok pola besar, susah capai ' + ctx.minPoints + ' poin'); }
+    }
+    if (banked) notes.push('sudah punya ' + banked + ' poin dari Pong honor');
+    var wait = new Array(34), why = new Array(34);
+    for (var t = 0; t < 34; t++) {
+      var r = baseWait(t, pond, melds, ctx.known), w = r.w, ww = r.why;
+      for (var q = 0; q < reads.length; q++) {
+        var rd = reads[q], cf = rd.conf;
+        if (rd.kind === 'flush') {
+          if (t < 27 && suitOf(t) !== rd.suit) w *= 1 - 0.85 * cf;
+          else { w *= 1 + (t < 27 ? 0.9 : 0.6) * cf; ww = 'cocok dengan tebakan ' + rd.name; }
+        } else if (rd.kind === 'pongs') {
+          if (ctx.unseen[t] >= 2) { w *= 1 + 0.5 * cf; } else w *= 1 - 0.5 * cf;
+        } else if (rd.kind === 'honors') {
+          if (rd.tiles.indexOf(t) >= 0) { w *= 1 + 2.5 * cf; ww = 'bisa melengkapi ' + rd.name; }
+        } else if (rd.kind === 'outside') {
+          if (t < 27 && t % 9 >= 3 && t % 9 <= 5) w *= 1 - 0.8 * cf;
+          else if (isTermOrHonor(t)) { w *= 1 + 0.6 * cf; ww = 'cocok dengan tebakan Mix Orphans'; }
+        }
+      }
+      wait[t] = clamp(w, 0, 0.5);
+      why[t] = ww;
+    }
+    reads.sort(function (a, b) { return b.conf - a.conf; });
+    return { threat: threat, reads: reads, wait: wait, why: why, banked: banked, notes: notes, nDiscards: pond.length };
+  }
+
+  // Peluang membuang t langsung membuat salah satu lawan Hu.
+  function discardRisk(t, reads) {
+    var safe = 1, worst = null, worstV = -1;
+    Object.keys(reads).forEach(function (o) {
+      var p = reads[o].threat * reads[o].wait[t];
+      safe *= 1 - p;
+      if (p > worstV) { worstV = p; worst = o; }
+    });
+    return { risk: 1 - safe, vs: worst, why: worst ? reads[worst].why[t] : '' };
+  }
+
+  // Kompatibilitas: skor bahaya lama (0..1) untuk satu lawan.
+  function dangerVs(t, pond, known) {
+    var r = baseWait(t, pond, [], known);
+    return { d: r.w / 0.12 * 0.65, why: r.why };
+  }
+
+  /* ---------- Analisis ---------- */
+
+  // state: { hand:[ids], visible:[34 counts], opps:{right,across,left: {pond, melds, alert, seatWind}},
+  //          cfg, drawsLeft, selfDraw }  (ponds/alert lama masih diterima)
+  function analyze(state) {
+    var cfg = state.cfg;
+    var c = toCounts(state.hand);
+    var phase = handPhase(c, cfg);
+    var uc = unseenCounts(c, state.visible);
+    var unseen = uc.unseen, U = sum(unseen);
+    var known = new Array(34);
+    for (var i = 0; i < 34; i++) known[i] = c[i] + state.visible[i];
+    var k = Math.max(1, state.drawsLeft | 0);
+    var routes = buildRoutes(cfg), M = minPts(cfg);
+    var out = { phase: phase, unseen: unseen, U: U, over: uc.over, drawsLeft: k, known: known, M: M, scoring: !!cfg.scoring, routesAll: routes };
+
+    var oppNames = ['right', 'across', 'left'];
+    var opps = state.opps || {};
+    var reads = {}, T = 0, Twho = null;
+    oppNames.forEach(function (o) {
+      var src = opps[o] || { pond: (state.ponds && state.ponds[o]) || [], melds: [], alert: state.alert && state.alert[o] };
+      reads[o] = readOpponent(src, { roundWind: cfg.roundWind, known: known, unseen: unseen, minPoints: M });
+      if (reads[o].threat > T) { T = reads[o].threat; Twho = o; }
+    });
+    out.reads = reads; out.threat = T; out.threatWho = Twho;
+    if (phase === 'bad') return out;
+
+    if (phase === 'draw') {
+      var sh = shanten(c, cfg);
+      var vd = validDistance(c, cfg, unseen, routes);
+      out.shanten = sh; out.vd = vd;
+      if (sh === 0) out.waits = winningTiles(c, cfg, unseen);
+      out.ukeire = validUkeire(c, cfg, unseen, routes, vd);
+      out.pNext = U ? out.ukeire.total / U : 0;
+      out.pWithin = pAtLeastOne(U, out.ukeire.total, k);
+      out.routeList = routeSummary(c, cfg, unseen, routes);
+      return out;
+    }
+
+    var sh14 = shanten(c, cfg);
+    out.shantenNow = sh14;
+    if (sh14 === -1) {
+      out.complete = true;
+      out.score = scoreHand(c, cfg, !!state.selfDraw);
+      out.validWin = out.score.points >= M;
+      if (out.validWin) return out;
+    }
+    out.vdNow = validDistance(c, cfg, unseen, routes);
+    var opts = [];
+    for (var t = 0; t < 34; t++) {
+      if (!c[t]) continue;
+      c[t]--;
+      var s = shanten(c, cfg);
+      var v = validDistance(c, cfg, unseen, routes);
+      var uk = validUkeire(c, cfg, unseen, routes, v);
+      var plain = ukeire(c, cfg, unseen, s);
+      c[t]++;
+      var rk = discardRisk(t, reads);
+      opts.push({
+        t: t, shanten: s, vd: v, ukeire: uk.total, tiles: uk.tiles, plainUkeire: plain.total,
+        pNext: U ? uk.total / U : 0, pWithin: pAtLeastOne(U, uk.total, k),
+        risk: rk.risk, riskVs: rk.vs, riskWhy: rk.why
+      });
+    }
+    opts.sort(function (a, b) {
+      return a.vd - b.vd || b.ukeire - a.ukeire || a.shanten - b.shanten || b.plainUkeire - a.plainUkeire || a.risk - b.risk || a.t - b.t;
+    });
+    function minRisk(list) {
+      return list.slice().sort(function (a, b) { return a.risk - b.risk || a.vd - b.vd || b.ukeire - a.ukeire; })[0];
+    }
+    var atk = opts[0], mode = 'attack', rec = atk;
+    if (T >= 0.3) {
+      if (atk.vd <= 0) {
+        // sudah siap menang sah: tetap siap, tapi pilih tunggu yang lebih aman kalau ada
+        var keep0 = opts.filter(function (o) { return o.vd === atk.vd && o.ukeire >= atk.ukeire * 0.5; });
+        var s0 = minRisk(keep0);
+        if (atk.risk > 0.08 && s0.risk < atk.risk - 0.02) { mode = 'careful'; rec = s0; }
+      } else if ((atk.vd >= 2 && T >= 0.5) || (atk.vd === 1 && T >= 0.7)) {
+        mode = 'fold'; rec = minRisk(opts);
+      } else {
+        var keep1 = opts.filter(function (o) { return o.vd === atk.vd && o.ukeire >= atk.ukeire * 0.7; });
+        var s1 = minRisk(keep1);
+        if (s1.risk < atk.risk - 0.01) { mode = 'careful'; rec = s1; }
+      }
+    }
+    out.options = opts;
+    out.best = atk;
+    out.rec = rec;
+    out.mode = mode;
+    out.safest = minRisk(opts);
+    c[rec.t]--;
+    out.routeList = routeSummary(c, cfg, unseen, routes);
+    if (rec.vd === 0 || rec.shanten === 0) out.waits = winningTiles(c, cfg, unseen);
+    c[rec.t]++;
+    return out;
+  }
+
+  // Saran klaim untuk buangan lawan t (tangan kita 3S+1). from = 'right'|'across'|'left'.
+  function claimOptions(state, t, from) {
+    var cfg = state.cfg, c = toCounts(state.hand);
+    if (handPhase(c, cfg) !== 'draw') return [];
+    var unseen = unseenCounts(c, state.visible).unseen;
+    var M = minPts(cfg), cur = validDistance(c, cfg, unseen), res = [];
+    c[t]++;
+    if (shanten(c, cfg) === -1) {
+      var sc = scoreHand(c, cfg, false);
+      res.push({ type: 'hu', tiles: [t], points: sc.points, patterns: sc.patterns, valid: sc.points >= M });
+    }
+    c[t]--;
+    function withMeld(tiles) {
+      return Object.assign({}, cfg, { melds: (cfg.melds || []).concat([tiles]), openMelds: undefined });
+    }
+    function bestAfter(c2, cfg2) {
+      var best = { vd: INF, t: -1 };
+      var r2 = buildRoutes(cfg2);
+      for (var x = 0; x < 34; x++) {
+        if (!c2[x]) continue;
+        c2[x]--;
+        var v = validDistance(c2, cfg2, unseen, r2);
+        c2[x]++;
+        if (v < best.vd) best = { vd: v, t: x };
+      }
+      return best;
+    }
+    if (c[t] >= 2) {
+      var cp = c.slice(); cp[t] -= 2;
+      var mp = [t, t, t], bp = bestAfter(cp, withMeld(mp));
+      res.push({ type: 'pong', tiles: mp, vd: bp.vd, discard: bp.t, cur: cur, better: bp.vd < cur });
+    }
+    if (c[t] >= 3) {
+      var ck = c.slice(); ck[t] -= 3;
+      var mk = [t, t, t, t], cfgK = withMeld(mk);
+      var vk = validDistance(ck, cfgK, unseen);
+      res.push({ type: 'kong', tiles: mk, vd: vk, cur: cur, better: vk <= cur });
+    }
+    if (from === 'left' && t < 27) {
+      var r = t % 9, b = t - r;
+      [[-2, -1], [-1, 1], [1, 2]].forEach(function (pr) {
+        var a1 = r + pr[0], a2 = r + pr[1];
+        if (a1 < 0 || a2 > 8 || a1 > 8 || a2 < 0) return;
+        var x1 = b + a1, x2 = b + a2;
+        if (!c[x1] || !c[x2]) return;
+        var cc = c.slice(); cc[x1]--; cc[x2]--;
+        var tiles = [x1, x2, t].sort(function (m, n) { return m - n; });
+        var bc = bestAfter(cc, withMeld(tiles));
+        res.push({ type: 'chi', tiles: tiles, vd: bc.vd, discard: bc.t, cur: cur, better: bc.vd < cur });
+      });
+    }
+    return res;
+  }
+
+  /* ---------- Simulasi Monte Carlo ---------- */
+
+  function rngFrom(seed) {
+    var x = (seed >>> 0) || 0x9e3779b9;
+    return function () {
+      x ^= x << 13; x >>>= 0;
+      x ^= x >>> 17;
+      x ^= x << 5; x >>>= 0;
+      return x / 4294967296;
+    };
+  }
+
+  function relevantTiles(c) {
+    var rel = [];
+    for (var t = 0; t < 34; t++) {
+      if (c[t] >= 4) continue;
+      if (c[t] > 0) { rel.push(t); continue; }
+      if (t >= 27) continue;
+      var n = t % 9, b = t - n, hit = false;
+      for (var d = -2; d <= 2 && !hit; d++) {
+        var x = n + d;
+        if (d !== 0 && x >= 0 && x <= 8 && c[b + x] > 0) hit = true;
+      }
+      if (hit) rel.push(t);
+    }
+    return rel;
+  }
+
+  function quickUkeire(c, cfg, belief, base) {
+    var rel = relevantTiles(c), tot = 0;
+    for (var i = 0; i < rel.length; i++) {
+      var t = rel[i];
+      if (!belief[t]) continue;
+      c[t]++;
+      if (shanten(c, cfg) < base) tot += belief[t];
+      c[t]--;
+    }
+    return tot;
+  }
+
+  // Simulasi dari tangan 3S+1. Tiap putaran: kita tarik 1 tile lalu buang dengan strategi
+  // rakus menuju menang sah; 3 lawan masing-masing membuang 1 tile acak dari tile tak terlihat
+  // (hanya bisa kita pakai untuk menang). Menang dihitung hanya kalau poinnya cukup.
+  function simulate(hand13, cfg, unseen, draws, sims, seed) {
+    var M = minPts(cfg), S = setsNeeded(cfg);
+    var routes = buildRoutes(cfg);
+    var d0 = routes.map(function (r) { return routeDist(hand13, S, r, unseen); });
+    var mn = Math.min.apply(null, d0.concat([INF]));
+    var active = routes.filter(function (r, i) { return d0[i] < INF && d0[i] <= mn + 2; });
+    var pool0 = [];
+    for (var t = 0; t < 34; t++) for (var k = 0; k < unseen[t]; k++) pool0.push(t);
+    var rnd = rngFrom(seed || 1);
+    var tsumo = new Array(draws + 1).fill(0), any = new Array(draws + 1).fill(0), tenpai = new Array(draws + 1).fill(0);
+    var patterns = {}, ptsSum = 0, wins = 0;
+    var pool = pool0.slice(), L = pool.length, perRound = 4;
+    var maxDraws = Math.min(draws, Math.floor(L / perRound));
+    function vdist(c, belief) {
+      var b = INF, n = 0;
+      for (var i = 0; i < active.length; i++) {
+        var d = routeDist(c, S, active[i], belief);
+        if (d < b) { b = d; n = 1; } else if (d === b) n++;
+      }
+      // lebih kecil = lebih baik; >> 4 memberi jarak, 4 bit bawah = sedikit jalur alternatif
+      return b * 16 + (15 - Math.min(n, 15));
+    }
+    function scoreOk(c, selfDraw) {
+      var sc = scoreHand(c, cfg, selfDraw);
+      return sc.points >= M ? sc : null;
+    }
+    function record(sc) {
+      var name = sc ? mainPattern(sc) : 'Tangan lengkap';
+      patterns[name] = (patterns[name] || 0) + 1;
+      ptsSum += sc ? sc.points : 0; wins++;
+    }
+    if (active.length) {
+      for (var sIdx = 0; sIdx < sims; sIdx++) {
+        var need = Math.min(L, maxDraws * perRound);
+        for (var i = 0; i < need; i++) {
+          var j = i + Math.floor(rnd() * (L - i));
+          var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        }
+        var c = hand13.slice(), belief = unseen.slice();
+        var cur = vdist(c, belief);
+        var tenpaiAt = (cur >> 4) === 0 ? 0 : -1;
+        var wonTsumo = -1, wonAny = -1;
+        for (var r = 0; r < maxDraws; r++) {
+          var d = pool[r * perRound];
+          belief[d]--;
+          c[d]++;
+          if (shanten(c, cfg) === -1) {
+            var sc = scoreOk(c, true);
+            if (sc) { wonTsumo = r + 1; if (wonAny < 0) { wonAny = r + 1; record(sc); } break; }
+          }
+          var bestKey = 1e9, cands = [];
+          for (var x = 0; x < 34; x++) {
+            if (!c[x]) continue;
+            c[x]--;
+            var key = vdist(c, belief) * 16 + Math.min(15, shanten(c, cfg));
+            c[x]++;
+            if (key < bestKey) { bestKey = key; cands = [x]; }
+            else if (key === bestKey) cands.push(x);
+          }
+          var pick = cands[0];
+          if (cands.length > 1) {
+            var bestU = -1, base = bestKey % 16;
+            for (var q = 0; q < cands.length; q++) {
+              c[cands[q]]--;
+              var uk = quickUkeire(c, cfg, belief, base);
+              c[cands[q]]++;
+              if (uk > bestU) { bestU = uk; pick = cands[q]; }
+            }
+          }
+          c[pick]--;
+          cur = Math.floor(bestKey / 16);
+          var validTenpai = (cur >> 4) === 0;
+          if (tenpaiAt < 0 && validTenpai) tenpaiAt = r + 1;
+          if (validTenpai && wonAny < 0) {
+            for (var o = 1; o < perRound; o++) {
+              var od = pool[r * perRound + o];
+              c[od]++;
+              var win = shanten(c, cfg) === -1 ? scoreOk(c, false) : null;
+              c[od]--;
+              if (win) { wonAny = r + 1; record(win); break; }
+            }
+          }
+          for (var o2 = 1; o2 < perRound; o2++) belief[pool[r * perRound + o2]]--;
+        }
+        if (wonTsumo > 0) tsumo[wonTsumo]++;
+        if (wonAny > 0) any[wonAny]++;
+        if (tenpaiAt >= 0) tenpai[tenpaiAt]++;
+      }
+    }
+    function cumulative(a) {
+      var out = [], run = 0;
+      for (var i2 = 0; i2 <= draws; i2++) { run += a[i2] || 0; out.push(run / sims); }
+      return out;
+    }
+    var pat = {};
+    Object.keys(patterns).forEach(function (n) { pat[n] = patterns[n] / sims; });
+    return {
+      sims: sims, draws: maxDraws, tsumo: cumulative(tsumo), any: cumulative(any), tenpai: cumulative(tenpai),
+      patterns: pat, avgPoints: wins ? ptsSum / wins : 0
+    };
+  }
+
+  var MJ = {
+    tileStr: tileStr, tileName: tileName, parseTile: parseTile, parseHand: parseHand,
+    toCounts: toCounts, countsToList: countsToList, handString: handString,
+    shanten: shanten, shantenStd: shantenStd, shantenChiitoi: shantenChiitoi,
+    shantenKokushi: shantenKokushi, handPhase: handPhase, handSize: handSize,
+    setsNeeded: setsNeeded, unseenCounts: unseenCounts, ukeire: ukeire,
+    pAtLeastOne: pAtLeastOne, dangerVs: dangerVs, readOpponent: readOpponent, discardRisk: discardRisk, tenpaiChance: tenpaiChance, analyze: analyze, simulate: simulate,
+    buildRoutes: buildRoutes, validDistance: validDistance, scoreHand: scoreHand,
+    winningTiles: winningTiles, claimOptions: claimOptions, meldType: meldType, minPts: minPts,
+    HONOR_GLYPHS: HONOR_GLYPHS, HONOR_NAMES: HONOR_NAMES, SUIT_NAMES: SUIT_NAMES
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = MJ;
+  else root.MJ = MJ;
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var MJ = window.MJ;
+  var SEATS = ['me', 'right', 'across', 'left'];
+  var OPPS = ['right', 'across', 'left'];
+  var LBL = { me: 'Saya', right: 'Kanan', across: 'Depan', left: 'Kiri' };
+  var SEAT_OFFSET = { me: 0, right: 1, across: 2, left: 3 };
+  var BEFORE = { me: 'left', right: 'me', across: 'right', left: 'across' }; // pemain sebelum X (kiri X)
+  var WIND_NAMES = ['East', 'South', 'West', 'North'];
+  var FLOWERS = [{ n: 1, g: '梅' }, { n: 2, g: '蘭' }, { n: 3, g: '菊' }, { n: 4, g: '竹' }];
+  var PRESETS = {
+    maje: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 83, scoring: true, minPoints: 3 },
+    riichi: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 70, scoring: false, minPoints: 0 },
+    tw: { sets: 5, sevenPairs: false, thirteenOrphans: false, wallStart: 55, scoring: false, minPoints: 0 }
+  };
+  var STORE = 'sempoa-mahjong-v1';
+  var SIMS = 300;
+  var CHUNK = 50;
+  var NEAR = 5;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function pct(x) {
+    if (x == null || isNaN(x)) return '—';
+    if (x >= 0.995 && x < 1) return '>99%';
+    if (x > 0 && x < 0.005) return '<1%';
+    return Math.round(x * 100) + '%';
+  }
+  function hash(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function name(t) { return MJ.tileName(t); }
+  function removeOne(arr, t) { var i = arr.indexOf(t); if (i >= 0) arr.splice(i, 1); return i >= 0; }
+  function removeLast(arr, t) { var i = arr.lastIndexOf(t); if (i >= 0) arr.splice(i, 1); return i >= 0; }
+  function multisetDiff(a, b) { // a - b
+    var c = b.slice(), out = [];
+    a.forEach(function (t) { if (!removeOne(c, t)) out.push(t); });
+    return out;
+  }
+  function tilesCode(list) { return list.map(MJ.tileStr).join(' '); }
+  // "2 3 4 Characters · 5 Dots · Red Dragon ×2" — nama tile seperti di buku Majé
+  function tilesText(list) {
+    var by = [[], [], []], hon = {}, parts = [];
+    list.slice().sort(function (a, b) { return a - b; }).forEach(function (t) {
+      if (t < 27) by[Math.floor(t / 9)].push(t % 9 + 1); else hon[t] = (hon[t] || 0) + 1;
+    });
+    by.forEach(function (nums, s) { if (nums.length) parts.push(nums.join(' ') + ' ' + (nums.length === 1 && nums[0] === 1 ? ['Character', 'Dot', 'Bamboo'][s] : MJ.SUIT_NAMES[s])); });
+    Object.keys(hon).forEach(function (t) { parts.push(MJ.HONOR_NAMES[t - 27] + (hon[t] > 1 ? ' ×' + hon[t] : '')); });
+    return parts.join(' · ');
+  }
+  function meldText(m) {
+    var s = m.slice().sort(function (a, b) { return a - b; });
+    if (s[0] !== s[s.length - 1]) return s.map(function (t) { return t % 9 + 1; }).join('-') + ' ' + MJ.SUIT_NAMES[Math.floor(s[0] / 9)];
+    return name(s[0]) + ' ×' + s.length;
+  }
+
+  /* ---------- tile faces (SVG, meniru biji mahjong asli) ---------- */
+  var COL = { b: '#1d4f9c', g: '#1b7a47', r: '#a3302a', ink: '#1a1c1a', face: '#f6f1e2', dg: '#12573a' };
+  var GLYPH_FONT = ' font-family="Noto Serif TC, Songti TC, PingFang TC, Hiragino Mincho ProN, serif" font-weight="700"';
+  var CN_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  function dot(x, y, r, c) {
+    var col = COL[c];
+    return '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + col + '"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="' + (r * 0.62).toFixed(2) + '" fill="' + COL.face + '"/>' +
+      '<circle cx="' + x + '" cy="' + y + '" r="' + (r * 0.34).toFixed(2) + '" fill="' + col + '"/>';
+  }
+  function stick(x, y, h, c, rot) {
+    var col = COL[c], half = h / 2;
+    return '<g transform="translate(' + x + ' ' + y + ')' + (rot ? ' rotate(' + rot + ')' : '') + '">' +
+      '<rect x="-1.9" y="' + (-half) + '" width="3.8" height="' + h + '" rx="1.9" fill="' + col + '"/>' +
+      '<rect x="-0.45" y="' + (-half + 1.4) + '" width="0.9" height="' + (h - 2.8) + '" rx="0.45" fill="' + COL.face + '" opacity="0.6"/>' +
+      '<rect x="-2.5" y="-0.75" width="5" height="1.5" rx="0.75" fill="' + col + '"/>' +
+      '</g>';
+  }
+  var DOT_LAYOUT = {
+    2: [[15, 11, 5.6, 'g'], [15, 29, 5.6, 'b']],
+    3: [[8, 9, 5, 'b'], [15, 20, 5, 'r'], [22, 31, 5, 'g']],
+    4: [[9, 12, 5, 'b'], [21, 12, 5, 'g'], [9, 28, 5, 'g'], [21, 28, 5, 'b']],
+    5: [[8.5, 10, 4.6, 'b'], [21.5, 10, 4.6, 'g'], [15, 20, 4.6, 'r'], [8.5, 30, 4.6, 'g'], [21.5, 30, 4.6, 'b']],
+    6: [[9.5, 8.5, 4.3, 'g'], [20.5, 8.5, 4.3, 'g'], [9.5, 22, 4.3, 'r'], [20.5, 22, 4.3, 'r'], [9.5, 31.5, 4.3, 'r'], [20.5, 31.5, 4.3, 'r']],
+    7: [[7.5, 6.8, 3.5, 'g'], [15, 10.4, 3.5, 'g'], [22.5, 14, 3.5, 'g'], [10, 24.5, 4, 'r'], [20, 24.5, 4, 'r'], [10, 33.2, 4, 'r'], [20, 33.2, 4, 'r']],
+    8: [[9.5, 7, 3.9, 'b'], [20.5, 7, 3.9, 'b'], [9.5, 15.7, 3.9, 'b'], [20.5, 15.7, 3.9, 'b'], [9.5, 24.3, 3.9, 'b'], [20.5, 24.3, 3.9, 'b'], [9.5, 33, 3.9, 'b'], [20.5, 33, 3.9, 'b']],
+    9: [[6.5, 9, 3.7, 'b'], [15, 9, 3.7, 'b'], [23.5, 9, 3.7, 'b'], [6.5, 20, 3.7, 'r'], [15, 20, 3.7, 'r'], [23.5, 20, 3.7, 'r'], [6.5, 31, 3.7, 'g'], [15, 31, 3.7, 'g'], [23.5, 31, 3.7, 'g']]
+  };
+  var STICK_LAYOUT = {
+    2: [[15, 11, 14, 'g'], [15, 29, 14, 'b']],
+    3: [[15, 11, 13, 'g'], [9.5, 29, 13, 'b'], [20.5, 29, 13, 'b']],
+    4: [[9.5, 11, 13, 'g'], [20.5, 11, 13, 'b'], [9.5, 29, 13, 'b'], [20.5, 29, 13, 'g']],
+    5: [[8, 11, 13, 'g'], [22, 11, 13, 'b'], [15, 20, 13, 'r'], [8, 29, 13, 'b'], [22, 29, 13, 'g']],
+    6: [[7.5, 11, 13, 'g'], [15, 11, 13, 'g'], [22.5, 11, 13, 'g'], [7.5, 29, 13, 'b'], [15, 29, 13, 'b'], [22.5, 29, 13, 'b']],
+    7: [[15, 7.5, 10, 'r'], [7.5, 20, 10, 'g'], [15, 20, 10, 'g'], [22.5, 20, 10, 'g'], [7.5, 32, 10, 'b'], [15, 32, 10, 'b'], [22.5, 32, 10, 'b']],
+    8: [[6, 11, 13, 'g'], [11.5, 11, 13, 'b', 14], [18.5, 11, 13, 'b', -14], [24, 11, 13, 'g'],
+        [6, 29, 13, 'g'], [11.5, 29, 13, 'b', -14], [18.5, 29, 13, 'b', 14], [24, 29, 13, 'g']],
+    9: [[7.5, 8, 10, 'g'], [15, 8, 10, 'r'], [22.5, 8, 10, 'g'], [7.5, 20, 10, 'g'], [15, 20, 10, 'r'], [22.5, 20, 10, 'g'], [7.5, 32, 10, 'g'], [15, 32, 10, 'r'], [22.5, 32, 10, 'g']]
+  };
+  var BIRD = '<ellipse cx="8.5" cy="27" rx="2.6" ry="8" transform="rotate(-38 8.5 27)" fill="' + COL.b + '"/>' +
+    '<ellipse cx="10.5" cy="31" rx="2.3" ry="7" transform="rotate(-68 10.5 31)" fill="' + COL.g + '"/>' +
+    '<circle cx="5.6" cy="21.6" r="1.1" fill="' + COL.r + '"/><circle cx="5" cy="29.4" r="1" fill="' + COL.r + '"/>' +
+    '<path d="M13 30 C 11 22, 14 14, 19 13 C 23 13, 24.5 19, 22 24.5 C 20 29, 16 31, 13 30 Z" fill="' + COL.g + '"/>' +
+    '<path d="M15 26.5 C 15 21.5, 18 18.5, 21.5 19.5 C 20.5 23.5, 18.5 26, 15 26.5 Z" fill="' + COL.dg + '"/>' +
+    '<circle cx="20" cy="10.5" r="3.4" fill="' + COL.g + '"/>' +
+    '<circle cx="21" cy="9.8" r="0.9" fill="' + COL.face + '"/>' +
+    '<path d="M23.1 10 L26.6 11.1 L23.1 12.1 Z" fill="' + COL.r + '"/>' +
+    '<path d="M18.6 7.4 L17.4 4.4 M20 7 L20 3.8 M21.4 7.4 L22.8 4.6" stroke="' + COL.r + '" stroke-width="0.9" stroke-linecap="round"/>' +
+    '<path d="M17 30.5 L16 36 M19.5 29.6 L20.2 36" stroke="' + COL.r + '" stroke-width="1.1" stroke-linecap="round"/>';
+  function faceInner(t) {
+    if (t >= 27) {
+      var h = t - 27;
+      if (h === 4) {
+        return '<rect x="5.5" y="6.5" width="19" height="27" rx="2.5" fill="none" stroke="' + COL.b + '" stroke-width="2"/>' +
+          '<rect x="8.3" y="9.3" width="13.4" height="21.4" rx="1.2" fill="none" stroke="' + COL.b + '" stroke-width="0.8"/>';
+      }
+      var col = h === 5 ? COL.g : h === 6 ? COL.r : COL.ink;
+      return '<text x="15" y="21" font-size="21" text-anchor="middle" dominant-baseline="central" fill="' + col + '"' + GLYPH_FONT + '>' + MJ.HONOR_GLYPHS[h] + '</text>';
+    }
+    var suit = Math.floor(t / 9), n = t % 9 + 1, out = '';
+    if (suit === 0) {
+      return '<text x="15" y="11" font-size="13.5" text-anchor="middle" dominant-baseline="central" fill="' + COL.ink + '"' + GLYPH_FONT + '>' + CN_NUM[n - 1] + '</text>' +
+        '<text x="15" y="28" font-size="16" text-anchor="middle" dominant-baseline="central" fill="' + COL.r + '"' + GLYPH_FONT + '>萬</text>';
+    }
+    if (suit === 1) {
+      if (n === 1) {
+        return '<circle cx="15" cy="20" r="11.5" fill="' + COL.g + '"/><circle cx="15" cy="20" r="9.6" fill="' + COL.face + '"/>' +
+          '<circle cx="15" cy="20" r="8" fill="none" stroke="' + COL.b + '" stroke-width="2.2" stroke-dasharray="2.1 1.4"/>' +
+          '<circle cx="15" cy="20" r="5" fill="' + COL.r + '"/><circle cx="15" cy="20" r="2.6" fill="' + COL.face + '"/><circle cx="15" cy="20" r="1.2" fill="' + COL.r + '"/>';
+      }
+      DOT_LAYOUT[n].forEach(function (d) { out += dot(d[0], d[1], d[2], d[3]); });
+      return out;
+    }
+    if (n === 1) return BIRD;
+    STICK_LAYOUT[n].forEach(function (d) { out += stick(d[0], d[1], d[2], d[3], d[4]); });
+    return out;
+  }
+  (function installSprite() {
+    var sym = '';
+    for (var t = 0; t < 34; t++) sym += '<symbol id="tf' + t + '" viewBox="0 0 30 40">' + faceInner(t) + '</symbol>';
+    var holder = document.createElement('div');
+    holder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false"><defs>' + sym + '</defs></svg>';
+    document.body.insertBefore(holder.firstChild, document.body.firstChild);
+  })();
+  function tileHTML(t, size, extra) {
+    var cls = 't' + (size ? ' ' + size : '') + (extra ? ' ' + extra : '');
+    return '<span class="' + cls + '" role="img" aria-label="' + esc(name(t)) + '"><span class="tile">' +
+      '<svg viewBox="0 0 30 40" aria-hidden="true" focusable="false"><use href="#tf' + t + '"/></svg></span></span>';
+  }
+  var FLOWER_ICON = {
+    1: '<g fill="#d9749b"><circle cx="10" cy="5" r="3.2"/><circle cx="14.8" cy="8.5" r="3.2"/><circle cx="13" cy="14" r="3.2"/><circle cx="7" cy="14" r="3.2"/><circle cx="5.2" cy="8.5" r="3.2"/></g><circle cx="10" cy="10" r="2.2" fill="#e6bd5c"/>',
+    2: '<g fill="#8c5bb8"><ellipse cx="10" cy="6" rx="2.6" ry="5"/><ellipse cx="6" cy="12" rx="2.4" ry="4.6" transform="rotate(-55 6 12)"/><ellipse cx="14" cy="12" rx="2.4" ry="4.6" transform="rotate(55 14 12)"/></g><circle cx="10" cy="11" r="1.8" fill="#e6bd5c"/><path d="M10 13 L10 19" stroke="#1b7a47" stroke-width="1.4" stroke-linecap="round"/>',
+    3: (function () {
+      var g = '';
+      for (var i = 0; i < 12; i++) g += '<ellipse cx="10" cy="4.2" rx="1.5" ry="4" transform="rotate(' + (i * 30) + ' 10 10)"/>';
+      return '<g fill="#e0a82e">' + g + '</g><circle cx="10" cy="10" r="2.4" fill="#c7771c"/>';
+    })(),
+    4: '<path d="M8 19 L8 2" stroke="#1b7a47" stroke-width="2" stroke-linecap="round"/><g fill="#2e9a5c"><ellipse cx="13" cy="6" rx="5" ry="1.8" transform="rotate(-25 13 6)"/><ellipse cx="13.5" cy="12" rx="5" ry="1.8" transform="rotate(-15 13.5 12)"/><ellipse cx="4" cy="10" rx="4" ry="1.6" transform="rotate(30 4 10)"/></g>'
+  };
+  function flowerSVG(n) {
+    return '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">' + FLOWER_ICON[n] + '</svg>';
+  }
+  var FLOWER_NAME = { 1: 'Flower 1', 2: 'Flower 2', 3: 'Flower 3', 4: 'Flower 4' };
+
+  /* ---------- state ---------- */
+  function emptyCur() {
+    return {
+      hand: [], drawn: null, lastIn: null,
+      melds: { me: [], right: [], across: [], left: [] },
+      ponds: { me: [], right: [], across: [], left: [] },
+      extra: [], myFlowers: [],
+      alert: { right: false, across: false, left: false },
+      wallAdjust: 0
+    };
+  }
+  function defaultCfg() {
+    return Object.assign({ preset: 'maje', tier: 'default', seatWind: 0, roundWind: 0 }, PRESETS.maje);
+  }
+  function normalize(st) {
+    var c = st.cfg || {};
+    if (c.preset === 'hk' || c.scoring == null) {
+      c = Object.assign(defaultCfg(), { tier: c.tier || 'default' });
+    }
+    if (c.seatWind == null) c.seatWind = 0;
+    if (c.roundWind == null) c.roundWind = 0;
+    st.cfg = c;
+    if (!st.cur.myFlowers) st.cur.myFlowers = [];
+    if (!st.undo) st.undo = [];
+    return st;
+  }
+  function newRound(cfg) {
+    return { v: 1, example: false, cfg: cfg || defaultCfg(), cur: emptyCur(), turn: 1, events: [], undo: [], seq: 0 };
+  }
+  function exampleRound() {
+    var st = newRound(defaultCfg());
+    st.example = true;
+    st.cfg.seatWind = 1; // Seat Wind South, Round Wind East
+    var T = function (list) { return list.map(MJ.parseTile); };
+    var order = {
+      me: T(['1z', '9m', '4z', '1p']),
+      right: T(['2z', '9s', '1m', '8p', '3z']),
+      across: T(['7z', '1s', '9p', '2p', '6z']),
+      left: T(['4z', '1m', '8s', '5z'])
+    };
+    for (var i = 0; i < 5; i++) {
+      SEATS.forEach(function (seat) {
+        var t = order[seat][i];
+        if (t == null) return;
+        st.events.push({ id: ++st.seq, turn: i + 1, type: 'discard', who: seat, tile: t, label: LBL[seat] + ' buang ' + MJ.tileName(t), at: 0 });
+      });
+      if (i === 2) st.events.push({ id: ++st.seq, turn: 3, type: 'meld', who: 'left', label: 'Kiri chi 4-5-6 Dots', at: 0 });
+    }
+    st.events.push({ id: ++st.seq, turn: 5, type: 'draw', who: 'me', label: 'Ambil 9 Dots', at: 0 });
+    st.cur.hand = MJ.parseHand('234m67m345p79p23s55s');
+    st.cur.drawn = MJ.parseTile('9p');
+    st.cur.lastIn = { from: 'wall' };
+    st.cur.myFlowers = [3];
+    st.cur.ponds = order;
+    st.cur.melds.left = [T(['4p', '5p', '6p'])];
+    st.turn = 5;
+    return st;
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var st = JSON.parse(raw);
+      if (!st || st.v !== 1 || !st.cur) return null;
+      return normalize(st);
+    } catch (e) { return null; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify(S)); }
+    catch (e) {
+      try {
+        S.events.forEach(function (ev) { delete ev.thumb; });
+        S.undo = S.undo.slice(-15);
+        localStorage.setItem(STORE, JSON.stringify(S));
+      } catch (e2) { /* penyimpanan browser tidak tersedia: tetap jalan di memori */ }
+    }
+  }
+
+  var S = load() || exampleRound();
+  var ui = {
+    selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false
+  };
+
+  function act(label, type, fn, extra) {
+    var snap = { cur: clone(S.cur), turn: S.turn, evLen: S.events.length };
+    var turnAt = S.turn;
+    var res = fn(S.cur);
+    if (res === false) return false;
+    S.undo.push(snap);
+    if (S.undo.length > 60) S.undo.shift();
+    S.events.push(Object.assign({ id: ++S.seq, turn: turnAt, type: type, label: label, at: Date.now() }, extra || {}));
+    save();
+    render();
+    return true;
+  }
+  function undo() {
+    var u = S.undo.pop();
+    if (!u) { toast('Belum ada langkah untuk diurungkan'); return; }
+    S.cur = u.cur; S.turn = u.turn; S.events.length = u.evLen;
+    ui.selHand = ui.selPond = ui.selMeld = null;
+    save(); render();
+    toast('Langkah terakhir diurungkan');
+  }
+
+  /* ---------- derived ---------- */
+  function flowerMatch() {
+    var mine = S.cfg.seatWind + 1;
+    return S.cur.myFlowers.filter(function (n) { return n === mine; }).length;
+  }
+  function cfgNow() {
+    return {
+      sets: S.cfg.sets, melds: S.cur.melds.me, sevenPairs: S.cfg.sevenPairs, thirteenOrphans: S.cfg.thirteenOrphans,
+      scoring: !!S.cfg.scoring, minPoints: S.cfg.minPoints, seatWind: S.cfg.seatWind, roundWind: S.cfg.roundWind,
+      flowers: S.cur.myFlowers.length, flowerMatch: flowerMatch()
+    };
+  }
+  function windOf(seat) { return (S.cfg.seatWind + SEAT_OFFSET[seat]) % 4; }
+  function visibleCounts() {
+    var v = new Array(34).fill(0);
+    SEATS.forEach(function (s) {
+      S.cur.ponds[s].forEach(function (t) { v[t]++; });
+      S.cur.melds[s].forEach(function (m) { m.forEach(function (t) { v[t]++; }); });
+    });
+    S.cur.extra.forEach(function (t) { v[t]++; });
+    return v;
+  }
+  function kongCount() {
+    var k = 0;
+    SEATS.forEach(function (s) { S.cur.melds[s].forEach(function (m) { if (m.length === 4) k++; }); });
+    return k;
+  }
+  function rawWallEstimate(phase) {
+    var pondN = SEATS.reduce(function (a, s) { return a + S.cur.ponds[s].length; }, 0);
+    return S.cfg.wallStart - pondN - kongCount() - (phase === 'discard' ? 1 : 0);
+  }
+  function wallLeft(phase) { return Math.max(0, rawWallEstimate(phase) + (S.cur.wallAdjust || 0)); }
+  function drawsFromWall(w) { return Math.max(1, Math.round(w / 4)); }
+  function lastDiscard() {
+    for (var i = S.events.length - 1; i >= 0; i--) {
+      var ev = S.events[i];
+      if (ev.type === 'discard') return ev;
+      if (ev.type !== 'edit') return null;
+    }
+    return null;
+  }
+
+  function analysis() {
+    var cfg = cfgNow();
+    var c = MJ.toCounts(S.cur.hand);
+    var phase = MJ.handPhase(c, cfg);
+    var wl = wallLeft(phase);
+    var state = {
+      hand: S.cur.hand, visible: visibleCounts(),
+      opps: {
+        right: { pond: S.cur.ponds.right, melds: S.cur.melds.right, alert: S.cur.alert.right, seatWind: windOf('right') },
+        across: { pond: S.cur.ponds.across, melds: S.cur.melds.across, alert: S.cur.alert.across, seatWind: windOf('across') },
+        left: { pond: S.cur.ponds.left, melds: S.cur.melds.left, alert: S.cur.alert.left, seatWind: windOf('left') }
+      },
+      cfg: cfg, drawsLeft: drawsFromWall(wl),
+      selfDraw: !S.cur.lastIn || S.cur.lastIn.from === 'wall'
+    };
+    var an = MJ.analyze(state);
+    an.cfg = cfg; an.counts = c; an.wall = wl; an.state = state;
+    // saran klaim untuk buangan lawan terakhir
+    var ld = lastDiscard();
+    if (phase === 'draw' && ld && ld.who !== 'me' && ld.tile != null) {
+      var pond = S.cur.ponds[ld.who];
+      if (pond[pond.length - 1] === ld.tile) {
+        an.claim = { from: ld.who, t: ld.tile, options: MJ.claimOptions(state, ld.tile, ld.who) };
+      }
+    }
+    return an;
+  }
+
+  /* ---------- simulation queue ---------- */
+  var simCache = new Map();
+  var simGen = 0, simProgress = 0;
+  function simKeyFor(counts13, an) {
+    return counts13.join('') + '|' + an.unseen.join('') + '|' + an.drawsLeft + '|' + JSON.stringify(an.cfg);
+  }
+  function simJobs(an) {
+    var jobs = [];
+    if (an.phase === 'draw' && an.shanten >= 0) {
+      jobs.push({ key: simKeyFor(an.counts, an), counts: an.counts.slice() });
+    } else if (an.phase === 'discard' && an.options) {
+      var seen = {};
+      var picks = an.options.slice(0, 3);
+      if (an.rec) picks.push(an.rec);
+      if (an.safest && an.threat >= 0.3) picks.push(an.safest);
+      picks.forEach(function (o) {
+        if (seen[o.t]) return; seen[o.t] = 1;
+        var c = an.counts.slice(); c[o.t]--;
+        jobs.push({ key: simKeyFor(c, an), counts: c, t: o.t });
+      });
+    }
+    jobs.forEach(function (j) { j.cfg = an.cfg; j.unseen = an.unseen; j.draws = an.drawsLeft; });
+    return jobs;
+  }
+  function mergeSim(a, b, na, nb) {
+    function mix(x, y) { return x.map(function (v, i) { return (v * na + (y[i] || 0) * nb) / (na + nb); }); }
+    var pat = {};
+    Object.keys(a.patterns).concat(Object.keys(b.patterns)).forEach(function (k) {
+      pat[k] = ((a.patterns[k] || 0) * na + (b.patterns[k] || 0) * nb) / (na + nb);
+    });
+    var wa = a.any[a.draws] * na, wb = b.any[b.draws] * nb;
+    return {
+      sims: na + nb, draws: a.draws, tsumo: mix(a.tsumo, b.tsumo), any: mix(a.any, b.any), tenpai: mix(a.tenpai, b.tenpai),
+      patterns: pat, avgPoints: (wa + wb) ? (a.avgPoints * wa + b.avgPoints * wb) / (wa + wb) : 0
+    };
+  }
+  function runSims(jobs) {
+    var gen = ++simGen;
+    var todo = jobs.filter(function (j) { return !simCache.has(j.key); });
+    if (!todo.length) return;
+    var ji = 0, done = 0, acc = null;
+    function step() {
+      if (gen !== simGen) return;
+      var j = todo[ji];
+      var n = Math.min(CHUNK, SIMS - done);
+      var r = MJ.simulate(j.counts.slice(), j.cfg, j.unseen, j.draws, n, hash(j.key) + done);
+      acc = acc ? mergeSim(acc, r, done, n) : r;
+      done += n;
+      simProgress = (ji + done / SIMS) / todo.length;
+      if (done >= SIMS) {
+        simCache.set(j.key, acc);
+        acc = null; done = 0; ji++;
+        renderAdvice(lastAn);
+      } else {
+        var bar = document.querySelector('#simBar i');
+        if (bar) bar.style.width = Math.round(simProgress * 100) + '%';
+      }
+      if (ji < todo.length) setTimeout(step, 0);
+    }
+    setTimeout(step, 40);
+  }
+  function simFor(an, t) {
+    var c = an.counts.slice();
+    if (t != null) c[t]--;
+    return simCache.get(simKeyFor(c, an)) || null;
+  }
+
+  /* ---------- labels ---------- */
+  function shantenLabel(s) {
+    if (s < 0) return 'Tangan lengkap';
+    if (s === 0) return 'Siap menang';
+    return s + ' langkah ke siap';
+  }
+  function scoringOn(an) { return an && an.scoring && an.M > 0; }
+  function vdLabel(v, an) {
+    if (!scoringOn(an)) return shantenLabel(v);
+    if (v >= 99) return 'Belum ada jalur ' + an.M + ' poin';
+    if (v < 0) return 'Menang sah';
+    if (v === 0) return 'Siap menang sah';
+    return v + ' langkah ke menang sah';
+  }
+  function vdShort(v, an) {
+    if (v >= 99) return 'buntu';
+    if (v < 0) return 'lengkap';
+    if (v === 0) return 'siap';
+    return v + ' langkah';
+  }
+  function riskPill(r) {
+    var cls = r < 0.02 ? 'safe' : r < 0.05 ? 'ok' : r < 0.1 ? 'mid' : 'risk';
+    return '<span class="pill ' + cls + '">risiko ' + pct(r) + '</span>';
+  }
+  function needChips(tiles) {
+    if (!tiles.length) return '<span class="muted small">Tidak ada tile yang langsung mendekatkan ke menang sah.</span>';
+    return '<div class="need">' + tiles.map(function (x) {
+      return '<span class="n' + (x.n ? '' : ' zero') + '">' + tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span></span>';
+    }).join('') + '</div>';
+  }
+  function patternList(patterns) {
+    return patterns.map(function (p) { return p[0] + ' ' + p[1]; }).join(' · ');
+  }
+
+  /* ---------- render: rack ---------- */
+  function rackOrder(an) {
+    var hand = S.cur.hand.slice();
+    var drawn = (S.cur.drawn != null && an.phase === 'discard' && hand.indexOf(S.cur.drawn) >= 0) ? S.cur.drawn : null;
+    if (drawn != null) removeOne(hand, drawn);
+    hand.sort(function (a, b) { return a - b; });
+    return { list: drawn != null ? hand.concat([drawn]) : hand, drawnIdx: drawn != null ? hand.length : -1 };
+  }
+  function renderRoundRow(an) {
+    $('roundRow').hidden = !S.cfg.scoring;
+    $('roundWind').value = String(S.cfg.roundWind);
+    $('seatWind').value = String(S.cfg.seatWind);
+    var mine = S.cfg.seatWind + 1;
+    $('flowers').innerHTML = FLOWERS.map(function (f) {
+      var on = S.cur.myFlowers.indexOf(f.n) >= 0;
+      return '<button type="button" class="flower' + (f.n === mine ? ' match' : '') + '" data-flower="' + f.n + '" aria-pressed="' + on + '" aria-label="' + FLOWER_NAME[f.n] + (f.n === mine ? ', cocok dengan Seat Wind kamu (Suitable Flower)' : '') + '" title="' + FLOWER_NAME[f.n] + '">' + flowerSVG(f.n) + '<small>' + f.n + '</small></button>';
+    }).join('');
+  }
+  function renderRack(an) {
+    var ord = rackOrder(an);
+    var n = ord.list.length;
+    var wide = window.innerWidth >= 640;
+    var cols = wide ? Math.max(n, 10) : Math.max(7, Math.ceil(n / 2));
+    var rack = $('rack');
+    rack.style.setProperty('--cols', cols);
+    var optMap = {};
+    if (an.options) an.options.forEach(function (o) { optMap[o.t] = o; });
+    var best = an.best, recT = an.rec ? an.rec.t : null;
+    rack.innerHTML = n ? ord.list.map(function (t, i) {
+      var cls = 'slot', q = '';
+      var o = optMap[t];
+      if (o && best) {
+        var val = o.vd > best.vd ? 0.08 : (best.ukeire ? o.ukeire / best.ukeire : 1);
+        q = ' style="--q:' + Math.max(0.08, Math.min(1, val)).toFixed(2) + '"';
+        if (t === recT) cls += ' best';
+        else if (o.vd > best.vd) cls += ' worse';
+      }
+      if (ui.selHand === t) cls += ' sel';
+      var label = name(t) + (o ? ', kalau dibuang: ' + vdLabel(o.vd, an) + ', ' + o.ukeire + ' tile berguna' : '');
+      return '<button type="button" class="' + cls + '" data-t="' + t + '" aria-label="' + esc(label) + '">' +
+        tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
+    }).join('') : '<p class="muted small" style="grid-column:1/-1;margin:0">Belum ada tile. Ketuk <b>+ Ketik tile</b> atau foto tanganmu.</p>';
+
+    var myMelds = S.cur.melds.me;
+    $('myMelds').innerHTML = myMelds.map(function (m) {
+      return '<span class="meld" title="Set terbuka">' + m.map(function (t) { return tileHTML(t, 'md'); }).join('') + '</span>';
+    }).join('');
+    $('myMelds').hidden = !myMelds.length;
+
+    var S0 = MJ.setsNeeded(an.cfg);
+    var need13 = 3 * S0 + 1;
+    $('handCount').textContent = n + ' tile' + (myMelds.length ? ' + ' + myMelds.length + ' set terbuka' : '') + ' · normal ' + need13 + '/' + (need13 + 1);
+
+    var st = '';
+    if (an.phase === 'bad') {
+      st = '<span class="pill mid">Jumlah belum pas</span><span class="small muted">Butuh ' + need13 + ' tile (menunggu tarikan) atau ' + (need13 + 1) + ' (baru ambil).</span>';
+    } else if (an.complete && an.validWin) {
+      st = '<span class="pill gold">Menang sah · ' + an.score.points + ' poin</span><span class="small">Nyatakan HU.</span>';
+    } else {
+      var v = an.phase === 'discard' ? an.vdNow : an.vd;
+      var sh = an.phase === 'discard' ? an.shantenNow : an.shanten;
+      st = '<span class="pill' + (v === 0 && an.phase === 'draw' ? ' gold' : '') + '">' + vdLabel(v, an) + '</span>';
+      if (scoringOn(an) && sh < v) {
+        st += '<span class="small muted">Tangan lengkap biasa ' + (sh <= 0 ? (sh < 0 ? 'sudah jadi' : 'tinggal 1 tile') : sh + ' langkah') + ', tapi belum ' + an.M + ' poin.</span>';
+      } else if (an.phase === 'discard') {
+        st += '<span class="small muted">Giliranmu membuang. Tanda emas = saran buang.</span>';
+      } else {
+        st += '<span class="small muted num">' + an.ukeire.total + ' tile berguna masih di luar</span>';
+      }
+    }
+    if (an.over.length) st += '<span class="pill risk">Tercatat lebih dari 4: ' + esc(tilesText(an.over)) + '</span>';
+    $('statusLine').innerHTML = st;
+
+    var ra = $('rackActions');
+    if (ui.selHand != null && S.cur.hand.indexOf(ui.selHand) >= 0) {
+      var t = ui.selHand;
+      ra.innerHTML = (an.phase === 'discard' ? '<button class="btn primary" type="button" data-act="discard">Buang ' + esc(name(t)) + '</button>' : '') +
+        '<button class="btn" type="button" data-act="remove">Hapus dari tangan</button>' +
+        '<button class="btn ghost" type="button" data-act="cancel">Batal</button>';
+      ra.hidden = false;
+    } else {
+      ra.hidden = true; ra.innerHTML = '';
+    }
+  }
+
+  /* ---------- render: advice ---------- */
+  function chartSVG(sim) {
+    var n = sim.draws;
+    if (!n) return '';
+    var W = 320, H = 132, L = 32, R = 40, T = 10, B = 22;
+    var x = function (i) { return L + (i / n) * (W - L - R); };
+    var y = function (p) { return T + (1 - p) * (H - T - B); };
+    var g = '';
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (p) {
+      g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(p) + '" y2="' + y(p) + '" stroke="rgba(214,232,220,' + (p === 0 ? 0.3 : 0.1) + ')" stroke-width="1"/>';
+      if (p === 0 || p === 0.5 || p === 1) g += '<text x="' + (L - 6) + '" y="' + (y(p) + 3.5) + '" text-anchor="end">' + (p * 100) + '%</text>';
+    });
+    [1, Math.max(1, Math.round(n / 2)), n].filter(function (v, i, a) { return a.indexOf(v) === i; }).forEach(function (tk) {
+      g += '<text x="' + x(tk) + '" y="' + (H - 6) + '" text-anchor="middle">' + tk + '</text>';
+    });
+    function path(arr) {
+      var d = '';
+      for (var i = 0; i <= n; i++) d += (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(arr[i] || 0).toFixed(1);
+      return d;
+    }
+    var area = path(sim.any) + 'L' + x(n) + ' ' + y(0) + 'L' + x(0) + ' ' + y(0) + 'Z';
+    var endAny = sim.any[n] || 0, endTs = sim.tsumo[n] || 0;
+    var ya = y(endAny), yt = y(endTs);
+    if (Math.abs(ya - yt) < 12) { if (ya <= yt) yt = ya + 12; else ya = yt + 12; }
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Peluang menang sah per tarikan">' +
+      g +
+      '<path d="' + area + '" fill="rgba(220,180,90,0.16)"/>' +
+      '<path d="' + path(sim.any) + '" fill="none" stroke="#dcb45a" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '<path d="' + path(sim.tsumo) + '" fill="none" stroke="#f1ead6" stroke-width="1.6" stroke-dasharray="4 3" stroke-linejoin="round"/>' +
+      '<circle cx="' + x(n) + '" cy="' + y(endAny) + '" r="3.2" fill="#dcb45a"/>' +
+      '<circle cx="' + x(n) + '" cy="' + y(endTs) + '" r="2.6" fill="#f1ead6"/>' +
+      '<text x="' + (x(n) + 7) + '" y="' + (ya + 3.5) + '" style="fill:#f0cf7e;font-weight:600">' + pct(endAny) + '</text>' +
+      '<text x="' + (x(n) + 7) + '" y="' + (yt + 3.5) + '" style="fill:#f1ead6">' + pct(endTs) + '</text>' +
+      '</svg>' +
+      '<div class="legend"><span style="--c:#dcb45a">termasuk dari buangan lawan</span><span style="--c:#f1ead6">tarik sendiri</span></div>' +
+      '<div class="note-line">Sumbu bawah: jumlah tarikanmu dari sekarang. Hanya kemenangan yang cukup poin yang dihitung. Asumsi: game berjalan sampai dinding habis dan buangan lawan acak.</div>';
+  }
+  function simBlock(sim) {
+    if (sim) return chartSVG(sim);
+    return '<div class="small muted">Menjalankan ' + SIMS + ' simulasi game…</div><div class="progress" id="simBar"><i style="width:' + Math.round(simProgress * 100) + '%"></i></div>';
+  }
+  function endOf(sim, k) { return sim ? sim[k][sim.draws] : null; }
+  function atOf(sim, k, n) { return sim ? sim[k][Math.min(n, sim.draws)] : null; }
+
+  function routesBlock(an, sim) {
+    if (!scoringOn(an) || !an.routeList) return '';
+    var rows = an.routeList.slice(0, 4);
+    var h = '<div><div class="sec-head" style="margin-bottom:4px"><span class="eyebrow">Pola incaran · minimal ' + an.M + ' poin</span></div>';
+    if (!rows.length) {
+      h += '<p class="small muted" style="margin:0">Belum ada pola yang bisa mencapai ' + an.M + ' poin dengan tile yang tersisa.</p></div>';
+      return h;
+    }
+    h += '<div class="routes">' + rows.map(function (r, i) {
+      return '<div class="route' + (i === 0 ? ' top' : '') + '"><div><div class="nm">' + esc(r.name) + '</div>' +
+        '<div class="sub">dijamin ' + r.g + ' poin · <span class="num">' + r.uk + '</span> tile mendekatkan</div></div>' +
+        '<div class="d">' + vdShort(r.d, an) + '<small>ke selesai</small></div></div>';
+    }).join('') + '</div>';
+    if (sim && sim.patterns) {
+      var pats = Object.keys(sim.patterns).map(function (k) { return [k, sim.patterns[k]]; })
+        .filter(function (x) { return x[1] >= 0.005; })
+        .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 5);
+      if (pats.length) {
+        h += '<div style="margin-top:8px"><div class="eyebrow" style="margin-bottom:6px">Peluang menang per pola (simulasi)</div><div class="chips">' +
+          pats.map(function (p) { return '<span class="pill">' + esc(p[0]) + ' <span class="num">' + pct(p[1]) + '</span></span>'; }).join('') +
+          (sim.avgPoints ? '<span class="pill">rata-rata <span class="num">' + sim.avgPoints.toFixed(1) + '</span> poin</span>' : '') +
+          '</div></div>';
+      }
+    }
+    return h + '</div>';
+  }
+
+  function waitsBlock(an, waits) {
+    if (!waits || !waits.length) return '';
+    var M = an.M, sc = scoringOn(an);
+    return '<div><div class="eyebrow" style="margin-bottom:6px">Tile yang memenangkan' + (sc ? ' dan poinnya' : '') + '</div><div class="waits">' +
+      waits.map(function (w) {
+        var tag = '';
+        if (sc) {
+          if (w.tsumo < M) tag = '<span class="pill risk">kurang poin</span>';
+          else if (w.ron < M) tag = '<span class="pill mid">sah hanya tarik sendiri</span>';
+          else tag = '<span class="pill safe">sah</span>';
+        }
+        return '<div class="wait">' + tileHTML(w.t, 'sm') + '<span class="num">×' + w.n + '</span>' +
+          (sc ? '<span>tarik sendiri <b class="num">' + w.tsumo + '</b> · dari buangan <b class="num">' + w.ron + '</b> poin</span>' : '') + tag + '</div>';
+      }).join('') + '</div></div>';
+  }
+
+  function claimBlock(an) {
+    var cl = an.claim;
+    if (!cl || !cl.options.length) return '';
+    var h = '<div class="claim"><div class="eyebrow">Buangan ' + LBL[cl.from] + ' · bisa kamu ambil</div>';
+    cl.options.forEach(function (o, i) {
+      var txt, btn;
+      if (o.type === 'hu') {
+        txt = o.valid ? '<b>HU! Menang ' + o.points + ' poin</b> · ' + esc(patternList(o.patterns))
+          : 'Tangan jadi, tapi hanya ' + o.points + ' poin (minimum ' + an.M + ') — belum sah.';
+        btn = o.valid ? '<button class="btn primary small" type="button" data-claim="' + i + '">Nyatakan HU</button>' : '';
+      } else {
+        var label = { pong: 'Pong', kong: 'Kong', chi: 'Chi' }[o.type] + ' ' + meldText(o.tiles);
+        var after = o.type === 'kong' ? ', lalu ambil tile ganti' : (o.discard >= 0 ? ', lalu buang ' + esc(name(o.discard)) : '');
+        txt = o.better
+          ? '<b>' + label + ' disarankan</b>: jarak ke menang sah ' + vdShort(o.cur, an) + ' → ' + vdShort(o.vd, an) + after + '.'
+          : label + ' tidak disarankan: jarak ' + vdShort(o.cur, an) + ' → ' + vdShort(o.vd, an) + (scoringOn(an) ? ', dan tangan jadi terbuka (hilang Concealed Hand).' : '.');
+        btn = '<button class="btn small' + (o.better ? ' primary' : '') + '" type="button" data-claim="' + i + '">' + label.split(' ')[0] + '</button>';
+      }
+      h += '<div class="copt"><p>' + txt + '</p>' + btn + '</div>';
+    });
+    h += '<div class="note-line">Prioritas rebutan: Hu &gt; Kong/Pong &gt; Chi. Chi hanya dari pemain kiri.</div></div>';
+    return h;
+  }
+
+  var lastAn = null;
+  function renderAdvice(an) {
+    if (!an) return;
+    var box = $('advice');
+    var k = an.drawsLeft;
+    $('drawsInfo').textContent = an.phase === 'bad' ? '' : '≈ ' + an.wall + ' tile di dinding · ' + k + ' tarikan lagi untukmu';
+    var h = '';
+
+    if (an.phase === 'bad') {
+      var S0 = MJ.setsNeeded(an.cfg), need = 3 * S0 + 1, have = S.cur.hand.length;
+      h += '<div class="rec"><div class="what" style="grid-column:1/-1"><span class="eyebrow">Mulai mencatat</span>' +
+        '<strong>' + (have < need ? 'Masukkan ' + (need - have) + ' tile lagi' : 'Kelebihan ' + (have - need - 1) + ' tile') + '</strong>' +
+        '<span class="muted small">Tanganmu tercatat ' + have + ' tile. Hitungan jalan saat ada ' + need + ' tile (menunggu tarikan) atau ' + (need + 1) + ' tile (baru ambil). Foto tanganmu, atau ketik satu per satu.</span></div></div>' +
+        '<div class="row"><button class="btn primary" type="button" data-act="pad-hand">+ Ketik tile tangan</button></div>';
+      box.innerHTML = h;
+      return;
+    }
+
+    if (an.complete && an.validWin) {
+      var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
+      h += '<div class="win"><span class="eyebrow" style="color:inherit">Menang sah · ' + (selfDraw ? 'tarik sendiri' : 'dari buangan ' + LBL[S.cur.lastIn.from]) + '</span>' +
+        '<strong>Nyatakan HU — ' + an.score.points + ' poin</strong><ul>' +
+        an.score.patterns.map(function (p) { return '<li>' + esc(p[0]) + ' · ' + p[1] + '</li>'; }).join('') + '</ul>' +
+        '<span class="small">' + (selfDraw ? 'Ketiga lawan membayar poin ke kamu.' : 'Hanya ' + LBL[S.cur.lastIn.from] + ' (pembuang) yang membayar.') + '</span></div>';
+      h += '<p class="note-line">Setelah game selesai, mulai game baru di Pengaturan. Kalau kamu dealer dan menang, kamu tetap dealer.</p>';
+      box.innerHTML = h;
+      return;
+    }
+
+    if (an.phase === 'draw') {
+      var sim = simFor(an, null);
+      var tenpai = an.vd === 0;
+      var waits = an.ukeire.tiles;
+      h += claimBlock(an);
+      h += '<div class="rec"><div class="what" style="grid-column:1/-1">' +
+        '<span class="eyebrow">' + (tenpai ? 'Siap menang' : 'Menunggu tarikan') + '</span>' +
+        '<strong>' + (tenpai && waits.length ? 'Tunggu ' + waits.map(function (x) { return name(x.t); }).join(' atau ') : vdLabel(an.vd, an)) + '</strong>' +
+        '<span class="muted small">' + (tenpai
+          ? an.ukeire.total + ' tile yang bisa memenangkan (cukup poin) masih di luar' + (an.ukeire.total === 0 ? ' — tunggumu mati, pertimbangkan ganti bentuk.' : '.')
+          : an.ukeire.total + ' tile berguna masih di luar dari ' + an.U + ' tile yang belum terlihat.') + '</span></div></div>';
+      var near = Math.min(NEAR, k);
+      h += '<div class="stats">' +
+        '<div class="stat"><span class="v num">' + pct(an.pNext) + '</span><span class="k">tarikan berikut ' + (tenpai ? 'menang' : 'berguna') + '</span></div>' +
+        (tenpai
+          ? '<div class="stat"><span class="v num">' + pct(an.pWithin) + '</span><span class="k">menang tarik sendiri dalam ' + k + ' tarikan</span></div>'
+          : '<div class="stat"><span class="v num">' + pct(atOf(sim, 'any', near)) + '</span><span class="k">menang sah ≈ dalam ' + near + ' tarikan</span></div>') +
+        '<div class="stat"><span class="v num gold">' + pct(endOf(sim, 'any')) + '</span><span class="k">menang sah ≈ sebelum dinding habis (tarik sendiri ' + pct(endOf(sim, 'tsumo')) + ')</span></div>' +
+        '</div>';
+      h += an.waits ? waitsBlock(an, an.waits) : needChips(waits);
+      h += threatLine(an);
+      h += routesBlock(an, sim);
+      h += simBlock(sim);
+      h += '<div class="row"><button class="btn primary" type="button" data-act="pad-hand">+ Masukkan tile yang kamu ambil</button></div>';
+      box.innerHTML = h;
+      return;
+    }
+
+    // phase discard
+    var best = an.best, rec = an.rec || best;
+    var bsim = simFor(an, rec.t), asim = simFor(an, best.t);
+    if (an.complete && !an.validWin) {
+      h += '<div class="readout"><div class="eyebrow">Tangan lengkap, belum sah</div><div>Baru ' + an.score.points + ' poin (' + esc(patternList(an.score.patterns)) + '). Minimum ' + an.M + ' poin, jadi lanjutkan membentuk pola.</div></div>';
+    }
+    var mode = an.mode || 'attack';
+    var who = an.threatWho, rd = who ? an.reads[who] : null;
+    var readName = rd && rd.reads[0] ? rd.reads[0].name : '';
+    var modeLabel = { attack: 'Serang', careful: 'Hati-hati', fold: 'Bertahan' }[mode];
+    var why;
+    if (mode === 'fold') {
+      why = 'Tanganmu masih ' + vdShort(best.vd, an) + ' lagi, sementara ' + LBL[who] + ' kemungkinan sudah siap (≈ ' + pct(an.threat) + ')' +
+        (readName ? ' dan sepertinya kejar ' + esc(readName) : '') + '. Buang tile paling aman dulu, lanjut menyerang kalau keadaan membaik.';
+    } else if (mode === 'careful') {
+      why = LBL[who] + ' mungkin sudah siap (≈ ' + pct(an.threat) + ')' + (readName ? ', sepertinya kejar ' + esc(readName) : '') +
+        '. Tile ini menjaga jarak ke menang sah tetap sama, tapi risikonya lebih kecil (' + pct(rec.risk) + ' vs ' + pct(best.risk) + ').';
+    } else {
+      var keeps = rec.vd === an.vdNow;
+      why = (keeps ? 'Tetap ' : 'Jadi ') + vdLabel(rec.vd, an).toLowerCase() + ' · ' + rec.ukeire + ' tile ' + (rec.vd === 0 ? 'penentu menang' : 'berguna') + ' masih di luar' +
+        (an.threat >= 0.3 ? '. Risiko kena Hu kecil (' + pct(rec.risk) + ').' : '.');
+    }
+    h += '<div class="rec">' + tileHTML(rec.t, 'lg') +
+      '<div class="what"><span class="eyebrow">Saran buang · <span class="mode mode-' + mode + '">' + modeLabel + '</span></span><strong>' + esc(name(rec.t)) + '</strong>' +
+      '<span class="muted small">' + why + '</span></div></div>';
+    var nearD = Math.min(NEAR, k);
+    h += '<div class="stats">' +
+      '<div class="stat"><span class="v num">' + pct(rec.pNext) + '</span><span class="k">tarikan berikut ' + (rec.vd === 0 ? 'menang' : 'berguna') + '</span></div>' +
+      (rec.vd === 0
+        ? '<div class="stat"><span class="v num">' + pct(rec.pWithin) + '</span><span class="k">menang tarik sendiri dalam ' + k + ' tarikan</span></div>'
+        : '<div class="stat"><span class="v num">' + pct(atOf(bsim, 'any', nearD)) + '</span><span class="k">menang sah ≈ dalam ' + nearD + ' tarikan</span></div>') +
+      '<div class="stat"><span class="v num gold">' + pct(endOf(bsim, 'any')) + '</span><span class="k">menang sah ≈ sebelum dinding habis (tarik sendiri ' + pct(endOf(bsim, 'tsumo')) + ')</span></div>' +
+      '<div class="stat"><span class="v num">' + pct(rec.risk) + '</span><span class="k">risiko buangan ini langsung bikin lawan Hu</span></div>' +
+      '</div>';
+    if (an.waits && (rec.vd === 0 || rec.shanten === 0)) h += waitsBlock(an, an.waits);
+    else h += '<div><div class="eyebrow" style="margin-bottom:6px">Tile yang kamu cari</div>' + needChips(rec.tiles) + '</div>';
+    h += '<div class="row"><button class="btn primary" type="button" data-act="discard-best" data-t="' + rec.t + '">Buang ' + esc(name(rec.t)) + '</button>' +
+      '<span class="small muted">atau ketuk tile lain di rak</span></div>';
+    if (rec.t !== best.t) {
+      h += '<div class="readout"><div class="eyebrow">Kalau tetap mau menyerang</div><div class="row">' + tileHTML(best.t, 'md') +
+        '<div><b>Buang ' + esc(name(best.t)) + '</b> ' + riskPill(best.risk) +
+        '<div class="small muted">' + vdLabel(best.vd, an) + ' · ' + best.ukeire + ' tile berguna · menang sah ≈ ' + pct(endOf(asim, 'any')) +
+        (best.riskVs ? ' · bahaya terhadap ' + LBL[best.riskVs] + ': ' + esc(best.riskWhy) : '') + '</div></div></div>' +
+        '<div class="row"><button class="btn small" type="button" data-act="discard-best" data-t="' + best.t + '">Buang ' + esc(name(best.t)) + '</button></div></div>';
+    }
+    h += threatLine(an);
+    h += routesBlock(an, bsim);
+    h += simBlock(bsim);
+
+    var opts = an.options;
+    var shown = ui.showAllOpts ? opts : opts.slice(0, 5);
+    if (!ui.showAllOpts && shown.indexOf(rec) < 0) shown = shown.slice(0, 4).concat([rec]);
+    h += '<div class="sec-head" style="margin-top:4px"><span class="eyebrow">Semua pilihan buang</span><span class="spacer"></span><span class="small muted">kanan: menang ≈ · risiko kena Hu</span></div>';
+    h += '<div class="opts">' + shown.map(function (o) {
+      var osim = simFor(an, o.t);
+      var open = ui.openOpt === o.t;
+      return '<button class="opt" type="button" data-opt="' + o.t + '" aria-expanded="' + open + '">' + tileHTML(o.t, 'md') +
+        '<div><div class="l1">' + vdShort(o.vd, an) + ' · <span class="num">' + o.ukeire + '</span> ' + (o.vd === 0 ? 'penentu' : 'berguna') + (o === rec ? ' · <span class="mode mode-' + mode + '">saran</span>' : '') + '</div>' +
+        '<div class="l2"><span class="num">' + pct(o.pNext) + '</span> tarikan berikut</div></div>' +
+        '<div class="r"><span class="num">' + (osim ? pct(endOf(osim, 'any')) : '—') + '</span>' + riskPill(o.risk) + '</div></button>' +
+        (open ? '<div class="opt-detail">' + needChips(o.tiles) + '<div class="muted">Risiko kena Hu ' + pct(o.risk) +
+          (o.riskVs ? ', paling bahaya terhadap ' + LBL[o.riskVs] + ' (' + esc(o.riskWhy) + ')' : '') + '.</div>' +
+          '<div><button class="btn small" type="button" data-act="discard-best" data-t="' + o.t + '">Buang ' + esc(name(o.t)) + '</button></div></div>' : '');
+    }).join('') + '</div>';
+    if (opts.length > 5) {
+      h += '<div><button class="btn small ghost" type="button" data-act="toggle-opts">' + (ui.showAllOpts ? 'Tampilkan 5 teratas' : 'Lihat semua ' + opts.length + ' pilihan') + '</button></div>';
+    }
+    h += '<p class="note-line">Risiko = perkiraan peluang buangan itu langsung membuat lawan Hu, dari buangan, set terbuka, dan pola yang sepertinya dikejar lawan. Kalau lawan terlihat siap, tandai "Siap?" di Ingatan meja supaya hitungannya lebih tepat.</p>';
+    box.innerHTML = h;
+  }
+
+  function threatClass(p) { return p >= 0.5 ? 'risk' : p >= 0.25 ? 'mid' : ''; }
+  function threatLine(an) {
+    if (!an.reads || an.threat < 0.15) return '';
+    return '<div><div class="eyebrow" style="margin-bottom:6px">Ancaman lawan</div><div class="chips">' + OPPS.map(function (o) {
+      var r = an.reads[o];
+      return '<span class="pill ' + threatClass(r.threat) + '">' + LBL[o] + ' siap ≈ <span class="num">' + pct(r.threat) + '</span>' +
+        (r.reads[0] ? ' · ' + esc(r.reads[0].name) : '') + '</span>';
+    }).join('') + '</div></div>';
+  }
+
+  /* ---------- render: seats ---------- */
+  function renderSeats() {
+    $('seats').innerHTML = SEATS.map(function (seat) {
+      var pond = S.cur.ponds[seat], melds = S.cur.melds[seat];
+      var alert = seat !== 'me' && S.cur.alert[seat];
+      var selP = ui.selPond && ui.selPond.seat === seat ? ui.selPond.idx : -1;
+      var selM = ui.selMeld && ui.selMeld.seat === seat ? ui.selMeld.idx : -1;
+      var w = windOf(seat);
+      var h = '<div class="seat' + (alert ? ' alert' : '') + '">';
+      h += '<div class="hd"><strong>' + LBL[seat] + '</strong><span class="muted small wind" title="Seat Wind">' + tileHTML(27 + w, 'xs') + WIND_NAMES[w] + '</span>' +
+        '<span class="muted small num" title="jumlah buangan">' + pond.length + ' buang</span><span class="spacer"></span>' +
+        (seat === 'me' ? '' : '<button class="toggle" type="button" data-alert="' + seat + '" aria-pressed="' + alert + '">' + (alert ? 'Siap!' : 'Siap?') + '</button>') + '</div>';
+      var rdo = seat !== 'me' && lastAn && lastAn.reads ? lastAn.reads[seat] : null;
+      if (rdo) {
+        var top = rdo.reads[0];
+        h += '<div class="opp-read"><span class="pill ' + threatClass(rdo.threat) + '">siap ≈ <span class="num">' + pct(rdo.threat) + '</span></span>' +
+          (top ? '<span class="small">Sepertinya: <b>' + esc(top.name) + '</b></span>' : '') + '</div>';
+        if (top && top.avoid) h += '<div class="small muted">Hindari: ' + esc(top.avoid) + '</div>';
+        if (rdo.notes.length) h += '<div class="small muted">' + esc(rdo.notes.join('; ')) + '</div>';
+        if (rdo.threat >= 0.3 && S.cur.hand.length) {
+          var mine = S.cur.hand.filter(function (t, i, a) { return a.indexOf(t) === i; })
+            .sort(function (a, b) { return rdo.wait[a] - rdo.wait[b]; }).slice(0, 3);
+          h += '<div class="opp-safe small muted">Aman dari tanganmu: ' + mine.map(function (t) { return tileHTML(t, 'xs'); }).join('') + '</div>';
+        }
+      }
+      if (melds.length) {
+        h += '<div class="melds">' + melds.map(function (m, i) {
+          return '<button type="button" class="meld" data-meld="' + seat + ':' + i + '" aria-label="Set ' + esc(meldText(m)) + '" style="border:0;' + (selM === i ? 'box-shadow:0 0 0 2px var(--brass-2);' : '') + '">' +
+            m.map(function (t) { return tileHTML(t, 'xs'); }).join('') + '</button>';
+        }).join('') + '</div>';
+      }
+      h += '<div class="pond">' + (pond.length ? pond.map(function (t, i) {
+        return '<button type="button" data-pond="' + seat + ':' + i + '" class="' + (selP === i ? 'sel' : '') + '">' + tileHTML(t, 'sm') + '</button>';
+      }).join('') : '<span class="muted small">Belum ada buangan</span>') + '</div>';
+      if (selP >= 0) {
+        h += '<div class="row"><button class="btn small" type="button" data-act="pond-remove">Hapus ' + esc(name(pond[selP])) + '</button><button class="btn small ghost" type="button" data-act="pond-cancel">Batal</button></div>';
+      }
+      if (selM >= 0) {
+        h += '<div class="row"><button class="btn small" type="button" data-act="meld-remove">Hapus set ini</button><button class="btn small ghost" type="button" data-act="meld-cancel">Batal</button></div>';
+      }
+      return h + '</div>';
+    }).join('');
+  }
+
+  /* ---------- render: abacus ---------- */
+  function renderAbacus(an) {
+    var vis = visibleCounts();
+    var c = MJ.toCounts(S.cur.hand);
+    var h = '';
+    for (var row = 0; row < 4; row++) {
+      var n = row < 3 ? 9 : 7;
+      for (var i = 0; i < 9; i++) {
+        if (i >= n) { h += '<span></span>'; continue; }
+        var t = row * 9 + i;
+        var inHand = c[t], seen = vis[t], left = Math.max(0, 4 - inHand - seen);
+        var beads = '';
+        for (var b = 0; b < 4; b++) beads += '<i class="' + (b < inHand ? 'h' : b < inHand + seen ? 'v' : '') + '"></i>';
+        var over = inHand + seen > 4;
+        h += '<div class="bead-cell' + (over ? ' over' : '') + (left === 0 ? ' zero' : '') + '" title="' + esc(name(t)) + ': ' + left + ' belum terlihat">' +
+          tileHTML(t) + '<span class="beads">' + beads + '</span><span class="num">' + (over ? '!' + (inHand + seen) : left) + '</span></div>';
+      }
+    }
+    $('abacus').innerHTML = h;
+    $('unseenTotal').textContent = (an ? an.U : 0) + ' tile belum terlihat';
+  }
+
+  /* ---------- render: history ---------- */
+  function renderHistory() {
+    var byTurn = {};
+    S.events.forEach(function (ev) { (byTurn[ev.turn] = byTurn[ev.turn] || []).push(ev); });
+    var turns = Object.keys(byTurn).map(Number).sort(function (a, b) { return b - a; });
+    $('hist').innerHTML = turns.length ? turns.map(function (tn) {
+      return '<div class="hturn"><span class="tn">Giliran ' + tn + '</span><div class="hevents">' + byTurn[tn].map(function (ev) {
+        return '<span class="hev' + (ev.who === 'me' ? ' me' : '') + '">' + (ev.thumb ? '<img src="' + ev.thumb + '" alt="">' : '') + esc(ev.label) + '</span>';
+      }).join('') + '</div></div>';
+    }).join('') : '<p class="muted small" style="margin:0">Belum ada langkah tercatat. Setiap ambil, buang, set terbuka (Chi/Pong/Kong), Flower, dan foto akan muncul di sini.</p>';
+    $('undoTop').disabled = !S.undo.length;
+    $('dockUndo').disabled = !S.undo.length;
+    $('sheetUndo').disabled = !S.undo.length;
+  }
+
+  /* ---------- render: settings ---------- */
+  function renderSettings(an) {
+    $('preset').value = S.cfg.preset || 'custom';
+    $('sets').value = String(S.cfg.sets);
+    $('scoring').checked = !!S.cfg.scoring;
+    $('minPoints').value = String(S.cfg.minPoints || 0);
+    $('minPoints').disabled = !S.cfg.scoring;
+    $('sevenPairs').checked = !!S.cfg.sevenPairs;
+    $('orphans').checked = !!S.cfg.thirteenOrphans;
+    if (document.activeElement !== $('wallStart')) $('wallStart').value = S.cfg.wallStart;
+    if (document.activeElement !== $('wallLeft')) {
+      $('wallLeft').value = S.cur.wallAdjust ? an.wall : '';
+      $('wallLeft').placeholder = 'otomatis: ' + an.wall;
+    }
+    $('tier').value = S.cfg.tier || 'default';
+    $('resetRow').innerHTML = ui.confirmReset
+      ? '<span class="small">Hapus catatan game ini?</span><button class="btn small primary" type="button" id="resetYes">Ya, mulai baru</button><button class="btn small ghost" type="button" id="resetNo">Batal</button>'
+      : '<button class="btn" type="button" id="resetBtn">Mulai game baru</button>';
+  }
+
+  function render() {
+    var an = analysis();
+    lastAn = an;
+    $('turnChip').textContent = 'Giliran ' + S.turn;
+    $('exampleBanner').hidden = !S.example;
+    renderRoundRow(an);
+    renderRack(an);
+    renderAdvice(an);
+    renderSeats();
+    renderAbacus(an);
+    renderHistory();
+    renderSettings(an);
+    if (!$('sheet').hidden) renderSheet(an);
+    runSims(simJobs(an));
+  }
+
+  /* ---------- actions ---------- */
+  function discardFromHand(t) {
+    act('Buang ' + name(t), 'discard', function (cur) {
+      if (!removeOne(cur.hand, t)) return false;
+      cur.ponds.me.push(t);
+      cur.drawn = null; cur.lastIn = null;
+      S.turn++;
+    }, { who: 'me', tile: t });
+    ui.selHand = null;
+    ui.zone = 'pond:right';
+    render();
+    toast('Buang ' + name(t) + '. Berikutnya: catat buangan Kanan.');
+  }
+  function addTile(zone, t) {
+    var an = lastAn;
+    if (zone === 'hand') {
+      var isDraw = an && an.phase === 'draw';
+      act((isDraw ? 'Ambil ' : 'Tangan + ') + name(t), isDraw ? 'draw' : 'edit', function (cur) {
+        cur.hand.push(t);
+        cur.drawn = isDraw ? t : null;
+        cur.lastIn = { from: 'wall' };
+      }, { who: 'me', tile: t });
+      if (isDraw) { closeSheet(); toast('Ambil ' + name(t) + '. Lihat saran buang.'); }
+      return;
+    }
+    if (zone.indexOf('pond:') === 0) {
+      var seat = zone.slice(5);
+      act(LBL[seat] + ' buang ' + name(t), 'discard', function (cur) { cur.ponds[seat].push(t); }, { who: seat, tile: t });
+      var next = { right: 'pond:across', across: 'pond:left', left: 'hand' }[seat];
+      var cl = lastAn && lastAn.claim;
+      var hu = cl && cl.options.some(function (o) { return o.type === 'hu' && o.valid; });
+      var better = cl && cl.options.some(function (o) { return o.type !== 'hu' && o.better; });
+      if (hu || better) {
+        closeSheet();
+        toast(hu ? 'HU! Buangan ' + LBL[seat] + ' memenangkan tanganmu' : 'Buangan ' + LBL[seat] + ' bisa kamu ambil — lihat saran');
+        return;
+      }
+      if (next) { ui.zone = next; renderSheet(lastAn); toast(LBL[seat] + ' buang ' + name(t) + ' · lanjut ' + zoneLabel(next)); }
+      return;
+    }
+    if (zone === 'extra') {
+      act('Tile terbuka + ' + name(t), 'edit', function (cur) { cur.extra.push(t); });
+      return;
+    }
+    if (zone === 'meld') {
+      if (ui.draft.length >= 4) { toast('Set maksimal 4 tile'); return; }
+      ui.draft.push(t);
+      renderSheet(lastAn);
+    }
+  }
+  function meldKind(m) {
+    var same = m.every(function (x) { return x === m[0]; });
+    if (same) return m.length === 4 ? 'kong' : 'pong';
+    var s = m.slice().sort(function (a, b) { return a - b; });
+    if (m.length === 3 && s[0] < 27 && Math.floor(s[0] / 9) === Math.floor(s[2] / 9) && s[1] === s[0] + 1 && s[2] === s[0] + 2) return 'chi';
+    return 'set';
+  }
+  // Catat set terbuka. claimed = {from, t} kalau tile diambil dari buangan.
+  function recordMeld(who, m, claimed, closed) {
+    var kind = meldKind(m);
+    var sorted = kind === 'chi' ? m.slice().sort(function (a, b) { return a - b; }) : m.slice();
+    if (kind === 'chi' && claimed && BEFORE[who] !== claimed.from) {
+      toast('Aturan Majé: chi hanya dari pemain kiri. Tetap dicatat, cek lagi kalau salah.');
+    }
+    act(LBL[who] + ' ' + kind + ' ' + meldText(sorted) + (claimed ? ' (dari ' + LBL[claimed.from] + ')' : '') + (closed ? ' tertutup' : ''), 'meld', function (cur) {
+      if (claimed) removeLast(cur.ponds[claimed.from], claimed.t);
+      if (who === 'me') {
+        var toRemove = m.slice();
+        if (claimed) removeOne(toRemove, claimed.t);
+        else if (!closed) toRemove.pop();
+        toRemove.forEach(function (t) { removeOne(cur.hand, t); });
+        cur.drawn = null; cur.lastIn = null;
+      }
+      cur.melds[who].push(sorted);
+    }, { who: who });
+    return kind;
+  }
+  function saveMeld() {
+    var m = ui.draft.slice(), who = ui.meldWho, closed = $('closedKong').checked;
+    if (m.length < 3) return;
+    var last = lastDiscard(), claimed = null;
+    if (!closed && last && last.who !== who) {
+      var lt = S.cur.ponds[last.who][S.cur.ponds[last.who].length - 1];
+      if (lt != null && m.indexOf(lt) >= 0) claimed = { from: last.who, t: lt };
+    }
+    var kind = recordMeld(who, m, claimed, closed);
+    ui.draft = [];
+    $('closedKong').checked = false;
+    if (who === 'me') {
+      if (kind === 'kong') { ui.zone = 'hand'; renderSheet(lastAn); toast('Kong tercatat. Masukkan tile pengganti yang kamu ambil.'); }
+      else { closeSheet(); toast('Set tercatat. Sekarang buang satu tile dari rak.'); }
+    } else {
+      ui.zone = 'pond:' + who;
+      renderSheet(lastAn);
+      toast('Set ' + LBL[who] + ' tercatat · lanjut buangan ' + LBL[who]);
+    }
+  }
+  function doClaim(i) {
+    var cl = lastAn && lastAn.claim;
+    if (!cl) return;
+    var o = cl.options[i];
+    if (!o) return;
+    if (o.type === 'hu') {
+      act('HU dari ' + LBL[cl.from] + ' (' + name(cl.t) + ') · ' + o.points + ' poin', 'win', function (cur) {
+        removeLast(cur.ponds[cl.from], cl.t);
+        cur.hand.push(cl.t);
+        cur.drawn = cl.t;
+        cur.lastIn = { from: cl.from };
+      }, { who: 'me', tile: cl.t });
+      toast('HU! ' + o.points + ' poin');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    var kind = recordMeld('me', o.tiles, { from: cl.from, t: cl.t }, false);
+    toast(kind === 'kong' ? 'Kong tercatat. Masukkan tile pengganti yang kamu ambil.' : 'Tercatat. Sekarang buang: saran ada di atas.');
+    if (kind === 'kong') openSheet('hand');
+  }
+
+  /* ---------- sheet ---------- */
+  var ZONES = [
+    ['hand', 'Tangan'], ['pond:right', 'Buang Kanan'], ['pond:across', 'Buang Depan'], ['pond:left', 'Buang Kiri'],
+    ['pond:me', 'Buang saya'], ['meld', 'Set terbuka'], ['extra', 'Lainnya']
+  ];
+  function zoneLabel(z) { for (var i = 0; i < ZONES.length; i++) if (ZONES[i][0] === z) return ZONES[i][1]; return z; }
+  function openSheet(zone) {
+    if (zone) ui.zone = zone;
+    else if (lastAn && lastAn.phase === 'bad') ui.zone = 'hand';
+    $('sheet').hidden = false;
+    $('dock').hidden = true;
+    renderSheet(lastAn);
+  }
+  function closeSheet() {
+    $('sheet').hidden = true;
+    $('dock').hidden = false;
+  }
+  function renderSheet(an) {
+    $('zones').innerHTML = ZONES.map(function (z) {
+      return '<button type="button" class="toggle" data-zone="' + z[0] + '" aria-pressed="' + (ui.zone === z[0]) + '">' + z[1] + '</button>';
+    }).join('');
+    var hint = '';
+    var S0 = MJ.setsNeeded(an.cfg), need = 3 * S0 + 1;
+    if (ui.zone === 'hand') {
+      hint = an.phase === 'draw' ? 'Ketuk tile yang baru kamu ambil. Lembar ini tertutup otomatis supaya kamu bisa lihat saran buang. Dapat Flower? Catat di baris Flower.'
+        : an.phase === 'bad' ? 'Ketuk tile tanganmu satu per satu (' + S.cur.hand.length + '/' + need + ').'
+        : 'Tanganmu sudah lengkap untuk membuang. Buang lewat rak, atau ketuk di sini untuk koreksi.';
+    } else if (ui.zone === 'pond:me') {
+      hint = 'Mencatat buanganmu tanpa lewat rak, mis. saat mulai mencatat di tengah game.';
+    } else if (ui.zone.indexOf('pond:') === 0) {
+      hint = 'Ketuk tile yang dibuang ' + LBL[ui.zone.slice(5)] + '. Setelah itu otomatis pindah ke pemain berikutnya, kecuali buangannya bisa kamu ambil.';
+    } else if (ui.zone === 'meld') {
+      hint = 'Pilih pemilik set, ketuk 3–4 tile, lalu Simpan set. Tile yang baru dibuang lawan otomatis dipindah dari buangannya. Chi hanya boleh dari pemain kiri.';
+    } else {
+      hint = 'Tile terbuka lain yang bukan buangan.';
+    }
+    $('zoneHint').textContent = hint;
+    var mb = $('meldBox');
+    mb.hidden = ui.zone !== 'meld';
+    if (!mb.hidden) {
+      $('meldWho').innerHTML = SEATS.map(function (s) {
+        return '<button type="button" data-who="' + s + '" aria-pressed="' + (ui.meldWho === s) + '">' + LBL[s] + '</button>';
+      }).join('');
+      $('draft').innerHTML = ui.draft.length
+        ? ui.draft.map(function (t) { return tileHTML(t, 'md'); }).join('') + '<span class="small muted">' + (ui.draft.length >= 3 ? meldKind(ui.draft) : '…') + '</span>'
+        : '<span class="muted small">Ketuk 3 atau 4 tile di bawah</span>';
+      $('draftSave').disabled = ui.draft.length < 3;
+    }
+    var rows = [['Characters', 0, 9], ['Dots', 9, 9], ['Bamboo', 18, 9], ['Honors · Winds & Dragons', 27, 7]];
+    var unseen = an ? an.unseen : new Array(34).fill(4);
+    $('pad').innerHTML = rows.map(function (r) {
+      var h = '<span class="suit-lbl">' + r[0] + '</span>';
+      for (var i = 0; i < r[2]; i++) {
+        var t = r[1] + i;
+        h += '<button type="button" class="key" data-key="' + t + '" aria-label="' + esc(name(t)) + ', ' + unseen[t] + ' belum terlihat">' + tileHTML(t) + '<span class="num">' + unseen[t] + '</span></button>';
+      }
+      return h;
+    }).join('');
+  }
+
+  /* ---------- photo reading ---------- */
+  var sample = null, photoReady = false, photoCtl = null, maxImages = 1;
+  function setPhotoMsg(text, work) {
+    var el = $('photoMsg');
+    el.textContent = text;
+    el.className = 'photo-msg' + (work ? ' work' : '');
+  }
+  function setPhotoEnabled(on) {
+    photoReady = on;
+    $('camBtn').disabled = !on;
+    $('galBtn').disabled = !on;
+  }
+  (function initPhoto() {
+    if (!window.claude || typeof window.claude.use !== 'function') {
+      setPhotoMsg('Pembaca foto aktif saat halaman ini dibuka lewat Claude di HP (versi Artifact). Di file lokal ini, pakai tombol Ketik tile.');
+      return;
+    }
+    window.claude.use('sample').then(function (s) {
+      if (!s) { setPhotoMsg('Pembaca foto tidak tersedia di tampilan ini. Pakai tombol Ketik tile.'); return; }
+      sample = s;
+      return s.limits().catch(function () { return null; }).then(function (lim) {
+        if (!lim || !lim.images) { setPhotoMsg('Tampilan ini belum bisa mengirim foto. Pakai tombol Ketik tile.'); return; }
+        maxImages = lim.images.maxCount || 1;
+        if (lim.images.mediaTypes && lim.images.mediaTypes.length) {
+          $('camInput').accept = lim.images.mediaTypes.join(',');
+          $('galInput').accept = lim.images.mediaTypes.join(',');
+        }
+        setPhotoEnabled(true);
+        setPhotoMsg('Foto tangan dari dekat untuk hasil paling akurat. Foto meja untuk menyalin semua buangan. Foto pertama akan minta izin memakai Claude di akunmu.');
+      });
+    }).catch(function () { setPhotoMsg('Pembaca foto tidak tersedia. Pakai tombol Ketik tile.'); });
+  })();
+
+  function statePrompt() {
+    var c = S.cur;
+    function list(a) { return a.length ? tilesCode(a) : '(empty)'; }
+    function melds(a) { return a.length ? a.map(function (m) { return '[' + tilesCode(m) + ']'; }).join(' ') : '(none)'; }
+    return [
+      'hand: ' + list(c.hand),
+      'myMelds: ' + melds(c.melds.me),
+      'myFlowers: ' + (c.myFlowers.length ? c.myFlowers.join(' ') : '(none)'),
+      'ponds.me: ' + list(c.ponds.me),
+      'ponds.right: ' + list(c.ponds.right),
+      'ponds.across: ' + list(c.ponds.across),
+      'ponds.left: ' + list(c.ponds.left),
+      'melds.right: ' + melds(c.melds.right),
+      'melds.across: ' + melds(c.melds.across),
+      'melds.left: ' + melds(c.melds.left)
+    ].join('\n');
+  }
+  function visionPrompt(scope, nImages) {
+    var S0 = MJ.setsNeeded(cfgNow()), need = 3 * S0 + 1;
+    var scopeText = scope === 'hand'
+      ? 'SCOPE: close-up of the player\'s OWN hand (and possibly their own exposed melds and flowers). Fill only "hand", "myMelds" and "myFlowers". Set every other area to null.'
+      : 'SCOPE: the whole table or a large part of it. Fill every area you can see. Include the player\'s own hand only if its tile faces are visible.';
+    return [
+      'You are the tile reader for a mahjong helper app (Hong Kong rules). The attached ' + (nImages > 1 ? nImages + ' photos were' : 'photo was') + ' taken by a player at a physical mahjong table, from their own seat.',
+      'Identify every tile you can see clearly and report it as JSON.',
+      '',
+      'Tile codes:',
+      '- 1m..9m = Characters / Wan: a Chinese numeral (一二三四五六七八九) above the character 萬.',
+      '- 1p..9p = Dots / Circles / Tong: count the circles. 1p is one large circle.',
+      '- 1s..9s = Bamboo / Tiao: count the sticks. 1s usually shows a bird instead of a stick.',
+      '- 1z East 東, 2z South 南, 3z West 西, 4z North 北, 5z White dragon 白 (blank face or a blue frame), 6z Green dragon 發, 7z Red dragon 中.',
+      '- Flower tiles never go in hand, melds or ponds. Report the player\'s own exposed flowers in "myFlowers" by number: plum 梅 = 1, orchid 蘭 = 2, chrysanthemum 菊 = 3, bamboo 竹 = 4 (seasons: spring 春 = 1, summer 夏 = 2, autumn 秋 = 3, winter 冬 = 4).',
+      '',
+      'Seats relative to the photographer: "me" = nearest edge (bottom of the photo), "right", "across" (far side), "left".',
+      'Ponds are the face-up discards in front of each seat. Exposed melds are face-up groups of 3-4 tiles set aside at the edge of a seat.',
+      scopeText,
+      'The player\'s concealed hand normally has ' + need + ' tiles, or ' + (need + 1) + ' right after drawing.',
+      '',
+      'Previously recorded state, from earlier turns. Use it only to settle tiles that are hard to read; when the photo clearly disagrees, the photo wins:',
+      statePrompt(),
+      '',
+      'Reply with only one JSON object in this shape:',
+      '{"hand": ["1m","2m"], "myMelds": [["5p","5p","5p"]], "myFlowers": [3], "ponds": {"me": [], "right": [], "across": [], "left": []}, "melds": {"right": [], "across": [], "left": []}, "extra": [], "unsure": ["right pond, 5th tile: 3s or 2s"], "note": "one short sentence in Indonesian about photo quality or what is missing"}',
+      'Use null for an area that is not visible in the photo, and [] for an area that is visible but empty. List each pond in discard order (that player\'s first discard first) when you can tell, otherwise left to right as seen.'
+    ].join('\n');
+  }
+  function parseTiles(arr, bad) {
+    if (!Array.isArray(arr)) return null;
+    var out = [];
+    arr.forEach(function (x) {
+      var id = MJ.parseTile(x);
+      if (id >= 0) out.push(id);
+      else if (x != null && String(x).trim()) bad.push(String(x));
+    });
+    return out;
+  }
+  function parseMelds(arr, bad) {
+    if (!Array.isArray(arr)) return null;
+    return arr.map(function (m) { return parseTiles(m, bad) || []; }).filter(function (m) { return m.length >= 3 && m.length <= 4; });
+  }
+  var FLOWER_GLYPH = { '梅': 1, '蘭': 2, '兰': 2, '菊': 3, '竹': 4, '春': 1, '夏': 2, '秋': 3, '冬': 4 };
+  function parseFlowers(arr) {
+    if (!Array.isArray(arr)) return null;
+    var out = [];
+    arr.forEach(function (x) {
+      var n = typeof x === 'number' ? x : (FLOWER_GLYPH[String(x).trim()] || parseInt(x, 10));
+      if (n >= 1 && n <= 4) out.push(n);
+    });
+    return out.slice(0, 8);
+  }
+  function applyVision(data, scope, thumb) {
+    if (!data || typeof data !== 'object') throw { code: 'invalid_json' };
+    var bad = [], lines = [];
+    var ponds = data.ponds && typeof data.ponds === 'object' ? data.ponds : {};
+    var omelds = data.melds && typeof data.melds === 'object' ? data.melds : {};
+    var r = {
+      hand: parseTiles(data.hand, bad),
+      myMelds: parseMelds(data.myMelds, bad),
+      myFlowers: parseFlowers(data.myFlowers),
+      ponds: {}, melds: {},
+      extra: scope === 'hand' ? null : parseTiles(data.extra, bad)
+    };
+    SEATS.forEach(function (s) { r.ponds[s] = scope === 'hand' ? null : parseTiles(ponds[s], bad); });
+    OPPS.forEach(function (s) { r.melds[s] = scope === 'hand' ? null : parseMelds(omelds[s], bad); });
+    var turnBump = 0;
+    var ok = act('Foto ' + (scope === 'hand' ? 'tangan' : 'meja'), 'photo', function (cur) {
+      if (r.hand && r.hand.length) {
+        var plus = multisetDiff(r.hand, cur.hand), minus = multisetDiff(cur.hand, r.hand);
+        lines.push('Tangan: ' + r.hand.length + ' tile' + (plus.length || minus.length
+          ? ' (' + (plus.length ? '+' + tilesText(plus) : '') + (plus.length && minus.length ? ', ' : '') + (minus.length ? '−' + tilesText(minus) : '') + ')'
+          : ', sama dengan catatan'));
+        cur.hand = r.hand;
+        cur.drawn = plus.length === 1 ? plus[0] : null;
+        if (plus.length === 1) cur.lastIn = { from: 'wall' };
+      }
+      if (r.myMelds) cur.melds.me = r.myMelds;
+      if (r.myFlowers && r.myFlowers.length >= cur.myFlowers.length) {
+        if (r.myFlowers.length !== cur.myFlowers.length) lines.push('Flower: ' + r.myFlowers.join(', '));
+        cur.myFlowers = r.myFlowers;
+      }
+      SEATS.forEach(function (s) {
+        var np = r.ponds[s];
+        if (!np) return;
+        var old = cur.ponds[s];
+        if (np.length >= old.length) {
+          var added = multisetDiff(np, old);
+          if (added.length) lines.push('Buangan ' + LBL[s] + ': +' + added.length + ' (' + tilesText(added) + ')');
+          if (s === 'me' && np.length > old.length) turnBump = np.length - old.length;
+          cur.ponds[s] = np;
+        } else {
+          lines.push('Buangan ' + LBL[s] + ': foto menunjukkan ' + np.length + ' tile, catatan lama (' + old.length + ') tetap dipakai');
+        }
+      });
+      OPPS.forEach(function (s) { if (r.melds[s]) cur.melds[s] = r.melds[s]; });
+      if (r.extra) cur.extra = r.extra;
+      S.turn += turnBump;
+    }, { who: 'me', thumb: thumb || undefined });
+    if (ok) S.example = false;
+    save();
+    var unsure = Array.isArray(data.unsure) ? data.unsure.filter(Boolean).slice(0, 6) : [];
+    var h = '<div class="eyebrow">Terbaca dari foto</div>';
+    h += lines.length ? '<ul>' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : '<div>Tidak ada perubahan dari catatan.</div>';
+    if (unsure.length) h += '<div class="muted">Kurang yakin: ' + esc(unsure.join(' · ')) + '</div>';
+    if (bad.length) h += '<div class="muted">Tidak dikenali: ' + esc(bad.join(', ')) + '</div>';
+    if (data.note) h += '<div class="muted">' + esc(String(data.note)) + '</div>';
+    h += '<div class="small muted">Ada yang salah? Ketuk tile di rak atau buangan untuk menghapus, tambah lewat Ketik tile, atau Urungkan.</div>';
+    $('readout').innerHTML = h;
+    $('readout').hidden = false;
+    render();
+  }
+  function makeThumb(file) {
+    return new Promise(function (resolve) {
+      try {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var w = 160, h = Math.round(img.naturalHeight / img.naturalWidth * w) || 120;
+            var cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', 0.6));
+          } catch (e) { resolve(null); }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = function () { resolve(null); URL.revokeObjectURL(url); };
+        img.src = url;
+      } catch (e) { resolve(null); }
+    });
+  }
+  var ERR = {
+    not_granted: 'Izin memakai Claude ditolak, jadi foto tidak bisa dibaca di tampilan ini. Pakai Ketik tile.',
+    sampling_disabled: 'Claude tidak tersedia untuk akun ini. Pakai Ketik tile.',
+    images_unavailable: 'Tampilan ini tidak bisa mengirim foto. Pakai Ketik tile.',
+    rate_limited: 'Terlalu banyak permintaan. Tunggu sebentar, lalu foto lagi.',
+    session_expired: 'Sesi Claude habis. Masuk lagi, lalu foto ulang.',
+    image_rejected: 'Foto tidak bisa dipakai (format atau ukuran). Coba foto lain.',
+    refused: 'Foto ini tidak bisa dibaca. Coba foto yang lebih dekat ke tile.',
+    empty_completion: 'Tidak ada jawaban. Coba foto lebih dekat dan terang.',
+    invalid_json: 'Hasil baca tidak terbaca rapi. Coba sekali lagi.',
+    upstream_error: 'Koneksi terganggu. Coba foto lagi.'
+  };
+  var PERMANENT = { not_granted: 1, sampling_disabled: 1, images_unavailable: 1, not_declared: 1, capability_disabled: 1, capability_removed: 1 };
+  function readPhotos(files) {
+    if (!sample || !photoReady || !files || !files.length) return;
+    var list = Array.prototype.slice.call(files, 0, maxImages);
+    var scope = ui.scope;
+    photoCtl = new AbortController();
+    setPhotoEnabled(false);
+    $('stopBtn').hidden = false;
+    setPhotoMsg('Membaca ' + (list.length > 1 ? list.length + ' foto' : 'foto') + '… biasanya 10–60 detik.', true);
+    var thumbP = makeThumb(list[0]);
+    sample.json(visionPrompt(scope, list.length), {
+      images: list.length === 1 ? list[0] : list,
+      modelTier: S.cfg.tier === 'complex' ? 'complex' : 'default',
+      signal: photoCtl.signal,
+      cache: false
+    }).then(function (data) {
+      return thumbP.then(function (thumb) {
+        applyVision(data, scope, thumb);
+        setPhotoMsg('Selesai. Periksa hasilnya di bawah.');
+        toast('Foto terbaca');
+      });
+    }).catch(function (e) {
+      var code = e && e.code;
+      if (code === 'cancelled') { setPhotoMsg('Dibatalkan.'); return; }
+      setPhotoMsg(ERR[code] || 'Foto gagal dibaca. Coba lagi.');
+      if (PERMANENT[code]) { sample = null; }
+    }).then(function () {
+      $('stopBtn').hidden = true;
+      if (sample) setPhotoEnabled(true);
+      photoCtl = null;
+      $('camInput').value = ''; $('galInput').value = '';
+    });
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('button');
+    if (!el) return;
+    var d = el.dataset;
+    if (el.classList.contains('slot')) {
+      var t = +d.t;
+      ui.selHand = ui.selHand === t ? null : t;
+      ui.selPond = ui.selMeld = null;
+      renderRack(lastAn);
+      return;
+    }
+    if (d.act) {
+      switch (d.act) {
+        case 'discard': if (ui.selHand != null) discardFromHand(ui.selHand); return;
+        case 'discard-best': discardFromHand(+d.t); return;
+        case 'remove':
+          var rt = ui.selHand;
+          act('Koreksi: hapus ' + name(rt), 'edit', function (cur) {
+            if (!removeOne(cur.hand, rt)) return false;
+            if (cur.drawn === rt && cur.hand.indexOf(rt) < 0) cur.drawn = null;
+          }, { who: 'me' });
+          ui.selHand = null; render(); return;
+        case 'cancel': ui.selHand = null; renderRack(lastAn); return;
+        case 'pad-hand': openSheet('hand'); return;
+        case 'toggle-opts': ui.showAllOpts = !ui.showAllOpts; renderAdvice(lastAn); return;
+        case 'pond-remove':
+          var sp = ui.selPond;
+          act('Koreksi: hapus ' + name(S.cur.ponds[sp.seat][sp.idx]) + ' dari buangan ' + LBL[sp.seat], 'edit', function (cur) {
+            cur.ponds[sp.seat].splice(sp.idx, 1);
+          });
+          ui.selPond = null; render(); return;
+        case 'pond-cancel': ui.selPond = null; renderSeats(); return;
+        case 'meld-remove':
+          var sm = ui.selMeld;
+          act('Koreksi: hapus set ' + LBL[sm.seat], 'edit', function (cur) { cur.melds[sm.seat].splice(sm.idx, 1); });
+          ui.selMeld = null; render(); return;
+        case 'meld-cancel': ui.selMeld = null; renderSeats(); return;
+      }
+    }
+    if (d.claim != null) { doClaim(+d.claim); return; }
+    if (d.flower) {
+      var fn = +d.flower, has = S.cur.myFlowers.indexOf(fn) >= 0;
+      act((has ? 'Batal ' : 'Dapat ') + FLOWER_NAME[fn], 'edit', function (cur) {
+        if (has) removeOne(cur.myFlowers, fn); else cur.myFlowers.push(fn);
+      }, { who: 'me' });
+      return;
+    }
+    if (d.opt != null) {
+      var ot = +d.opt;
+      ui.openOpt = ui.openOpt === ot ? null : ot;
+      renderAdvice(lastAn);
+      return;
+    }
+    if (d.pond) {
+      var p = d.pond.split(':');
+      ui.selPond = (ui.selPond && ui.selPond.seat === p[0] && ui.selPond.idx === +p[1]) ? null : { seat: p[0], idx: +p[1] };
+      ui.selMeld = null;
+      renderSeats();
+      return;
+    }
+    if (d.meld) {
+      var mm = d.meld.split(':');
+      ui.selMeld = (ui.selMeld && ui.selMeld.seat === mm[0] && ui.selMeld.idx === +mm[1]) ? null : { seat: mm[0], idx: +mm[1] };
+      ui.selPond = null;
+      renderSeats();
+      return;
+    }
+    if (d.alert) {
+      var who = d.alert, on = !S.cur.alert[who];
+      act(LBL[who] + (on ? ' ditandai siap' : ' batal ditandai siap'), 'edit', function (cur) { cur.alert[who] = on; }, { who: who });
+      return;
+    }
+    if (d.zone) { ui.zone = d.zone; renderSheet(lastAn); return; }
+    if (d.who) { ui.meldWho = d.who; renderSheet(lastAn); return; }
+    if (d.key != null) { addTile(ui.zone, +d.key); return; }
+    switch (el.id) {
+      case 'dockPad': openSheet(); return;
+      case 'sheetClose': closeSheet(); return;
+      case 'dockUndo': case 'undoTop': case 'sheetUndo': undo(); return;
+      case 'dockCam':
+        if (photoReady) $('camInput').click();
+        else { $('photoTitle').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast($('photoMsg').textContent.split('.')[0]); }
+        return;
+      case 'camBtn': $('camInput').click(); return;
+      case 'galBtn': $('galInput').click(); return;
+      case 'stopBtn': if (photoCtl) photoCtl.abort(); return;
+      case 'scopeHand': ui.scope = 'hand'; $('scopeHand').setAttribute('aria-pressed', 'true'); $('scopeTable').setAttribute('aria-pressed', 'false'); return;
+      case 'scopeTable': ui.scope = 'table'; $('scopeTable').setAttribute('aria-pressed', 'true'); $('scopeHand').setAttribute('aria-pressed', 'false'); return;
+      case 'draftClear': ui.draft = []; renderSheet(lastAn); return;
+      case 'draftSave': saveMeld(); return;
+      case 'exampleNew':
+        S = newRound(S.cfg);
+        simCache.clear();
+        save(); render(); openSheet('hand');
+        toast('Game baru. Atur angin ronde & kursimu, lalu masukkan tile tangan.');
+        return;
+      case 'resetBtn': ui.confirmReset = true; renderSettings(lastAn); return;
+      case 'resetNo': ui.confirmReset = false; renderSettings(lastAn); return;
+      case 'resetYes':
+        ui.confirmReset = false;
+        S = newRound(S.cfg);
+        simCache.clear();
+        $('readout').hidden = true;
+        save(); render();
+        toast('Game baru dimulai. Cek angin ronde & kursimu.');
+        return;
+    }
+  });
+  $('camInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
+  $('galInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
+
+  function cfgChanged(patch) {
+    Object.assign(S.cfg, patch);
+    save(); render();
+  }
+  $('preset').addEventListener('change', function (e) {
+    var p = PRESETS[e.target.value];
+    if (p) cfgChanged(Object.assign({ preset: e.target.value }, p));
+    else cfgChanged({ preset: 'custom' });
+  });
+  $('sets').addEventListener('change', function (e) { cfgChanged({ sets: +e.target.value, preset: 'custom' }); });
+  $('scoring').addEventListener('change', function (e) { cfgChanged({ scoring: e.target.checked, minPoints: e.target.checked ? (S.cfg.minPoints || 3) : S.cfg.minPoints, preset: 'custom' }); });
+  $('minPoints').addEventListener('change', function (e) { cfgChanged({ minPoints: +e.target.value }); });
+  $('sevenPairs').addEventListener('change', function (e) { cfgChanged({ sevenPairs: e.target.checked, preset: 'custom' }); });
+  $('orphans').addEventListener('change', function (e) { cfgChanged({ thirteenOrphans: e.target.checked, preset: 'custom' }); });
+  $('roundWind').addEventListener('change', function (e) { cfgChanged({ roundWind: +e.target.value }); });
+  $('seatWind').addEventListener('change', function (e) { cfgChanged({ seatWind: +e.target.value }); });
+  $('wallStart').addEventListener('change', function (e) {
+    var v = Math.max(20, Math.min(140, +e.target.value || 83));
+    cfgChanged({ wallStart: v, preset: 'custom' });
+  });
+  $('wallLeft').addEventListener('change', function (e) {
+    var raw = e.target.value.trim();
+    var phase = lastAn ? lastAn.phase : 'draw';
+    S.cur.wallAdjust = raw === '' ? 0 : Math.round(+raw) - rawWallEstimate(phase);
+    save(); render();
+  });
+  $('tier').addEventListener('change', function (e) { S.cfg.tier = e.target.value; save(); });
+
+  var resizeT = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(function () { if (lastAn) renderRack(lastAn); }, 120);
+  });
+
+  render();
+  window.Sempoa = {
+    state: function () { return S; },
+    lastAnalysis: function () { return lastAn; },
+    tilesText: tilesText, multisetDiff: multisetDiff, toast: toast,
+    label: function (seat) { return LBL[seat]; },
+    recordDraw: function (t) {
+      act('Ambil ' + name(t) + ' (kamera)', 'draw', function (cur) { cur.hand.push(t); cur.drawn = t; cur.lastIn = { from: 'wall' }; }, { who: 'me', tile: t });
+    },
+    discard: function (t) { discardFromHand(t); },
+    setHand: function (list, label) {
+      S.example = false;
+      act(label, 'photo', function (cur) { cur.hand = list.slice(); cur.drawn = null; }, { who: 'me' });
+    },
+    setFlowers: function (list) {
+      act('Kamera: Flower ' + list.join(', '), 'edit', function (cur) { cur.myFlowers = list.slice(0, 8); }, { who: 'me' });
+    },
+    recordDiscard: function (seat, t) {
+      act(LBL[seat] + ' buang ' + name(t) + ' (kamera)', 'discard', function (cur) { cur.ponds[seat].push(t); if (seat === 'me') S.turn++; }, { who: seat, tile: t });
+    },
+    setPond: function (seat, list) {
+      act('Kamera: buangan ' + LBL[seat], 'photo', function (cur) { cur.ponds[seat] = list.slice(); });
+    }
+  };
+  window.__sempoa = { state: function () { return S; }, applyVision: applyVision, visionPrompt: visionPrompt, analysis: function () { return lastAn; } };
+})();
+
+</script>
+<script>
+/* Sempoa Mahjong — kamera live.
+ * Model deteksi tile (YOLO, format ONNX) jalan langsung di browser HP lewat onnxruntime-web.
+ * Butuh halaman HTTPS biasa (mis. GitHub Pages); di dalam Artifact claude.ai kamera diblokir.
+ */
+(function () {
+  'use strict';
+  var API = window.Sempoa, MJ = window.MJ;
+  if (!API || !MJ) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.webgpu.min.js';
+  var ORT_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
+  var JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+  var CONF = 0.45, IOU = 0.45, WINDOW = 8, NEED = 5;
+
+  var panel = $('livePanel');
+  if (!panel) return;
+  var inArtifact = !!(window.claude && typeof window.claude.use === 'function');
+  var canCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
+
+  var st = {
+    target: 'hand', running: false, stream: null, session: null, meta: null, busy: false,
+    history: [], lastKey: null, appliedKey: null, stable: null, fps: 0, shots: [], wake: null,
+    modelState: 'idle' // idle | loading | ready | missing | error
+  };
+
+  function msg(text, work) {
+    var el = $('liveMsg');
+    el.textContent = text;
+    el.className = 'photo-msg' + (work ? ' work' : '');
+  }
+
+  if (inArtifact || !canCamera) {
+    $('liveControls').hidden = true;
+    msg(inArtifact
+      ? 'Kamera live tidak diizinkan di dalam Claude. Buka versi GitHub Pages untuk memakai kamera live; di sini tetap bisa pakai Foto.'
+      : 'Browser ini tidak memberi akses kamera (butuh HTTPS). Buka lewat GitHub Pages.');
+    return;
+  }
+  msg('Arahkan kamera ke tanganmu (tile berdiri menghadap kamera) atau ke buangan satu pemain. Mesin mencatat otomatis kalau hasilnya stabil.');
+
+  /* ---------- target (yang sedang dilihat kamera) ---------- */
+  var TARGETS = [['hand', 'Tangan saya'], ['right', 'Buangan Kanan'], ['across', 'Buangan Depan'], ['left', 'Buangan Kiri'], ['me', 'Buangan saya']];
+  function renderTargets() {
+    $('liveTargets').innerHTML = TARGETS.map(function (x) {
+      return '<button type="button" data-live-target="' + x[0] + '" aria-pressed="' + (st.target === x[0]) + '">' + x[1] + '</button>';
+    }).join('');
+  }
+  renderTargets();
+
+  /* ---------- muat library & model ---------- */
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+      s.onload = resolve; s.onerror = function () { reject(new Error('gagal memuat ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  function classToTile(name) {
+    var code = st.meta.map && st.meta.map[name];
+    if (!code) return null;
+    if (/^f[1-8]$/.test(code)) return { flower: (+code.slice(1) - 1) % 4 + 1 };
+    var t = MJ.parseTile(code);
+    return t >= 0 ? { tile: t } : null;
+  }
+  function loadModel() {
+    if (st.modelState === 'ready' || st.modelState === 'loading') return Promise.resolve();
+    st.modelState = 'loading';
+    msg('Memuat model pengenal tile…', true);
+    return fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
+      if (!r.ok) throw { missing: true };
+      return r.json();
+    }).then(function (meta) {
+      st.meta = meta;
+      return loadScript(ORT_URL);
+    }).then(function () {
+      var ort = window.ort;
+      ort.env.wasm.wasmPaths = ORT_BASE;
+      ort.env.wasm.numThreads = 1;
+      var providers = navigator.gpu ? ['webgpu', 'wasm'] : ['wasm'];
+      return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: providers, graphOptimizationLevel: 'all' })
+        .catch(function () { return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: ['wasm'] }); });
+    }).then(function (session) {
+      st.session = session;
+      st.modelState = 'ready';
+      msg('Model siap. Tahan kamera stabil beberapa detik sampai hasilnya muncul.');
+    }).catch(function (e) {
+      if (e && e.missing) {
+        st.modelState = 'missing';
+        msg('Model pengenal tile belum dipasang. Kamera tetap bisa dipakai untuk mengumpulkan foto latihan.');
+      } else {
+        st.modelState = 'error';
+        msg('Model gagal dimuat (' + (e && e.message ? e.message : 'koneksi') + '). Coba muat ulang halaman.');
+      }
+    });
+  }
+
+  /* ---------- kamera ---------- */
+  function start() {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+    }).then(function (stream) {
+      st.stream = stream;
+      var v = $('liveVideo');
+      v.srcObject = stream;
+      return v.play();
+    }).then(function () {
+      st.running = true;
+      $('liveImage').hidden = true; $('liveVideo').hidden = false;
+      $('liveStage').hidden = false;
+      $('liveStart').hidden = true;
+      $('liveStop').hidden = false;
+      $('liveSnap').disabled = false;
+      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { st.wake = w; }).catch(function () {}); } catch (e) { /* opsional */ }
+      return loadModel();
+    }).then(function () {
+      loop();
+    }).catch(function (e) {
+      msg(e && e.name === 'NotAllowedError'
+        ? 'Izin kamera ditolak. Izinkan kamera untuk situs ini di pengaturan browser, lalu coba lagi.'
+        : 'Kamera tidak bisa dibuka: ' + (e && e.message ? e.message : 'tidak diketahui'));
+    });
+  }
+  function stop() {
+    st.running = false;
+    if (st.stream) st.stream.getTracks().forEach(function (t) { t.stop(); });
+    st.stream = null;
+    if (st.wake) { try { st.wake.release(); } catch (e) { /* abaikan */ } st.wake = null; }
+    $('liveStage').hidden = true;
+    $('liveStart').hidden = false;
+    $('liveStop').hidden = true;
+    $('liveFps').textContent = '';
+  }
+
+  /* ---------- deteksi ---------- */
+  function dims(el) { return el.tagName === 'VIDEO' ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+  var prep = document.createElement('canvas');
+  var prepCtx = prep.getContext('2d', { willReadFrequently: true });
+  function preprocess(video, size) {
+    var dd = dims(video), vw = dd[0], vh = dd[1];
+    var scale = Math.min(size / vw, size / vh);
+    var w = Math.round(vw * scale), h = Math.round(vh * scale);
+    var dx = Math.floor((size - w) / 2), dy = Math.floor((size - h) / 2);
+    prep.width = size; prep.height = size;
+    prepCtx.fillStyle = 'rgb(114,114,114)';
+    prepCtx.fillRect(0, 0, size, size);
+    prepCtx.drawImage(video, 0, 0, vw, vh, dx, dy, w, h);
+    var px = prepCtx.getImageData(0, 0, size, size).data;
+    var n = size * size, data = new Float32Array(3 * n);
+    for (var i = 0, j = 0; i < n; i++, j += 4) {
+      data[i] = px[j] / 255; data[i + n] = px[j + 1] / 255; data[i + 2 * n] = px[j + 2] / 255;
+    }
+    return { data: data, scale: scale, dx: dx, dy: dy };
+  }
+  function iou(a, b) {
+    var x1 = Math.max(a.x1, b.x1), y1 = Math.max(a.y1, b.y1), x2 = Math.min(a.x2, b.x2), y2 = Math.min(a.y2, b.y2);
+    var inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+    var u = (a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter;
+    return u > 0 ? inter / u : 0;
+  }
+  // Keluaran YOLOv8/YOLO11 standar: [1, 4 + kelas, N] (cx, cy, w, h, skor kelas...)
+  function decode(out, pre, nc) {
+    var dims = out.dims, d = out.data;
+    var N = dims[2], C = dims[1], boxes = [];
+    for (var i = 0; i < N; i++) {
+      var best = 0, cls = -1;
+      for (var c = 4; c < C; c++) {
+        var s = d[c * N + i];
+        if (s > best) { best = s; cls = c - 4; }
+      }
+      if (best < CONF || cls < 0 || cls >= nc) continue;
+      var cx = d[i], cy = d[N + i], w = d[2 * N + i], h = d[3 * N + i];
+      boxes.push({
+        x1: (cx - w / 2 - pre.dx) / pre.scale, y1: (cy - h / 2 - pre.dy) / pre.scale,
+        x2: (cx + w / 2 - pre.dx) / pre.scale, y2: (cy + h / 2 - pre.dy) / pre.scale,
+        score: best, cls: cls
+      });
+    }
+    boxes.sort(function (a, b) { return b.score - a.score; });
+    var keep = [];
+    for (var k = 0; k < boxes.length; k++) {
+      var ok = true;
+      for (var m = 0; m < keep.length; m++) if (iou(boxes[k], keep[m]) > IOU) { ok = false; break; }
+      if (ok) keep.push(boxes[k]);
+    }
+    return keep;
+  }
+  function shortLabel(t) {
+    if (t >= 27) return ['E', 'S', 'W', 'N', 'Wh', 'G', 'R'][t - 27];
+    return (t % 9 + 1) + 'CDB'[Math.floor(t / 9)];
+  }
+  function draw(dets, v) {
+    v = v || $('liveVideo');
+    var cv = $('liveCanvas'), dd = dims(v);
+    var rect = v.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(rect.width * dpr); cv.height = Math.round(rect.height * dpr);
+    var ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    var sx = cv.width / dd[0], sy = cv.height / dd[1];
+    ctx.lineWidth = 2 * dpr;
+    ctx.font = '600 ' + Math.round(13 * dpr) + 'px "Spline Sans Mono", monospace';
+    dets.forEach(function (b) {
+      var x = b.x1 * sx, y = b.y1 * sy, w = (b.x2 - b.x1) * sx, h = (b.y2 - b.y1) * sy;
+      ctx.strokeStyle = '#dcb45a';
+      ctx.strokeRect(x, y, w, h);
+      var label = b.tile != null ? shortLabel(b.tile) : b.flower != null ? 'F' + b.flower : '?';
+      var tw = ctx.measureText(label).width + 8 * dpr;
+      ctx.fillStyle = '#dcb45a';
+      ctx.fillRect(x, y - 18 * dpr, tw, 18 * dpr);
+      ctx.fillStyle = '#2a1f06';
+      ctx.fillText(label, x + 4 * dpr, y - 5 * dpr);
+    });
+  }
+
+  // Satu hasil per frame: daftar tile (diurutkan kiri ke kanan) + bunga.
+  function frameResult(dets) {
+    var tiles = [], flowers = [];
+    var hs = dets.map(function (b) { return b.y2 - b.y1; }).sort(function (a, b) { return a - b; });
+    var rowH = (hs[Math.floor(hs.length / 2)] || 1) * 1.1;
+    dets.slice().sort(function (a, b) {
+      var ra = Math.round((a.y1 + a.y2) / 2 / rowH), rb = Math.round((b.y1 + b.y2) / 2 / rowH);
+      return ra - rb || a.x1 - b.x1;
+    }).forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
+    var key = tiles.slice().sort(function (a, b) { return a - b; }).join(',') + '|' + flowers.slice().sort().join(',');
+    return { tiles: tiles, flowers: flowers, key: key };
+  }
+
+  function detect(el) {
+    var size = st.meta.imgsz || 640, pre = preprocess(el, size), ort = window.ort, feeds = {};
+    feeds[st.session.inputNames[0]] = new ort.Tensor('float32', pre.data, [1, 3, size, size]);
+    return st.session.run(feeds).then(function (res) {
+      var dets = decode(res[st.session.outputNames[0]], pre, st.meta.classes.length);
+      dets.forEach(function (b) {
+        var m = classToTile(st.meta.classes[b.cls]);
+        if (m) { b.tile = m.tile; b.flower = m.flower; }
+      });
+      return dets.filter(function (b) { return b.tile != null || b.flower != null; });
+    });
+  }
+
+  // Deteksi sekali dari foto (tanpa Claude, tanpa internet setelah model termuat).
+  function detectFile(file) {
+    if (!file) return;
+    if (st.running) stop();
+    loadModel().then(function () {
+      if (st.modelState !== 'ready') return;
+      var img = $('liveImage'), url = URL.createObjectURL(file);
+      img.onload = function () {
+        $('liveVideo').hidden = true; img.hidden = false; $('liveStage').hidden = false;
+        msg('Mendeteksi tile di foto…', true);
+        var t0 = performance.now();
+        detect(img).then(function (dets) {
+          draw(dets, img);
+          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tile';
+          msg(dets.length ? 'Selesai. Periksa kotak di foto; hasilnya di bawah.' : 'Tidak ada tile yang terdeteksi. Coba foto lebih dekat dan terang.');
+          st.appliedKey = null; st.stable = null;
+          if (dets.length) apply(frameResult(dets));
+        }).catch(function (e) { msg('Deteksi gagal: ' + (e && e.message ? e.message : e)); });
+      };
+      img.src = url;
+    });
+  }
+
+  function loop() {
+    if (!st.running) return;
+    var v = $('liveVideo');
+    if (st.modelState !== 'ready' || !v.videoWidth || st.busy) {
+      requestAnimationFrame(loop);
+      return;
+    }
+    st.busy = true;
+    var t0 = performance.now();
+    detect(v).then(function (dets) {
+      draw(dets, v);
+      onFrame(frameResult(dets));
+      var dt = performance.now() - t0;
+      st.fps = st.fps ? st.fps * 0.8 + (1000 / dt) * 0.2 : 1000 / dt;
+      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tile';
+    }).catch(function (e) {
+      msg('Deteksi gagal: ' + (e && e.message ? e.message : e));
+    }).then(function () {
+      st.busy = false;
+      if (st.running) requestAnimationFrame(loop);
+    });
+  }
+
+  /* ---------- stabilkan lalu catat ---------- */
+  function onFrame(r) {
+    st.history.push(r);
+    if (st.history.length > WINDOW) st.history.shift();
+    var counts = {};
+    st.history.forEach(function (h) { counts[h.key] = (counts[h.key] || 0) + 1; });
+    var bestKey = null, bestN = 0;
+    Object.keys(counts).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; bestKey = k; } });
+    if (bestN < NEED) return;
+    var stable = null;
+    for (var i = st.history.length - 1; i >= 0; i--) if (st.history[i].key === bestKey) { stable = st.history[i]; break; }
+    if (!stable || !stable.tiles.length) return;
+    if (st.stable && st.stable.key === stable.key) return;
+    st.stable = stable;
+    apply(stable);
+  }
+
+  function apply(r) {
+    var S = API.state(), an = API.lastAnalysis();
+    var auto = $('liveAuto').checked;
+    var box = $('liveRead');
+    var key = st.target + ':' + r.key;
+    if (st.appliedKey === key) return;
+    var h = '<div class="eyebrow">Kamera melihat · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
+      '<div>' + r.tiles.length + ' tile: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
+    var did = null;
+    if (st.target === 'hand') {
+      var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
+      if (!plus.length && !minus.length) {
+        did = 'sama dengan catatan';
+      } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
+        API.recordDraw(plus[0]);
+        did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
+      } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
+        API.discard(minus[0]);
+        did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
+      } else if (auto && S.cur.hand.length === 0) {
+        API.setHand(r.tiles, 'Kamera: tangan awal');
+        did = 'tercatat sebagai tangan awal';
+      } else {
+        h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';
+      }
+      if (r.flowers.length && r.flowers.length > S.cur.myFlowers.length) API.setFlowers(r.flowers);
+    } else {
+      var seat = st.target, old = S.cur.ponds[seat];
+      var added = API.multisetDiff(r.tiles, old), gone = API.multisetDiff(old, r.tiles);
+      if (!added.length) {
+        did = gone.length ? 'tile tidak kelihatan semua, catatan lama tetap dipakai' : 'sama dengan catatan';
+      } else if (auto && !gone.length) {
+        added.forEach(function (t) { API.recordDiscard(seat, t); });
+        did = 'tercatat: ' + API.label(seat) + ' buang ' + API.tilesText(added);
+      } else {
+        h += '<div class="muted">Beda dengan catatan: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Ganti buangan dengan hasil kamera</button></div>';
+      }
+    }
+    if (did) { h += '<div class="muted">' + did + '</div>'; st.appliedKey = key; }
+    st.pending = r;
+    box.innerHTML = h;
+    box.hidden = false;
+  }
+
+  /* ---------- foto latihan (untuk melatih ulang dengan tile mejamu) ---------- */
+  function snap() {
+    var v = $('liveVideo');
+    if (!v.videoWidth) return;
+    var cv = document.createElement('canvas');
+    cv.width = v.videoWidth; cv.height = v.videoHeight;
+    cv.getContext('2d').drawImage(v, 0, 0);
+    cv.toBlob(function (b) {
+      if (!b) return;
+      if (st.shots.length >= 120) st.shots.shift();
+      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'meja-' + Date.now() });
+      $('liveZip').disabled = false;
+      $('liveZip').textContent = 'Unduh foto latihan (' + st.shots.length + ')';
+      API.toast('Foto latihan disimpan (' + st.shots.length + ')');
+    }, 'image/jpeg', 0.9);
+  }
+  function downloadZip() {
+    if (!st.shots.length) return;
+    (window.JSZip ? Promise.resolve() : loadScript(JSZIP_URL)).then(function () {
+      var zip = new window.JSZip();
+      st.shots.forEach(function (s) { zip.file('images/' + s.name + '.jpg', s.blob); });
+      zip.file('README.txt', 'Foto tile meja mahjong untuk melatih ulang model Sempoa Mahjong.\nKirim zip ini ke Claude untuk dilabeli dan dipakai melatih model.\n');
+      return zip.generateAsync({ type: 'blob' });
+    }).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'sempoa-foto-latihan-' + new Date().toISOString().slice(0, 10) + '.zip';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    }).catch(function () { API.toast('Gagal membuat zip. Coba lagi.'); });
+  }
+
+  /* ---------- tombol ---------- */
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('button');
+    if (!el) return;
+    if (el.dataset.liveTarget) {
+      st.target = el.dataset.liveTarget;
+      st.history = []; st.stable = null;
+      renderTargets();
+      $('liveRead').hidden = true;
+      return;
+    }
+    if (el.dataset.liveApply && st.pending) {
+      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Kamera: tangan');
+      else API.setPond(st.target, st.pending.tiles);
+      st.appliedKey = st.target + ':' + st.pending.key;
+      $('liveRead').hidden = true;
+      return;
+    }
+    switch (el.id) {
+      case 'liveStart': start(); return;
+      case 'liveStop': stop(); return;
+      case 'liveSnap': snap(); return;
+      case 'liveZip': downloadZip(); return;
+      case 'liveFromPhoto': $('liveFile').click(); return;
+    }
+  });
+  $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
+})();
+
+</script>
+
+</body>
+</html>

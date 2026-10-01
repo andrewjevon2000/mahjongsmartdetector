@@ -1,0 +1,638 @@
+<title>Sempoa Mahjong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&family=Young+Serif&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&text=%%GLYPHS%%&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --felt: #133629;
+  --felt-2: #184234;
+  --felt-3: #1f4f3e;
+  --line: rgba(214, 232, 220, 0.14);
+  --line-2: rgba(214, 232, 220, 0.26);
+  --text: #eaf1e8;
+  --muted: #a3bcb0;
+  --faint: #7c998c;
+  --brass: #dcb45a;
+  --brass-2: #f0cf7e;
+  --brass-ink: #2a1f06;
+  --ivory: #f1ead6;
+  --ivory-hi: #fbf7ec;
+  --ivory-edge: #d3c6a3;
+  --back: #3d8f6d;
+  --ink: #1a1c1a;
+  --pin: #1d4f9c;
+  --sou: #1b7a47;
+  --crimson: #a3302a;
+  --safe: #86d6a8;
+  --ok: #c3d77c;
+  --mid: #e6bd5c;
+  --risk: #e8894b;
+  --f-display: "Young Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-num: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-glyph: "Noto Serif TC", "Songti TC", "PingFang TC", "Hiragino Mincho ProN", serif;
+  --r: 14px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+html, body { background: var(--felt); }
+body {
+  margin: 0;
+  color: var(--text);
+  font: 15px/1.45 var(--f-body);
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(0,0,0,0.18), transparent 50%),
+    var(--felt);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brass-2); outline-offset: 2px; border-radius: 6px; }
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-inline: 16px;
+  padding-block: 12px 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-size: 19px; letter-spacing: 0.01em; }
+.eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* ---------- top ---------- */
+.top { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand .seal {
+  width: 34px; height: 34px; border-radius: 9px; flex: none;
+  display: grid; place-items: center;
+  background: var(--brass); color: var(--brass-ink);
+  box-shadow: 0 3px 0 #a9852f;
+}
+.brand h1 { font-family: var(--f-display); font-size: 21px; white-space: nowrap; }
+.top .spacer { flex: 1; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line-2); font-size: 13px; white-space: nowrap;
+}
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 10px 12px; border-radius: var(--r);
+  background: rgba(220, 180, 90, 0.12); border: 1px solid rgba(220, 180, 90, 0.35);
+  font-size: 14px;
+}
+.banner p { margin: 0; flex: 1 1 220px; }
+
+/* ---------- tiles ---------- */
+.t { container-type: inline-size; display: inline-block; width: 100%; flex: none; }
+.t.sm { width: 26px; } .t.md { width: 34px; } .t.lg { width: 58px; } .t.xs { width: 20px; }
+.tile {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 3 / 4;
+  border-radius: 14cqi;
+  background: linear-gradient(180deg, var(--ivory-hi), var(--ivory) 70%);
+  box-shadow:
+    inset 0 -2px 0 var(--ivory-edge),
+    0 1.5px 0 #e6dcc0,
+    0 4px 0 var(--back),
+    0 6px 8px rgba(0,0,0,0.35);
+  color: var(--ink);
+  line-height: 1;
+  user-select: none; -webkit-user-select: none;
+}
+.tile svg { display: block; width: 100%; height: 100%; }
+.tile b { font-family: var(--f-num); font-weight: 600; font-size: 46cqi; }
+.tile i { font-style: normal; font-family: var(--f-glyph); font-size: 30cqi; margin-top: 5cqi; }
+.s-m i { color: var(--crimson); }
+.s-p b, .s-p i { color: var(--pin); }
+.s-s b, .s-s i { color: var(--sou); }
+.s-z b { font-family: var(--f-glyph); font-weight: 700; font-size: 56cqi; }
+.h6 b { color: var(--sou); }
+.h7 b { color: var(--crimson); }
+.h5 b { color: transparent; width: 52cqi; height: 66cqi; border: 5cqi solid var(--pin); border-radius: 8cqi; font-size: 0; }
+.t.dim .tile { filter: saturate(0.4) brightness(0.8); }
+
+/* ---------- panels ---------- */
+.panel {
+  background: var(--felt-2);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.sec-head .spacer { flex: 1; }
+
+/* ---------- rack ---------- */
+.rack {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
+  gap: 12px 6px;
+  padding: 4px 2px 10px;
+}
+.slot {
+  appearance: none; border: 0; background: none; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  transition: transform 120ms ease;
+}
+.slot .q { width: 70%; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+.slot .q::after { content: ""; display: block; height: 100%; width: calc(var(--q, 0) * 100%); background: var(--muted); border-radius: 3px; }
+.slot.best .q::after { background: var(--brass); }
+.slot.worse .q::after { background: var(--faint); }
+.slot.sel { transform: translateY(-8px); }
+.slot.sel .tile { box-shadow: 0 0 0 2px var(--brass-2), 0 4px 0 var(--back), 0 10px 14px rgba(0,0,0,0.4); }
+.slot.best .tile::before {
+  content: ""; position: absolute; top: -7px; left: 50%; width: 8px; height: 8px;
+  transform: translateX(-50%) rotate(45deg); background: var(--brass); border-radius: 2px;
+}
+.slot.drawn { margin-left: 0; }
+.melds { display: flex; flex-wrap: wrap; gap: 10px; }
+.meld { display: flex; gap: 2px; padding: 4px 6px 7px; border-radius: 10px; background: rgba(0,0,0,0.16); }
+.status-line { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  background: rgba(255,255,255,0.08); border: 1px solid var(--line-2);
+  white-space: nowrap;
+}
+.pill.gold { background: var(--brass); color: var(--brass-ink); border-color: transparent; }
+.pill.safe { color: var(--safe); border-color: color-mix(in srgb, var(--safe) 45%, transparent); }
+.pill.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.pill.mid { color: var(--mid); border-color: color-mix(in srgb, var(--mid) 45%, transparent); }
+.pill.risk { color: var(--risk); border-color: color-mix(in srgb, var(--risk) 45%, transparent); }
+.rack-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none; border: 1px solid var(--line-2); background: var(--felt-3);
+  padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--brass); color: var(--brass-ink); border-color: transparent; box-shadow: 0 3px 0 #a9852f; }
+.btn.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #a9852f; }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 6px 10px; min-height: 34px; font-size: 13px; border-radius: 10px; }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* ---------- advice ---------- */
+.rec { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.rec .what { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rec .what strong { font-family: var(--f-display); font-size: 24px; font-weight: 400; line-height: 1.15; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+.stat { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.16); display: flex; flex-direction: column; gap: 2px; }
+.stat .v { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 600; }
+.stat .v.gold { color: var(--brass-2); }
+.stat .k { font-size: 12px; color: var(--muted); }
+.need { display: flex; flex-wrap: wrap; gap: 8px; }
+.need .n { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+.need .n .num { color: var(--muted); }
+.need .n.zero { opacity: 0.45; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--f-num); font-size: 10px; fill: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; background: var(--c); }
+#advice { display: flex; flex-direction: column; gap: 14px; }
+.opts { display: flex; flex-direction: column; }
+.opt {
+  appearance: none; border: 0; background: none; text-align: left; width: 100%;
+  display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+  padding: 10px 2px; border-top: 1px solid var(--line);
+}
+.opt:first-child { border-top: 0; }
+.opt .l1 { font-weight: 600; font-size: 14px; }
+.opt .l2 { font-size: 12.5px; color: var(--muted); }
+.opt .r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.opt .r .num { font-size: 15px; font-weight: 600; }
+.opt-detail { padding: 2px 2px 12px 48px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.progress { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--brass); width: 0; transition: width 200ms; }
+
+/* ---------- photo ---------- */
+.photo-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; padding: 3px; border-radius: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--line); }
+.seg button { appearance: none; border: 0; background: none; padding: 6px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--felt-3); color: var(--text); box-shadow: 0 0 0 1px var(--line-2); }
+.photo-msg { font-size: 13.5px; color: var(--muted); }
+.photo-msg.work { color: var(--brass-2); }
+.readout { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.18); font-size: 13.5px; display: flex; flex-direction: column; gap: 4px; }
+.readout ul { margin: 0; padding-left: 18px; }
+
+/* ---------- table memory ---------- */
+.seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.seat { border-radius: 14px; background: rgba(0,0,0,0.14); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.seat.alert { box-shadow: inset 0 0 0 1.5px var(--mid); }
+.seat .hd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+.seat .hd strong { font-weight: 600; }
+.seat .hd .spacer { flex: 1; }
+.pond { display: flex; flex-wrap: wrap; gap: 7px 3px; min-height: 30px; }
+.pond button { appearance: none; border: 0; background: none; padding: 0 0 4px; }
+.pond button.sel .tile { box-shadow: 0 0 0 2px var(--brass-2), 0 4px 0 var(--back); }
+.toggle { appearance: none; border: 1px solid var(--line-2); background: transparent; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.toggle[aria-pressed="true"] { background: var(--mid); color: #2a1d02; border-color: transparent; }
+
+/* ---------- sempoa tracker ---------- */
+.abacus { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px 4px; }
+.bead-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+.bead-cell .t { width: min(100%, 30px); }
+.beads { display: grid; grid-template-columns: repeat(2, 6px); gap: 2px; }
+.beads i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid var(--line-2); }
+.beads i.h { background: var(--brass); border-color: var(--brass); }
+.beads i.v { background: var(--muted); border-color: var(--muted); }
+.bead-cell .num { font-size: 11px; color: var(--muted); }
+.bead-cell.over .num { color: var(--risk); font-weight: 600; }
+.bead-cell.zero .t { opacity: 0.4; }
+.bead-key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.bead-key i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; border: 1px solid var(--line-2); }
+
+/* ---------- history ---------- */
+.hist { display: flex; flex-direction: column; gap: 10px; }
+.hturn { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: start; }
+.hturn .tn { font-family: var(--f-num); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.hevents { display: flex; flex-wrap: wrap; gap: 6px; }
+.hev { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,0.18); font-size: 12.5px; }
+.hev.me { background: rgba(220,180,90,0.16); }
+.hev img { width: 34px; height: 26px; object-fit: cover; border-radius: 4px; }
+
+/* ---------- settings ---------- */
+details.panel > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after { content: "+"; margin-left: auto; font-family: var(--f-num); color: var(--muted); }
+details.panel[open] > summary::after { content: "−"; }
+.form { display: grid; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
+.field label, .field .lbl { color: var(--muted); }
+.field select, .field input[type="number"] {
+  background: var(--felt); border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 10px; min-height: 42px;
+}
+.check { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--brass); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* ---------- bottom bar + keypad sheet ---------- */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(15, 44, 34, 0.0), rgba(15, 44, 34, 0.94) 22%);
+}
+.dock .inner { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: 1.3fr 1fr auto; gap: 8px; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  background: #10301f; border-top: 1px solid var(--line-2);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.45);
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  max-height: 82vh; overflow-y: auto;
+}
+.sheet .inner { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.zones { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.zones button { flex: none; }
+.pad { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 9px 5px; }
+.key { appearance: none; border: 0; background: none; padding: 0 0 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.key .num { font-size: 10.5px; color: var(--muted); line-height: 1; }
+.key:active .tile { transform: translateY(2px); }
+.suit-lbl { grid-column: 1 / -1; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-top: 2px; }
+.draft { display: flex; gap: 4px; align-items: center; min-height: 40px; flex-wrap: wrap; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 40; background: var(--ivory); color: var(--ink); font-weight: 600; font-size: 14px;
+  padding: 9px 14px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  max-width: calc(100% - 32px);
+}
+.note-line { font-size: 12px; color: var(--faint); }
+/* ---------- Majé: ronde, bunga, pola, klaim ---------- */
+.round-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.mini { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.mini select { background: var(--felt); border: 1px solid var(--line-2); border-radius: 10px; padding: 6px 8px; min-height: 36px; font-size: 14px; color: var(--text); }
+.flowers { display: flex; gap: 6px; }
+.flower {
+  appearance: none; border: 1px solid var(--line-2); background: transparent; border-radius: 10px;
+  min-width: 40px; min-height: 36px; padding: 2px 6px; display: inline-flex; align-items: center; gap: 3px;
+  font-size: 17px; color: var(--muted);
+}
+.flower svg { display: block; }
+.flower:not([aria-pressed="true"]) svg { opacity: 0.55; }
+.seat .hd .wind { display: inline-flex; align-items: center; gap: 5px; }
+.flower small { font-family: var(--f-num); font-size: 10px; }
+.flower[aria-pressed="true"] { background: var(--ivory); color: var(--ink); border-color: transparent; }
+.flower.match[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--brass); }
+.routes { display: flex; flex-direction: column; }
+.route { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.route:first-child { border-top: 0; }
+.route .nm { font-weight: 600; font-size: 14px; }
+.route .sub { font-size: 12.5px; color: var(--muted); }
+.route .d { font-family: var(--f-num); font-weight: 600; text-align: right; }
+.route .d small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+.route.top .nm { color: var(--brass-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.claim { border-radius: 14px; padding: 12px; background: rgba(220,180,90,0.10); border: 1px solid rgba(220,180,90,0.4); display: flex; flex-direction: column; gap: 10px; }
+.claim .copt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.claim .copt p { margin: 0; flex: 1 1 200px; font-size: 13.5px; }
+.win { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 6px; }
+.win strong { font-family: var(--f-display); font-weight: 400; font-size: 24px; }
+.win ul, .pts { margin: 0; padding-left: 18px; font-size: 14px; }
+.waits { display: flex; flex-direction: column; gap: 6px; }
+.wait { display: flex; align-items: center; gap: 10px; font-size: 13.5px; flex-wrap: wrap; }
+.mode { font-weight: 700; letter-spacing: 0.08em; }
+.mode-attack { color: var(--safe); }
+.mode-careful { color: var(--mid); }
+.mode-fold { color: var(--risk); }
+.opp-read { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.opp-safe { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.live-controls { display: flex; flex-direction: column; gap: 10px; }
+.seg.wrap { flex-wrap: wrap; }
+.live-stage { position: relative; border-radius: 14px; overflow: hidden; background: #000; }
+.live-stage video, .live-stage img { display: block; width: 100%; height: auto; }
+.live-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.rules { display: grid; gap: 14px; font-size: 14px; }
+.rules ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.ptable { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 16px; }
+.ptable div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.ptable b { font-family: var(--f-num); color: var(--brass-2); font-weight: 600; }
+@media (min-width: 640px) {
+  .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .abacus { gap: 10px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
+    <span class="spacer"></span>
+    <span class="chip num" id="turnChip">Giliran 1</span>
+  </header>
+
+  <div class="banner" id="exampleBanner" hidden>
+    <p>Ini contoh game supaya kamu bisa lihat cara kerjanya. Semua angka di bawah dihitung dari tile contoh ini.</p>
+    <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
+  </div>
+
+  <section class="panel" aria-labelledby="handTitle">
+    <div class="sec-head">
+      <h2 id="handTitle">Tangan kamu</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="handCount"></span>
+    </div>
+    <div class="round-row" id="roundRow">
+      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
+    </div>
+    <div class="melds" id="myMelds"></div>
+    <div class="rack" id="rack"></div>
+    <div class="status-line" id="statusLine"></div>
+    <div class="rack-actions" id="rackActions" hidden></div>
+  </section>
+
+  <section class="panel" aria-labelledby="adviceTitle" id="advicePanel">
+    <div class="sec-head">
+      <h2 id="adviceTitle">Saran &amp; peluang</h2>
+      <span class="spacer"></span>
+      <span class="muted small" id="drawsInfo"></span>
+    </div>
+    <div id="advice"></div>
+  </section>
+
+  <section class="panel" id="livePanel" aria-labelledby="liveTitle">
+    <div class="sec-head">
+      <h2 id="liveTitle">Kamera live</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="liveFps"></span>
+    </div>
+    <div class="live-controls" id="liveControls">
+      <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
+      <div class="live-stage" id="liveStage" hidden>
+        <video id="liveVideo" playsinline muted autoplay></video>
+        <img id="liveImage" alt="Foto yang dideteksi" hidden>
+        <canvas id="liveCanvas" aria-hidden="true"></canvas>
+      </div>
+      <div class="photo-row">
+        <button class="btn primary" type="button" id="liveStart">Mulai kamera</button>
+        <button class="btn" type="button" id="liveStop" hidden>Stop</button>
+        <button class="btn" type="button" id="liveFromPhoto">Deteksi dari foto</button>
+        <input type="file" id="liveFile" accept="image/*" hidden>
+        <label class="check small"><input type="checkbox" id="liveAuto" checked> Catat otomatis</label>
+      </div>
+      <div class="photo-row">
+        <button class="btn small" type="button" id="liveSnap" disabled>Simpan foto latihan</button>
+        <button class="btn small" type="button" id="liveZip" disabled>Unduh foto latihan (0)</button>
+      </div>
+    </div>
+    <p class="photo-msg" id="liveMsg"></p>
+    <div class="readout" id="liveRead" hidden></div>
+    <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="photoTitle">
+    <div class="sec-head">
+      <h2 id="photoTitle">Baca dari foto</h2>
+    </div>
+    <div class="photo-row">
+      <div class="seg" role="group" aria-label="Yang difoto">
+        <button type="button" id="scopeHand" aria-pressed="false">Tangan saya</button>
+        <button type="button" id="scopeTable" aria-pressed="true">Seluruh meja</button>
+      </div>
+    </div>
+    <div class="photo-row">
+      <button class="btn primary" type="button" id="camBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Foto sekarang
+      </button>
+      <button class="btn" type="button" id="galBtn" disabled>Pilih dari galeri</button>
+      <button class="btn ghost" type="button" id="stopBtn" hidden>Berhenti</button>
+      <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="galInput" accept="image/*" multiple hidden>
+    </div>
+    <p class="photo-msg" id="photoMsg">Menyiapkan pembaca foto…</p>
+    <div class="readout" id="readout" hidden></div>
+  </section>
+
+  <section class="panel" aria-labelledby="tableTitle">
+    <div class="sec-head">
+      <h2 id="tableTitle">Ingatan meja</h2>
+      <span class="spacer"></span>
+      <span class="muted small">Kanan = pemain sesudah kamu</span>
+    </div>
+    <div class="seats" id="seats"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="abacusTitle">
+    <div class="sec-head">
+      <h2 id="abacusTitle">Sempoa tile</h2>
+      <span class="spacer"></span>
+      <span class="muted small num" id="unseenTotal"></span>
+    </div>
+    <div class="bead-key">
+      <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
+      <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
+      <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
+    </div>
+    <div class="abacus" id="abacus"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="histTitle">
+    <div class="sec-head">
+      <h2 id="histTitle">Langkah sebelumnya</h2>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" id="undoTop">Urungkan</button>
+    </div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <details class="panel" id="rulesPanel">
+    <summary><h2>Aturan Majé</h2></summary>
+    <div class="rules">
+      <ul>
+        <li>Hu (Mahjong): 4 sets + 1 pair (14 tile), <b>minimal 3 poin</b>. Tangan tanpa pola (Chicken Hand) bernilai 0.</li>
+        <li>Claim: Chi hanya dari pemain kiri (pemain sebelum kamu). Pong dan Kong dari siapa saja.</li>
+        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. Kalau dua orang Hu tile yang sama, yang di kanan pembuang yang menang.</li>
+        <li>Flower langsung dibuka, lalu ambil tile ganti dari dead wall. Kong: umumkan, lalu ambil tile ganti.</li>
+        <li>Self-draw: ketiga lawan bayar. Discard win: hanya pembuang yang bayar.</li>
+        <li>Dealer tetap kalau menang; kalau tidak, pindah ke pemain berikutnya. Rounds: East, South, West, North.</li>
+      </ul>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Common Winning Hand</div>
+        <div class="ptable">
+          <div>Chicken Hand <b>0</b></div><div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
+          <div>Sequence Hand / All Chows <b>1</b></div><div>No Orphan / All Simples <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
+          <div>Mix Orphans <b>3</b></div><div>Pure Orphans <b>5</b></div><div>Half Flush <b>3</b></div><div>Full Flush <b>7</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Additional Point</div>
+        <div class="ptable">
+          <div>Robbing a Kong <b>1</b></div><div>Suitable Flower <b>1/Flower</b></div><div>No Flower <b>1</b></div>
+          <div>Self Draw <b>1</b></div><div>Last Tile <b>1</b></div><div>Concealed Hand <b>1</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Special / High-Value Hands</div>
+        <div class="ptable">
+          <div>7 Pairs <b>4</b></div><div>Little Dragon <b>5</b></div><div>Great Dragon <b>8</b></div><div>Little Wind <b>10</b></div>
+          <div>All Honor <b>10</b></div><div>Kong Hand / 4 Kongs <b>12</b></div><div>Great Wind <b>13</b></div><div>13 Orphans <b>13</b></div>
+          <div>Heavenly Gates / Nine Gates <b>15</b></div>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:6px">Aturan meja (sudah dikonfirmasi)</div>
+        <ul>
+          <li>Chi hanya dari pemain kiri.</li>
+          <li>Versi yang lebih besar menggantikan versi kecilnya, tidak ditumpuk: Full Flush menggantikan Half Flush · Pure Orphans menggantikan Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand menggantikan All Pongs · All Honor menggantikan Half Flush, Mix Orphans, dan All Pongs · Heavenly Gates menggantikan Full Flush.</li>
+          <li>Pola dari jenis berbeda tetap dijumlah, mis. Little Dragon 5 + Half Flush 3 = 8.</li>
+        </ul>
+      </div>
+      <p class="note-line">Concealed Hand yang menang tarik sendiri dihitung Self Draw. Robbing a Kong dan Last Tile tidak dihitung otomatis. Pair di Sequence Hand dibaca sebagai tile 2–8 (sesuai kata "simple" di buku).</p>
+    </div>
+  </details>
+
+  <details class="panel" id="settings">
+    <summary><h2>Pengaturan</h2></summary>
+    <div class="form">
+      <div class="field">
+        <label for="preset">Jenis permainan</label>
+        <select id="preset">
+          <option value="maje">Majé House Rules · Hong Kong</option>
+          <option value="riichi">Riichi Jepang · 13 tile</option>
+          <option value="tw">Taiwan · 16 tile</option>
+          <option value="custom">Atur sendiri</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sets">Jumlah sets untuk Hu (+1 pair)</label>
+        <select id="sets"><option value="4">4 sets · tangan 13 tile</option><option value="5">5 sets · tangan 16 tile</option></select>
+      </div>
+      <label class="check"><input type="checkbox" id="scoring"> Hitung poin (tabel Majé)</label>
+      <div class="field">
+        <label for="minPoints">Poin minimum untuk menang</label>
+        <select id="minPoints"><option value="3">3 poin · standar Majé</option><option value="2">2 poin</option><option value="1">1 poin</option><option value="0">0 · Chicken Hand boleh</option></select>
+      </div>
+      <label class="check"><input type="checkbox" id="sevenPairs"> Hitung 7 Pairs</label>
+      <label class="check"><input type="checkbox" id="orphans"> Hitung 13 Orphans</label>
+      <div class="field">
+        <label for="wallStart">Tile di dinding saat ronde mulai (setelah bagi tile)</label>
+        <input type="number" id="wallStart" min="20" max="120" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="wallLeft">Sisa tile di dinding sekarang (kosongkan = perkiraan otomatis)</label>
+        <input type="number" id="wallLeft" min="0" max="140" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="tier">Cara baca foto</label>
+        <select id="tier"><option value="default">Standar · lebih cepat</option><option value="complex">Teliti · lebih lama, lebih akurat</option></select>
+      </div>
+      <div class="row" id="resetRow">
+        <button class="btn" type="button" id="resetBtn">Mulai game baru</button>
+      </div>
+      <p class="note-line">Catatan game tersimpan di browser HP ini saja. Ganti HP atau hapus data browser berarti catatan hilang.</p>
+    </div>
+  </details>
+
+  <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
+</div>
+
+<div class="dock" id="dock">
+  <div class="inner">
+    <button class="btn primary" type="button" id="dockPad">+ Ketik tile</button>
+    <button class="btn" type="button" id="dockCam">Foto</button>
+    <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-label="Ketik tile">
+  <div class="inner">
+    <div class="sec-head">
+      <h2>Ketik tile</h2>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" id="sheetUndo">Urungkan</button>
+      <button class="btn small primary" type="button" id="sheetClose">Selesai</button>
+    </div>
+    <div class="zones" id="zones" role="group" aria-label="Masukkan ke"></div>
+    <div id="meldBox" hidden>
+      <div class="row" style="margin-bottom:8px">
+        <span class="muted small">Set milik</span>
+        <div class="seg" role="group" aria-label="Set milik" id="meldWho"></div>
+      </div>
+      <div class="row">
+        <div class="draft" id="draft"><span class="muted small">Ketuk 3 atau 4 tile di bawah</span></div>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label class="check small"><input type="checkbox" id="closedKong"> Kong tertutup (semua dari tangan)</label>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn small" type="button" id="draftClear">Kosongkan</button>
+        <button class="btn small primary" type="button" id="draftSave" disabled>Simpan set</button>
+      </div>
+    </div>
+    <p class="muted small" id="zoneHint"></p>
+    <div class="pad" id="pad"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+%%ENGINE%%
+</script>
+<script>
+%%APP%%
+</script>
+<script>
+%%LIVE%%
+</script>
