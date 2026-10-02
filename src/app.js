@@ -488,12 +488,22 @@
       return '<button type="button" class="' + cls + '" data-t="' + t + '" aria-label="' + esc(label) + '">' +
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
     }).join('') : '';
+    // faint "+" slots for the tiles still missing; tap one to add a tile by hand
+    var needSlots = 3 * MJ.setsNeeded(an.cfg) + 1;
+    if (n < needSlots && !ui.scanning) {
+      var ghost = '';
+      for (var gi = n; gi < needSlots; gi++) ghost += '<button type="button" class="slot ghost" data-act="pad-hand" aria-label="Add a tile"><span class="t"><span class="tile ghost-tile">+</span></span></button>';
+      rack.insertAdjacentHTML('beforeend', ghost);
+      rack.style.setProperty('--cols', wide ? Math.max(needSlots, 10) : Math.max(7, Math.ceil(needSlots / 2)));
+    }
 
     var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
     rack.classList.toggle('pending', !!ui.pending);
     if (ui.pending && n) {
       var okCount = n === needN || n === needN + 1;
+      var dbt = ui.doubt || [];
       cb.innerHTML = '<span><b>' + n + ' tiles scanned</b>' + (okCount ? ' · correct?' : ' · need ' + needN) + '</span>' +
+        (dbt.length ? '<span class="small" style="flex-basis:100%;color:var(--mid)">Unclear: ' + esc(dbt.map(name).join(', ')) + ' — a set has only 4 of each tile. Check these.</span>' : '') +
         '<span class="small muted" style="flex-basis:100%">Tap a wrong tile to take it out.</span>' +
         '';
       cb.hidden = false;
@@ -644,7 +654,7 @@
     if (an.phase === 'bad') {
       var S0 = MJ.setsNeeded(an.cfg), need = 3 * S0 + 1, have = S.cur.hand.length;
       h += '<div class="rec"><div class="what" style="grid-column:1/-1"><span class="eyebrow">Start tracking</span>' +
-        '<strong>' + (have < need ? 'Enter ' + (need - have) + ' more tiles' : (have - need - 1) + ' tiles too many') + '</strong>' +
+        '<strong>' + (have < need ? 'Enter ' + (need - have) + (need - have === 1 ? ' more tile' : ' more tiles') : (have - need - 1) + ' tiles too many') + '</strong>' +
         '<span class="muted small">Your hand has ' + have + ' tiles recorded. Analysis runs at ' + need + ' tiles (waiting to draw) or ' + (need + 1) + ' tiles (just drew). Photograph your hand, or type tiles one by one.</span></div></div>' +
         '<div class="row"><button class="btn primary" type="button" data-act="pad-hand">+ Type hand tiles</button></div>';
       box.innerHTML = h;
@@ -926,6 +936,10 @@
   }
   function addTile(zone, t) {
     var an = lastAn;
+    if (zone !== 'meld') {
+      var have = (an && an.known) ? an.known[t] : 0;
+      if (have >= 4) { toast('All 4 ' + name(t) + ' are already recorded'); return; }
+    }
     if (zone === 'hand') {
       var isDraw = an && an.phase === 'draw';
       act((isDraw ? 'Draw ' : 'Hand + ') + name(t), isDraw ? 'draw' : 'edit', function (cur) {
@@ -1429,7 +1443,7 @@
     if (an.phase === 'bad') {
       var S0 = MJ.setsNeeded(an.cfg), need = 3 * S0 + 1, have = S.cur.hand.length;
       h += '<div class="hero-head"><span class="eyebrow">Start</span></div>' +
-        '<div class="hero-text"><div class="hero-title">' + (have === 0 ? 'Enter your hand tiles' : have < need ? (need - have) + ' more tiles' : (have - need - 1) + ' tiles too many') + '</div>' +
+        '<div class="hero-text"><div class="hero-title">' + (have === 0 ? 'Enter your hand tiles' : have < need ? (need - have) + (need - have === 1 ? ' more tile' : ' more tiles') : (have - need - 1) + (have - need - 1 === 1 ? ' tile too many' : ' tiles too many')) + '</div>' +
         '<div class="hero-sub num">' + have + ' / ' + need + ' tiles</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
@@ -1668,7 +1682,7 @@
     var el = e.target.closest('button');
     if (!el) return;
     var d = el.dataset;
-    if (el.classList.contains('slot')) {
+    if (el.classList.contains('slot') && !el.classList.contains('ghost')) {
       var t = +d.t;
       ui.selHand = ui.selHand === t ? null : t;
       ui.selPond = ui.selMeld = null;
@@ -1689,7 +1703,7 @@
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
         case 'pad-hand': closeView(); openSheet('hand'); return;
         case 'menu-new-game': openSetup(); return;
-        case 'confirm-scan': ui.pending = false; ui.selHand = null; render(); toast('Hand confirmed'); return;
+        case 'confirm-scan': ui.doubt = []; ui.pending = false; ui.selHand = null; render(); toast('Hand confirmed'); return;
         case 'rescan': ui.pending = false; ui.selHand = null; if (window.SempoaScan) window.SempoaScan.start(); return;
         case 'win-check': openWin(d.from, d.t != null && d.t !== '' ? +d.t : null); return;
         case 'win-declare': declareWin(); return;
@@ -1843,8 +1857,14 @@
       act(label, 'photo', function (cur) { cur.hand = list.slice(); cur.drawn = null; }, { who: 'me' });
     },
     setScanning: function (on) { ui.scanning = !!on; renderDock(lastAn); },
-    scanned: function (tiles, flowers) {
+    scanned: function (tiles, flowers, doubt) {
       S.example = false;
+      // never more than 4 of a tile
+      var cnt = {}, clean = [];
+      doubt = (doubt || []).slice();
+      tiles.forEach(function (t) { cnt[t] = (cnt[t] || 0) + 1; if (cnt[t] <= 4) clean.push(t); else if (doubt.indexOf(t) < 0) doubt.push(t); });
+      tiles = clean;
+      ui.doubt = doubt;
       act('Scan: hand (' + tiles.length + ' tiles)', 'photo', function (cur) {
         cur.hand = tiles.slice(); cur.drawn = null; cur.winResult = null; cur.lastIn = { from: 'wall' };
         if (flowers && flowers.length > cur.myFlowers.length) cur.myFlowers = flowers.slice(0, 8);

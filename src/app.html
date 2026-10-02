@@ -151,6 +151,8 @@ h2 { font-family: var(--f-display); font-size: 19px; letter-spacing: 0.01em; }
 .slot.best .q::after { background: var(--brass); }
 .slot.worse .q::after { background: var(--faint); }
 .slot.sel { transform: translateY(-8px); }
+.tile.ghost-tile { background: transparent; box-shadow: none; border: 2px dashed rgba(214,232,220,0.28); color: rgba(214,232,220,0.45); font: 400 60cqi var(--f-body); line-height: 1; }
+.slot.ghost:hover .ghost-tile, .slot.ghost:focus-visible .ghost-tile { border-color: var(--brass); color: var(--brass-2); }
 .slot.sel .tile { box-shadow: 0 0 0 2px var(--brass-2), 0 4px 0 var(--back), 0 10px 14px rgba(0,0,0,0.4); }
 .slot.best .tile::before {
   content: ""; position: absolute; top: -7px; left: 50%; width: 8px; height: 8px;

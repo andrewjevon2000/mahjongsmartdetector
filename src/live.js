@@ -222,12 +222,20 @@
       ctx.fillText(label, x + 4 * u, ly + th - 4 * u);
     });
   }
+  // A real set has only 4 copies of each tile and a hand has at most need+1 tiles:
+  // keep the most confident detections, and remember which tile types had extras dropped.
   function frameResult(dets) {
-    var tiles = [], flowers = [];
-    dets.slice().sort(function (a, b) { return a.x1 - b.x1; })
-      .forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
+    var maxTiles = API.handNeed() + 1, per = {}, kept = [], doubt = {};
+    dets.filter(function (b) { return b.tile != null; }).sort(function (a, b) { return b.score - a.score; })
+      .forEach(function (b) {
+        per[b.tile] = (per[b.tile] || 0) + 1;
+        if (per[b.tile] > 4 || kept.length >= maxTiles) { doubt[b.tile] = 1; return; }
+        kept.push(b);
+      });
+    var tiles = kept.sort(function (a, b) { return a.x1 - b.x1; }).map(function (b) { return b.tile; });
+    var flowers = dets.filter(function (b) { return b.flower != null; }).map(function (b) { return b.flower; });
     var key = tiles.slice().sort(function (a, b) { return a - b; }).join(',') + '|' + flowers.slice().sort().join(',');
-    return { tiles: tiles, flowers: flowers, key: key };
+    return { tiles: tiles, flowers: flowers, key: key, doubt: Object.keys(doubt).map(Number) };
   }
   function detect(el) {
     var size = st.meta.imgsz || 640, pre = preprocess(el, size), ort = window.ort, feeds = {};
@@ -294,7 +302,7 @@
     st.done = true;
     if ($('liveKeep').checked) keepShot($('liveVideo'));
     stop();
-    API.scanned(r.tiles, r.flowers);
+    API.scanned(r.tiles, r.flowers, r.doubt);
   }
 
   function loop() {
@@ -336,7 +344,7 @@
             $('liveStage').hidden = true;
             if (!dets.length) { msg('No tiles found. Try a closer, brighter photo.'); return; }
             msg('');
-            API.scanned(r.tiles, r.flowers);
+            API.scanned(r.tiles, r.flowers, r.doubt);
           }, 900);
         }).catch(function (e) { msg('Detection failed: ' + (e && e.message ? e.message : e)); });
       };
