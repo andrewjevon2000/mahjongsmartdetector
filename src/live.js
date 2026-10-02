@@ -33,14 +33,14 @@
   if (inArtifact || !canCamera) {
     $('liveControls').hidden = true;
     msg(inArtifact
-      ? 'Kamera live tidak diizinkan di dalam Claude. Buka versi GitHub Pages untuk memakai kamera live; di sini tetap bisa pakai Foto.'
-      : 'Browser ini tidak memberi akses kamera (butuh HTTPS). Buka lewat GitHub Pages.');
+      ? 'Live camera is not available inside Claude. Open the GitHub Pages version to use the live camera; here you can still use Photo.'
+      : 'This browser does not allow camera access (HTTPS required). Open it via GitHub Pages.');
     return;
   }
-  msg('Arahkan kamera ke tanganmu (tile berdiri menghadap kamera) atau ke buangan satu pemain. Mesin mencatat otomatis kalau hasilnya stabil.');
+  msg('Point the camera at your hand (tiles standing, facing the camera) or at one player’s discards. Results are recorded automatically once they are stable.');
 
   /* ---------- target (yang sedang dilihat kamera) ---------- */
-  var TARGETS = [['hand', 'Tangan saya'], ['right', 'Buangan Kanan'], ['across', 'Buangan Depan'], ['left', 'Buangan Kiri'], ['me', 'Buangan saya']];
+  var TARGETS = [['hand', 'My hand'], ['right', 'Right discards'], ['across', 'Across discards'], ['left', 'Left discards'], ['me', 'My discards']];
   function renderTargets() {
     $('liveTargets').innerHTML = TARGETS.map(function (x) {
       return '<button type="button" data-live-target="' + x[0] + '" aria-pressed="' + (st.target === x[0]) + '">' + x[1] + '</button>';
@@ -53,7 +53,7 @@
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
       s.src = src; s.async = true; s.crossOrigin = 'anonymous';
-      s.onload = resolve; s.onerror = function () { reject(new Error('gagal memuat ' + src)); };
+      s.onload = resolve; s.onerror = function () { reject(new Error('failed to load ' + src)); };
       document.head.appendChild(s);
     });
   }
@@ -67,7 +67,7 @@
   function loadModel() {
     if (st.modelState === 'ready' || st.modelState === 'loading') return Promise.resolve();
     st.modelState = 'loading';
-    msg('Memuat model pengenal tile…', true);
+    msg('Loading tile model…', true);
     return fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw { missing: true };
       return r.json();
@@ -85,14 +85,14 @@
     }).then(function (session) {
       st.session = session;
       st.modelState = 'ready';
-      msg('Model siap. Tahan kamera stabil beberapa detik sampai hasilnya muncul.');
+      msg('Model ready. Hold the camera steady for a second or two.');
     }).catch(function (e) {
       if (e && e.missing) {
         st.modelState = 'missing';
-        msg('Model pengenal tile belum dipasang. Kamera tetap bisa dipakai untuk mengumpulkan foto latihan.');
+        msg('Tile model not installed yet. You can still use the camera to collect training photos.');
       } else {
         st.modelState = 'error';
-        msg('Model gagal dimuat (' + (e && e.message ? e.message : 'koneksi') + '). Coba muat ulang halaman.');
+        msg('Could not load the model (' + (e && e.message ? e.message : 'connection') + '). Try reloading the page.');
       }
     });
   }
@@ -119,8 +119,8 @@
       loop();
     }).catch(function (e) {
       msg(e && e.name === 'NotAllowedError'
-        ? 'Izin kamera ditolak. Izinkan kamera untuk situs ini di pengaturan browser, lalu coba lagi.'
-        : 'Kamera tidak bisa dibuka: ' + (e && e.message ? e.message : 'tidak diketahui'));
+        ? 'Camera permission denied. Allow the camera for this site in your browser settings, then try again.'
+        : 'Could not open the camera: ' + (e && e.message ? e.message : 'unknown error'));
     });
   }
   function stop() {
@@ -254,15 +254,15 @@
       var img = $('liveImage'), url = URL.createObjectURL(file);
       img.onload = function () {
         $('liveVideo').hidden = true; img.hidden = false; $('liveStage').hidden = false;
-        msg('Mendeteksi tile di foto…', true);
+        msg('Reading photo…', true);
         var t0 = performance.now();
         detect(img).then(function (dets) {
           draw(dets, img);
-          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tile';
-          msg(dets.length ? 'Selesai. Periksa kotak di foto; hasilnya di bawah.' : 'Tidak ada tile yang terdeteksi. Coba foto lebih dekat dan terang.');
+          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tiles';
+          msg(dets.length ? 'Done. Check the boxes on the photo; the result is below.' : 'No tiles detected. Try a closer, brighter photo.');
           st.appliedKey = null; st.stable = null;
           if (dets.length) apply(frameResult(dets));
-        }).catch(function (e) { msg('Deteksi gagal: ' + (e && e.message ? e.message : e)); });
+        }).catch(function (e) { msg('Detection failed: ' + (e && e.message ? e.message : e)); });
       };
       img.src = url;
     });
@@ -282,9 +282,9 @@
       onFrame(frameResult(dets));
       var dt = performance.now() - t0;
       st.fps = st.fps ? st.fps * 0.8 + (1000 / dt) * 0.2 : 1000 / dt;
-      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tile';
+      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tiles';
     }).catch(function (e) {
-      msg('Deteksi gagal: ' + (e && e.message ? e.message : e));
+      msg('Detection failed: ' + (e && e.message ? e.message : e));
     }).then(function () {
       st.busy = false;
       var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
@@ -315,48 +315,48 @@
     var box = $('liveRead');
     var key = st.target + ':' + r.key;
     if (st.appliedKey === key) return;
-    var h = '<div class="eyebrow">Kamera melihat · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
-      '<div>' + r.tiles.length + ' tile: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
+    var h = '<div class="eyebrow">Camera sees · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
+      '<div>' + r.tiles.length + ' tiles: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
     var did = null;
     if (st.target === 'hand') {
       var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
       var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
       if (!plus.length && !minus.length) {
-        did = 'sama dengan catatan';
+        did = 'same as recorded';
       } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
         // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
-        API.setHand(r.tiles, 'Kamera: tangan ' + r.tiles.length + ' tile');
-        did = 'tersimpan otomatis (' + r.tiles.length + ' tile)';
-        backToMain('Tangan ' + r.tiles.length + ' tile tersimpan');
+        API.setHand(r.tiles, 'Camera: hand (' + r.tiles.length + ' tiles)');
+        did = 'saved automatically (' + r.tiles.length + ' tiles)';
+        backToMain('Hand saved (' + r.tiles.length + ' tiles)');
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
-        did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
-        backToMain('Ambil ' + MJ.tileName(plus[0]) + ' · lihat saran');
+        did = 'recorded: Draw ' + MJ.tileName(plus[0]);
+        backToMain('Drew ' + MJ.tileName(plus[0]) + ' · see advice');
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
-        did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
+        did = 'recorded: Discard ' + MJ.tileName(minus[0]);
       } else if (auto && S.cur.hand.length === 0 && full) {
-        API.setHand(r.tiles, 'Kamera: tangan awal');
-        did = 'tercatat sebagai tangan awal';
-        backToMain('Tangan tercatat · lihat kombinasi menang');
+        API.setHand(r.tiles, 'Camera: starting hand');
+        did = 'recorded as starting hand';
+        backToMain('Hand recorded · see winning combinations');
       } else if (auto && S.cur.hand.length === 0) {
-        did = 'terbaca ' + r.tiles.length + ' tile, butuh ' + need + ' — geser kamera sampai semua tile masuk';
+        did = 'read ' + r.tiles.length + ' tiles, need ' + need + ' — move the camera until all tiles are in view';
       } else {
-        h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';
+        h += '<div class="muted">Differs from the record: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Use camera result</button></div>';
       }
       if (r.flowers.length && r.flowers.length > S.cur.myFlowers.length) API.setFlowers(r.flowers);
     } else {
       var seat = st.target, old = S.cur.ponds[seat];
       var added = API.multisetDiff(r.tiles, old), gone = API.multisetDiff(old, r.tiles);
       if (!added.length) {
-        did = gone.length ? 'tile tidak kelihatan semua, catatan lama tetap dipakai' : 'sama dengan catatan';
+        did = gone.length ? 'not all tiles visible, keeping the previous record' : 'same as recorded';
       } else if (auto && !gone.length) {
         added.forEach(function (t) { API.recordDiscard(seat, t); });
-        did = 'tercatat: ' + API.label(seat) + ' buang ' + API.tilesText(added);
+        did = 'recorded: ' + API.label(seat) + ' discarded ' + API.tilesText(added);
       } else {
-        h += '<div class="muted">Beda dengan catatan: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Ganti buangan dengan hasil kamera</button></div>';
+        h += '<div class="muted">Differs from the record: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Replace discards with camera result</button></div>';
       }
     }
     if (did) { h += '<div class="muted">' + did + '</div>'; st.appliedKey = key; }
@@ -380,10 +380,10 @@
     cv.toBlob(function (b) {
       if (!b) return;
       if (st.shots.length >= 120) st.shots.shift();
-      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'meja-' + Date.now() });
+      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'table-' + Date.now() });
       $('liveZip').disabled = false;
-      $('liveZip').textContent = 'Unduh foto latihan (' + st.shots.length + ')';
-      API.toast('Foto latihan disimpan (' + st.shots.length + ')');
+      $('liveZip').textContent = 'Download training photos (' + st.shots.length + ')';
+      API.toast('Training photo saved (' + st.shots.length + ')');
     }, 'image/jpeg', 0.9);
   }
   function downloadZip() {
@@ -391,15 +391,15 @@
     (window.JSZip ? Promise.resolve() : loadScript(JSZIP_URL)).then(function () {
       var zip = new window.JSZip();
       st.shots.forEach(function (s) { zip.file('images/' + s.name + '.jpg', s.blob); });
-      zip.file('README.txt', 'Foto tile meja mahjong untuk melatih ulang model Sempoa Mahjong.\nKirim zip ini ke Claude untuk dilabeli dan dipakai melatih model.\n');
+      zip.file('README.txt', 'Photos of mahjong table tiles for retraining the Sempoa Mahjong model.\nSend this zip to Claude to be labelled and used to train the model.\n');
       return zip.generateAsync({ type: 'blob' });
     }).then(function (blob) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'sempoa-foto-latihan-' + new Date().toISOString().slice(0, 10) + '.zip';
+      a.download = 'sempoa-training-photos-' + new Date().toISOString().slice(0, 10) + '.zip';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-    }).catch(function () { API.toast('Gagal membuat zip. Coba lagi.'); });
+    }).catch(function () { API.toast('Could not create the zip. Try again.'); });
   }
 
   /* ---------- tombol ---------- */
@@ -414,7 +414,7 @@
       return;
     }
     if (el.dataset.liveApply && st.pending) {
-      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Kamera: tangan');
+      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Camera: hand');
       else API.setPond(st.target, st.pending.tiles);
       st.appliedKey = st.target + ':' + st.pending.key;
       $('liveRead').hidden = true;

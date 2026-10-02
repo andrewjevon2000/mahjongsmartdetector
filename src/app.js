@@ -1358,12 +1358,20 @@
   var ROUTE_LABEL = { 'Chicken Hand + Additional Point': 'Chicken Hand + poin tambahan' };
   // Daftar kombinasi menang yang mungkin, dengan peluangnya (dari simulasi) dan jaraknya (pasti).
   function combosBlock(an, sim) {
-    var rows = (an.routeList || []).map(function (r) {
+    var all = (an.routeList || []).map(function (r) {
       var p = sim && sim.routes ? (sim.routes[r.name] || 0) : null;
-      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p };
+      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p, kind: r.kind };
     });
-    if (!rows.length) return '<div class="hero-sub">Belum ada kombinasi yang mencapai ' + an.M + ' poin dengan tile tersisa.</div>';
-    rows.sort(function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; });
+    if (!all.length) return '<div class="hero-sub">Belum ada kombinasi yang mencapai ' + an.M + ' poin dengan tile tersisa.</div>';
+    var bySort = function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; };
+    // Seat Wind / Round Wind / Dragon = kombinasi tambahan, ditampilkan terpisah
+    var rows = all.filter(function (r) { return r.kind !== 'honor'; }).sort(bySort);
+    // tambahan hanya ditampilkan kalau peluangnya nyata (>= 0,5%), supaya tidak jadi daftar "<1%"
+    var sec = all.filter(function (r) { return r.kind === 'honor' && (r.p == null || r.p >= 0.005); }).sort(bySort);
+    var secHtml = sec.length ? '<div class="combo-sec"><span class="eyebrow">Tambahan</span>' + sec.slice(0, 4).map(function (r) {
+      return '<span class="pill">' + esc(r.name) + ' <span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></span>';
+    }).join('') + '</div>' : '';
+    if (!rows.length) return secHtml || '<div class="hero-sub">Belum ada kombinasi utama yang mencapai ' + an.M + ' poin.</div>';
     // tampilkan yang punya peluang nyata; kalau sedikit, tambahkan 2 jalur terdekat sebagai gambaran
     var shown = rows.filter(function (r) { return r.p == null || r.p >= 0.005; }).slice(0, 5);
     if (shown.length < 2) {
@@ -1376,7 +1384,7 @@
         '<div class="combo-top"><b>' + esc(r.name) + '</b><span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></div>' +
         '<div class="combo-bar"><i style="width:' + w + '%"></i></div>' +
         '<div class="combo-sub">' + (an.scoring ? r.g + ' poin · ' : '') + (r.d === 0 ? 'tinggal 1 tile' : r.d + ' langkah') + ' · ' + r.uk + ' tile membantu</div></div>';
-    }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' kombinasi lain, lihat Detail</div>' : '') + '</div>';
+    }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' kombinasi lain, lihat Detail</div>' : '') + secHtml + '</div>';
   }
   function renderHero(an) {
     if (!an) return;

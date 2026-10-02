@@ -356,9 +356,9 @@
   }
 
   var RULE_ROUTES = [
-    { rule: 'allChows', name: 'Sequence Hand', pts: 1 },
-    { rule: 'allSimples', name: 'All Simples', pts: 1 },
-    { rule: 'chowsSimples', name: 'Sequence Hand + All Simples', pts: 2 },
+    { rule: 'allChows', name: 'All Chow', pts: 1 },
+    { rule: 'allSimples', name: 'No Orphan', pts: 1 },
+    { rule: 'chowsSimples', name: 'All Chow + No Orphan', pts: 2 },
     { rule: 'allPongs', name: 'All Pongs', pts: 3 },
     { rule: 'flush0', name: 'Half Flush Characters', pts: 3 },
     { rule: 'flush1', name: 'Half Flush Dots', pts: 3 },
@@ -377,7 +377,7 @@
     if (hit) return hit;
     var open = openCount(cfg) > 0, four = (cfg.sets || 4) === 4, S = setsNeeded(cfg), list = [];
     if (!cfg.scoring) {
-      list.push({ kind: 'std', name: 'Tangan lengkap', pts: 0, g: 0 });
+      list.push({ kind: 'std', name: 'Complete hand', pts: 0, g: 0 });
       if (!open && four && cfg.sevenPairs) list.push({ kind: 'chiitoi', name: '7 Pairs', pts: 0, g: 0 });
       if (!open && four && cfg.thirteenOrphans) list.push({ kind: 'kokushi', name: '13 Orphans', pts: 0, g: 0 });
       routeCache.set(key, list);
@@ -467,7 +467,15 @@
 
   /* ---------- Hitung poin (Majé House Rules) ---------- */
 
-  var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1 };
+  var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1, 'Last Tile': 1, 'Robbing a Kong': 1 };
+  // Kombinasi tambahan (poin kecil yang menempel pada tangan utama): ditampilkan setelah kombinasi utama.
+  var SECONDARY = { 'Seat Wind': 1, 'Round Wind': 1, 'Dragon': 1 };
+  function patternRank(name) { return EXTRA[name] ? 2 : SECONDARY[name] ? 1 : 0; }
+  function orderPatterns(p) {
+    return p.map(function (x, i) { return [x, i]; })
+      .sort(function (a, b) { return patternRank(a[0][0]) - patternRank(b[0][0]) || a[1] - b[1]; })
+      .map(function (x) { return x[0]; });
+  }
 
   function decompositions(c, S) {
     var out = [], a = c.slice(), sets = [];
@@ -532,8 +540,8 @@
       if (roundP) p.push(['Round Wind', 1]);
     }
     var fl = flushOf(tiles);
-    if (chows === sets.length && isSimple(pair)) p.push(['Sequence Hand', 1]);
-    if (tiles.every(isSimple)) p.push(['All Simples', 1]);
+    if (chows === sets.length && isSimple(pair)) p.push(['All Chow', 1]);
+    if (tiles.every(isSimple)) p.push(['No Orphan', 1]);
     for (var su = 0; su < 3; su++) {
       var b = su * 9, has = [false, false, false];
       sets.forEach(function (s) { if (s.type === 'chow' && s.t >= b && s.t < b + 9 && (s.t - b) % 3 === 0) has[(s.t - b) / 3] = true; });
@@ -562,7 +570,7 @@
     var S = setsNeeded(cfg), best = null;
     function consider(p) {
       var pts = total(p);
-      if (!best || pts > best.points) best = { points: pts, patterns: p };
+      if (!best || pts > best.points) best = { points: pts, patterns: orderPatterns(p) };
     }
     decompositions(c, S).forEach(function (d) {
       consider(scoreStd(d.sets.concat(melds), d.pair, cfg, selfDraw, concealed, opts));
@@ -578,7 +586,7 @@
         else {
           if (fl.one) p7.push(fl.hasHonor ? ['Half Flush', 3] : ['Full Flush', 7]);
           if (tiles.every(isTermOrHonor)) p7.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
-          if (tiles.every(isSimple)) p7.push(['All Simples', 1]);
+          if (tiles.every(isSimple)) p7.push(['No Orphan', 1]);
         }
         addExtras(p7, cfg, selfDraw, true, opts);
         consider(p7);
@@ -609,8 +617,12 @@
   }
 
   function mainPattern(sc) {
-    var top = null;
-    sc.patterns.forEach(function (x) { if (!EXTRA[x[0]] && (!top || x[1] > top[1])) top = x; });
+    var top = null, topRank = 9;
+    sc.patterns.forEach(function (x) {
+      var r = patternRank(x[0]);
+      if (r === 2) return;
+      if (r < topRank || (r === topRank && x[1] > top[1])) { top = x; topRank = r; }
+    });
     return top ? top[0] : 'Chicken Hand';
   }
 
@@ -733,16 +745,16 @@
   // Peluang tile t jadi tile penentu Hu lawan, kalau lawan sudah siap (sebelum membaca polanya).
   // Aturan HK tidak punya furiten, jadi tile yang sudah dia buang tidak 100% aman.
   function baseWait(t, pond, melds, known) {
-    if (pond.indexOf(t) >= 0) return { w: 0.012, why: 'sudah dibuang lawan ini' };
+    if (pond.indexOf(t) >= 0) return { w: 0.012, why: 'already discarded by this player' };
     for (var i = 0; i < melds.length; i++) {
-      if (meldType(melds[i]) === 'pong' && melds[i][0] === t) return { w: 0.004, why: 'sudah dia Pong' };
+      if (meldType(melds[i]) === 'pong' && melds[i][0] === t) return { w: 0.004, why: 'already in their Pong' };
     }
     if (t >= 27) {
       var k = known[t];
-      if (k >= 4) return { w: 0, why: 'semua salinan terlihat' };
-      if (k === 3) return { w: 0.01, why: '3 salinan terlihat' };
-      if (k === 2) return { w: 0.03, why: '2 salinan terlihat' };
-      return { w: 0.05, why: 'honor yang belum banyak terlihat' };
+      if (k >= 4) return { w: 0, why: 'all copies seen' };
+      if (k === 3) return { w: 0.01, why: '3 copies seen' };
+      if (k === 2) return { w: 0.03, why: '2 copies seen' };
+      return { w: 0.05, why: 'honor tile, few copies seen' };
     }
     var n = t % 9 + 1, b = t - (n - 1);
     var w = (n === 1 || n === 9) ? 0.06 : (n === 2 || n === 8) ? 0.09 : 0.12;
@@ -753,12 +765,12 @@
     else {
       var lo = inPond(n - 3), hi = inPond(n + 3);
       if (lo && hi) { w *= 0.75; why.push('suji ' + (n - 3) + '-' + (n + 3)); }
-      else if (lo || hi) { w *= 0.88; why.push('setengah suji'); }
+      else if (lo || hi) { w *= 0.88; why.push('half suji'); }
     }
     function gone(x) { return x < 1 || x > 9 || known[b + x - 1] >= 4; }
-    if ((gone(n + 1) || gone(n + 2)) && (gone(n - 1) || gone(n - 2))) { w *= 0.5; why.push('tetangganya sudah habis'); }
-    if (known[t] >= 3) { w *= 0.7; why.push('3 salinan terlihat'); }
-    return { w: w, why: why.join(', ') || 'tile tengah, belum ada petunjuk' };
+    if ((gone(n + 1) || gone(n + 2)) && (gone(n - 1) || gone(n - 2))) { w *= 0.5; why.push('neighbours all seen'); }
+    if (known[t] >= 3) { w *= 0.7; why.push('3 copies seen'); }
+    return { w: w, why: why.join(', ') || 'middle tile, no clues yet' };
   }
 
   // opp: { pond:[ids], melds:[[ids]], alert, seatWind }; ctx: { roundWind, known, unseen, minPoints }
@@ -790,7 +802,7 @@
     }
     var pongs = melds.filter(function (m) { return meldType(m) !== 'chow'; }).length;
     if (pongs >= 2 && pongs === melds.length) {
-      reads.push({ kind: 'pongs', conf: Math.min(0.85, 0.35 + 0.15 * pongs), name: 'All Pongs', avoid: 'tile yang masih banyak sisa (bisa jadi pair/pong)' });
+      reads.push({ kind: 'pongs', conf: Math.min(0.85, 0.35 + 0.15 * pongs), name: 'All Pongs', avoid: 'tiles with many copies left (pair/pong material)' });
     }
     var dragonP = melds.filter(function (m) { return meldType(m) !== 'chow' && m[0] >= 31; }).map(function (m) { return m[0]; });
     if (dragonP.length >= 2) {
@@ -817,9 +829,9 @@
     if (melds.length && (ctx.minPoints || 0) >= 3 && banked === 0 && !opp.alert) {
       var anyBig = [0, 1, 2].some(function (x) { return meldFeasible('flush' + x, melds); }) ||
         meldFeasible('allPongs', melds) || meldFeasible('outside', melds);
-      if (!anyBig) { threat *= 0.6; notes.push('set terbukanya tidak cocok pola besar, susah capai ' + ctx.minPoints + ' poin'); }
+      if (!anyBig) { threat *= 0.6; notes.push('open sets do not fit any big pattern; hard to reach ' + ctx.minPoints + ' points'); }
     }
-    if (banked) notes.push('sudah punya ' + banked + ' poin dari Pong honor');
+    if (banked) notes.push('already has ' + banked + ' points from honor Pongs');
     var wait = new Array(34), why = new Array(34);
     for (var t = 0; t < 34; t++) {
       var r = baseWait(t, pond, melds, ctx.known), w = r.w, ww = r.why;
@@ -827,14 +839,14 @@
         var rd = reads[q], cf = rd.conf;
         if (rd.kind === 'flush') {
           if (t < 27 && suitOf(t) !== rd.suit) w *= 1 - 0.85 * cf;
-          else { w *= 1 + (t < 27 ? 0.9 : 0.6) * cf; ww = 'cocok dengan tebakan ' + rd.name; }
+          else { w *= 1 + (t < 27 ? 0.9 : 0.6) * cf; ww = 'fits the likely ' + rd.name; }
         } else if (rd.kind === 'pongs') {
           if (ctx.unseen[t] >= 2) { w *= 1 + 0.5 * cf; } else w *= 1 - 0.5 * cf;
         } else if (rd.kind === 'honors') {
-          if (rd.tiles.indexOf(t) >= 0) { w *= 1 + 2.5 * cf; ww = 'bisa melengkapi ' + rd.name; }
+          if (rd.tiles.indexOf(t) >= 0) { w *= 1 + 2.5 * cf; ww = 'could complete ' + rd.name; }
         } else if (rd.kind === 'outside') {
           if (t < 27 && t % 9 >= 3 && t % 9 <= 5) w *= 1 - 0.8 * cf;
-          else if (isTermOrHonor(t)) { w *= 1 + 0.6 * cf; ww = 'cocok dengan tebakan Mix Orphans'; }
+          else if (isTermOrHonor(t)) { w *= 1 + 0.6 * cf; ww = 'fits the likely Mix Orphans'; }
         }
       }
       wait[t] = clamp(w, 0, 0.5);
@@ -1083,7 +1095,7 @@
     }
     // cc = tangan lengkap saat menang; tiap jalur/pola yang terpenuhi dihitung (bisa lebih dari satu).
     function record(sc, cc) {
-      var name = sc ? mainPattern(sc) : 'Tangan lengkap';
+      var name = sc ? mainPattern(sc) : 'Complete hand';
       patterns[name] = (patterns[name] || 0) + 1;
       ptsSum += sc ? sc.points : 0; wins++;
       for (var q = 0; q < routes.length; q++) {

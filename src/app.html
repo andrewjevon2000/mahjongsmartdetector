@@ -396,6 +396,8 @@ details.panel[open] > summary::after { content: "−"; }
 .combo-bar i { display: block; height: 100%; background: var(--brass); border-radius: 3px; transition: width 400ms ease; }
 .combo-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .combo.faint { opacity: 0.6; }
+.combo-sec { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.combo-sec .pill { font-weight: 500; }
 .claim-card { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 10px; }
 .claim-card .hero-title { font-size: 36px; }
 .claim-card .btn { background: var(--brass-ink); color: var(--brass-2); border-color: transparent; }
@@ -453,19 +455,19 @@ body.view-open { overflow: hidden; }
   <header class="top">
     <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
     <span class="spacer"></span>
-    <button class="chip winds" type="button" id="windChip" data-view="game" aria-label="Round Wind, Seat Wind, dan Flower"></button>
-    <span class="chip num" id="turnChip">Giliran 1</span>
+    <button class="chip winds" type="button" id="windChip" data-view="game" aria-label="Round Wind, Seat Wind and Flowers"></button>
+    <span class="chip num" id="turnChip">Turn 1</span>
     <button class="iconbtn" type="button" id="menuBtn" data-view="menu" aria-label="Menu">⋯</button>
   </header>
 
   <div class="banner compact" id="exampleBanner" hidden>
-    <p>Contoh game, supaya kamu bisa lihat cara kerjanya.</p>
-    <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
+    <p>Example game, so you can see how it works.</p>
+    <button class="btn small primary" id="exampleNew" type="button">Start my own game</button>
   </div>
 
   <section class="panel" id="handPanel" aria-labelledby="handTitle">
     <div class="sec-head">
-      <h2 id="handTitle">Tanganmu</h2>
+      <h2 id="handTitle">Your hand</h2>
       <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
     </div>
@@ -473,143 +475,143 @@ body.view-open { overflow: hidden; }
     <div class="rack" id="rack"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
   </section>
-  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Potensi menang dan langkah berikutnya">
+  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Win potential and next move">
     <div id="hero"></div>
   </section>
 
-  <section class="opp-strip" id="oppStrip" aria-label="Lawan"></section>
+  <section class="opp-strip" id="oppStrip" aria-label="Opponents"></section>
 
 </div>
 
 <section class="view" id="view-menu" role="dialog" aria-modal="true" aria-label="Menu">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Menu</h2></header>
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Menu</h2></header>
   <div class="vbody">
     <div class="menu-list">
-      <button class="menu-item" type="button" data-view="table">Meja <small>buangan &amp; set lawan</small></button>
-      <button class="menu-item" type="button" data-view="detail">Detail analisis <small>peluang, pola, grafik</small></button>
-      <button class="menu-item" type="button" data-view="history">Langkah sebelumnya</button>
-      <button class="menu-item" type="button" data-view="abacus">Sempoa tile <small>sisa tiap tile</small></button>
-      <button class="menu-item" type="button" data-view="game">Angin &amp; Flower</button>
-      <button class="menu-item" type="button" data-view="rules">Aturan Majé</button>
-      <button class="menu-item" type="button" data-view="settings">Pengaturan</button>
-      <button class="menu-item danger" type="button" data-act="menu-new-game">Game baru</button>
+      <button class="menu-item" type="button" data-view="table">Table <small>discards &amp; opponents' sets</small></button>
+      <button class="menu-item" type="button" data-view="detail">Details <small>odds, patterns, charts</small></button>
+      <button class="menu-item" type="button" data-view="history">Previous moves</button>
+      <button class="menu-item" type="button" data-view="abacus">Tile counter <small>how many of each are left</small></button>
+      <button class="menu-item" type="button" data-view="game">Winds &amp; Flowers</button>
+      <button class="menu-item" type="button" data-view="rules">Majé Rules</button>
+      <button class="menu-item" type="button" data-view="settings">Settings</button>
+      <button class="menu-item danger" type="button" data-act="menu-new-game">New game</button>
     </div>
-    <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
+    <p class="note-line">Odds are based on tiles not yet seen. Discard safety and simulations are estimates: opponents don't discard at random, and they can win before you do.</p>
   </div>
 </section>
-<section class="view" id="view-detail" role="dialog" aria-modal="true" aria-label="Detail analisis">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Detail analisis</h2></header>
+<section class="view" id="view-detail" role="dialog" aria-modal="true" aria-label="Details">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Details</h2></header>
   <div class="vbody">
     <p class="muted small" id="drawsInfo" style="margin:0"></p>
     <div id="advice"></div>
   </div>
 </section>
-<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Kamera">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Kamera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
+<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Camera">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Camera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
   <div class="vbody">
     <div class="form" id="livePanel">
       <div class="live-controls" id="liveControls">
-      <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
+      <div class="seg wrap" id="liveTargets" role="group" aria-label="Camera is looking at"></div>
       <div class="live-stage" id="liveStage" hidden>
         <video id="liveVideo" playsinline muted autoplay></video>
-        <img id="liveImage" alt="Foto yang dideteksi" hidden>
+        <img id="liveImage" alt="Detected photo" hidden>
         <canvas id="liveCanvas" aria-hidden="true"></canvas>
       </div>
       <div class="photo-row">
-        <button class="btn primary" type="button" id="liveStart">Mulai kamera</button>
+        <button class="btn primary" type="button" id="liveStart">Start camera</button>
         <button class="btn" type="button" id="liveStop" hidden>Stop</button>
-        <button class="btn" type="button" id="liveFromPhoto">Deteksi dari foto</button>
+        <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
         <input type="file" id="liveFile" accept="image/*" hidden>
-        <label class="check small"><input type="checkbox" id="liveAuto" checked> Catat otomatis</label>
+        <label class="check small"><input type="checkbox" id="liveAuto" checked> Auto-record</label>
       </div>
       <div class="photo-row">
-        <button class="btn small" type="button" id="liveSnap" disabled>Simpan foto latihan</button>
-        <button class="btn small" type="button" id="liveZip" disabled>Unduh foto latihan (0)</button>
+        <button class="btn small" type="button" id="liveSnap" disabled>Save training photo</button>
+        <button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button>
       </div>
     </div>
     <p class="photo-msg" id="liveMsg"></p>
     <div class="readout" id="liveRead" hidden></div>
-      <div class="sub-head"><h3>Foto lewat Claude</h3></div>
+      <div class="sub-head"><h3>Photo via Claude</h3></div>
       <div class="photo-row">
-      <div class="seg" role="group" aria-label="Yang difoto">
-        <button type="button" id="scopeHand" aria-pressed="false">Tangan saya</button>
-        <button type="button" id="scopeTable" aria-pressed="true">Seluruh meja</button>
+      <div class="seg" role="group" aria-label="What to photograph">
+        <button type="button" id="scopeHand" aria-pressed="false">My hand</button>
+        <button type="button" id="scopeTable" aria-pressed="true">Whole table</button>
       </div>
     </div>
     <div class="photo-row">
       <button class="btn primary" type="button" id="camBtn" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-        Foto sekarang
+        Take photo
       </button>
-      <button class="btn" type="button" id="galBtn" disabled>Pilih dari galeri</button>
-      <button class="btn ghost" type="button" id="stopBtn" hidden>Berhenti</button>
+      <button class="btn" type="button" id="galBtn" disabled>Choose from gallery</button>
+      <button class="btn ghost" type="button" id="stopBtn" hidden>Stop</button>
       <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
       <input type="file" id="galInput" accept="image/*" multiple hidden>
     </div>
-    <p class="photo-msg" id="photoMsg">Menyiapkan pembaca foto…</p>
+    <p class="photo-msg" id="photoMsg">Preparing photo reader…</p>
     <div class="readout" id="readout" hidden></div>
-      <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
+      <p class="note-line">Tile model trained on the "Mahjong" dataset by Jon Chan (Roboflow Universe), CC BY 4.0. All detection runs on your phone; video never leaves the device.</p>
     </div>
   </div>
 </section>
-<section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Meja">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Meja</h2></header>
+<section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Table">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Table</h2></header>
   <div class="vbody">
-    <p class="muted small" style="margin:0">Kanan = pemain sesudah kamu. Ketuk tile untuk menghapus; tandai "Siap?" kalau lawan terlihat siap.</p>
+    <p class="muted small" style="margin:0">Right = the player after you. Tap a tile to remove it; mark "Ready?" when an opponent looks ready.</p>
     <div class="seats" id="seats"></div>
   </div>
 </section>
-<section class="view" id="view-game" role="dialog" aria-modal="true" aria-label="Angin &amp; Flower">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Angin &amp; Flower</h2></header>
+<section class="view" id="view-game" role="dialog" aria-modal="true" aria-label="Winds &amp; Flowers">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Winds &amp; Flowers</h2></header>
   <div class="vbody">
     <div class="round-row" id="roundRow">
       <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
+      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <div class="mini"><span>My Flowers</span><div class="flowers" id="flowers"></div></div>
     </div>
   </div>
 </section>
-<section class="view" id="view-abacus" role="dialog" aria-modal="true" aria-label="Sempoa tile">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Sempoa tile</h2><span class="spacer"></span><span class="muted small num" id="unseenTotal"></span></header>
+<section class="view" id="view-abacus" role="dialog" aria-modal="true" aria-label="Tile counter">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Tile counter</h2><span class="spacer"></span><span class="muted small num" id="unseenTotal"></span></header>
   <div class="vbody">
     <div class="bead-key">
-      <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
-      <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
-      <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
+      <span><i style="background:var(--brass);border-color:var(--brass)"></i>in your hand</span>
+      <span><i style="background:var(--muted);border-color:var(--muted)"></i>seen</span>
+      <span><i></i>unseen (you could still draw it)</span>
     </div>
     <div class="abacus" id="abacus"></div>
   </div>
 </section>
-<section class="view" id="view-history" role="dialog" aria-modal="true" aria-label="Langkah sebelumnya">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Langkah sebelumnya</h2></header>
+<section class="view" id="view-history" role="dialog" aria-modal="true" aria-label="Previous moves">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Previous moves</h2></header>
   <div class="vbody">
-    <div class="row"><button class="btn small" type="button" id="undoTop">Urungkan langkah terakhir</button></div>
+    <div class="row"><button class="btn small" type="button" id="undoTop">Undo last move</button></div>
     <div class="hist" id="hist"></div>
   </div>
 </section>
-<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Aturan Majé">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Aturan Majé</h2></header>
+<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Majé Rules">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Majé Rules</h2></header>
   <div class="vbody">
     <div class="rules">
       <ul>
-        <li>Hu (Mahjong): 4 sets + 1 pair (14 tile), <b>minimal 3 poin</b>. Tangan tanpa pola (Chicken Hand) bernilai 0.</li>
-        <li>Claim: Chi hanya dari pemain kiri (pemain sebelum kamu). Pong dan Kong dari siapa saja.</li>
-        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. Kalau dua orang Hu tile yang sama, yang di kanan pembuang yang menang.</li>
-        <li>Flower langsung dibuka, lalu ambil tile ganti dari dead wall. Kong: umumkan, lalu ambil tile ganti.</li>
-        <li>Self-draw: ketiga lawan bayar. Discard win: hanya pembuang yang bayar.</li>
-        <li>Dealer tetap kalau menang; kalau tidak, pindah ke pemain berikutnya. Rounds: East, South, West, North.</li>
+        <li>Hu (Mahjong): 4 sets + 1 pair (14 tiles), <b>at least 3 points</b>. A hand with no pattern (Chicken Hand) scores 0.</li>
+        <li>Claims: Chi only from the player on your left (the player before you). Pong and Kong from anyone.</li>
+        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. If two players Hu on the same tile, the one to the discarder's right wins.</li>
+        <li>Flowers are revealed right away, then draw a replacement tile from the dead wall. Kong: declare it, then draw a replacement tile.</li>
+        <li>Self-draw: all three opponents pay. Discard win: only the discarder pays.</li>
+        <li>The dealer stays on after a win; otherwise it passes to the next player. Rounds: East, South, West, North.</li>
       </ul>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Common Winning Hand</div>
         <div class="ptable">
-          <div>Chicken Hand <b>0</b></div><div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
-          <div>Sequence Hand / All Chows <b>1</b></div><div>No Orphan / All Simples <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
+          <div>Chicken Hand <b>0</b></div><div>All Chow <b>1</b></div><div>No Orphan <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
           <div>Mix Orphans <b>3</b></div><div>Pure Orphans <b>5</b></div><div>Half Flush <b>3</b></div><div>Full Flush <b>7</b></div>
         </div>
       </div>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Additional Point</div>
         <div class="ptable">
+          <div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
           <div>Robbing a Kong <b>1</b></div><div>Suitable Flower <b>1/Flower</b></div><div>No Flower <b>1</b></div>
           <div>Self Draw <b>1</b></div><div>Last Tile <b>1</b></div><div>Concealed Hand <b>1</b></div>
         </div>
@@ -623,19 +625,19 @@ body.view-open { overflow: hidden; }
         </div>
       </div>
       <div>
-        <div class="eyebrow" style="margin-bottom:6px">Aturan meja (sudah dikonfirmasi)</div>
+        <div class="eyebrow" style="margin-bottom:6px">Table rules (confirmed)</div>
         <ul>
-          <li>Chi hanya dari pemain kiri.</li>
-          <li>Versi yang lebih besar menggantikan versi kecilnya, tidak ditumpuk: Full Flush menggantikan Half Flush · Pure Orphans menggantikan Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand menggantikan All Pongs · All Honor menggantikan Half Flush, Mix Orphans, dan All Pongs · Heavenly Gates menggantikan Full Flush.</li>
-          <li>Pola dari jenis berbeda tetap dijumlah, mis. Little Dragon 5 + Half Flush 3 = 8.</li>
+          <li>Chi only from the player on your left.</li>
+          <li>The bigger version replaces the smaller one, they don't stack: Full Flush replaces Half Flush · Pure Orphans replaces Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand replaces All Pongs · All Honor replaces Half Flush, Mix Orphans and All Pongs · Heavenly Gates replaces Full Flush.</li>
+          <li>Patterns of different kinds still add up, e.g. Little Dragon 5 + Half Flush 3 = 8.</li>
         </ul>
       </div>
-      <p class="note-line">Concealed Hand yang menang tarik sendiri dihitung Self Draw. Robbing a Kong dan Last Tile tidak dihitung otomatis. Pair di Sequence Hand dibaca sebagai tile 2–8 (sesuai kata "simple" di buku).</p>
+      <p class="note-line">A Concealed Hand won by self-draw counts as Self Draw. Robbing a Kong and Last Tile are not scored automatically. The pair in All Chow is read as a 2–8 tile (the "simple" in the book).</p>
     </div>
   </div>
 </section>
-<section class="view" id="view-settings" role="dialog" aria-modal="true" aria-label="Pengaturan">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Pengaturan</h2></header>
+<section class="view" id="view-settings" role="dialog" aria-modal="true" aria-label="Settings">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Settings</h2></header>
   <div class="vbody">
     <div class="form">
       <div class="field">
@@ -681,17 +683,17 @@ body.view-open { overflow: hidden; }
 <div class="dock" id="dock">
   <div class="inner">
     <button class="btn primary" type="button" id="dockCam">Scan tangan</button>
-    <button class="btn" type="button" id="dockPad">+ Ketik tile</button>
-    <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
+    <button class="btn" type="button" id="dockPad">+ Type tiles</button>
+    <button class="btn" type="button" id="dockUndo" aria-label="Undo last move">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
     </button>
   </div>
 </div>
 
-<div class="sheet" id="sheet" hidden role="dialog" aria-label="Ketik tile">
+<div class="sheet" id="sheet" hidden role="dialog" aria-label="Type tiles">
   <div class="inner">
     <div class="sec-head">
-      <h2>Ketik tile</h2>
+      <h2>Type tiles</h2>
       <span class="spacer"></span>
       <button class="btn small" type="button" id="sheetUndo">Urungkan</button>
       <button class="btn small primary" type="button" id="sheetClose">Selesai</button>
@@ -699,8 +701,8 @@ body.view-open { overflow: hidden; }
     <div class="zones" id="zones" role="group" aria-label="Masukkan ke"></div>
     <div id="meldBox" hidden>
       <div class="row" style="margin-bottom:8px">
-        <span class="muted small">Set milik</span>
-        <div class="seg" role="group" aria-label="Set milik" id="meldWho"></div>
+        <span class="muted small">Set owner</span>
+        <div class="seg" role="group" aria-label="Set owner" id="meldWho"></div>
       </div>
       <div class="row">
         <div class="draft" id="draft"><span class="muted small">Ketuk 3 atau 4 tile di bawah</span></div>

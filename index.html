@@ -404,6 +404,8 @@ details.panel[open] > summary::after { content: "−"; }
 .combo-bar i { display: block; height: 100%; background: var(--brass); border-radius: 3px; transition: width 400ms ease; }
 .combo-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .combo.faint { opacity: 0.6; }
+.combo-sec { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.combo-sec .pill { font-weight: 500; }
 .claim-card { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 10px; }
 .claim-card .hero-title { font-size: 36px; }
 .claim-card .btn { background: var(--brass-ink); color: var(--brass-2); border-color: transparent; }
@@ -461,19 +463,19 @@ body.view-open { overflow: hidden; }
   <header class="top">
     <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
     <span class="spacer"></span>
-    <button class="chip winds" type="button" id="windChip" data-view="game" aria-label="Round Wind, Seat Wind, dan Flower"></button>
-    <span class="chip num" id="turnChip">Giliran 1</span>
+    <button class="chip winds" type="button" id="windChip" data-view="game" aria-label="Round Wind, Seat Wind and Flowers"></button>
+    <span class="chip num" id="turnChip">Turn 1</span>
     <button class="iconbtn" type="button" id="menuBtn" data-view="menu" aria-label="Menu">⋯</button>
   </header>
 
   <div class="banner compact" id="exampleBanner" hidden>
-    <p>Contoh game, supaya kamu bisa lihat cara kerjanya.</p>
-    <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
+    <p>Example game, so you can see how it works.</p>
+    <button class="btn small primary" id="exampleNew" type="button">Start my own game</button>
   </div>
 
   <section class="panel" id="handPanel" aria-labelledby="handTitle">
     <div class="sec-head">
-      <h2 id="handTitle">Tanganmu</h2>
+      <h2 id="handTitle">Your hand</h2>
       <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
     </div>
@@ -481,143 +483,143 @@ body.view-open { overflow: hidden; }
     <div class="rack" id="rack"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
   </section>
-  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Potensi menang dan langkah berikutnya">
+  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Win potential and next move">
     <div id="hero"></div>
   </section>
 
-  <section class="opp-strip" id="oppStrip" aria-label="Lawan"></section>
+  <section class="opp-strip" id="oppStrip" aria-label="Opponents"></section>
 
 </div>
 
 <section class="view" id="view-menu" role="dialog" aria-modal="true" aria-label="Menu">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Menu</h2></header>
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Menu</h2></header>
   <div class="vbody">
     <div class="menu-list">
-      <button class="menu-item" type="button" data-view="table">Meja <small>buangan &amp; set lawan</small></button>
-      <button class="menu-item" type="button" data-view="detail">Detail analisis <small>peluang, pola, grafik</small></button>
-      <button class="menu-item" type="button" data-view="history">Langkah sebelumnya</button>
-      <button class="menu-item" type="button" data-view="abacus">Sempoa tile <small>sisa tiap tile</small></button>
-      <button class="menu-item" type="button" data-view="game">Angin &amp; Flower</button>
-      <button class="menu-item" type="button" data-view="rules">Aturan Majé</button>
-      <button class="menu-item" type="button" data-view="settings">Pengaturan</button>
-      <button class="menu-item danger" type="button" data-act="menu-new-game">Game baru</button>
+      <button class="menu-item" type="button" data-view="table">Table <small>discards &amp; opponents' sets</small></button>
+      <button class="menu-item" type="button" data-view="detail">Details <small>odds, patterns, charts</small></button>
+      <button class="menu-item" type="button" data-view="history">Previous moves</button>
+      <button class="menu-item" type="button" data-view="abacus">Tile counter <small>how many of each are left</small></button>
+      <button class="menu-item" type="button" data-view="game">Winds &amp; Flowers</button>
+      <button class="menu-item" type="button" data-view="rules">Majé Rules</button>
+      <button class="menu-item" type="button" data-view="settings">Settings</button>
+      <button class="menu-item danger" type="button" data-act="menu-new-game">New game</button>
     </div>
-    <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
+    <p class="note-line">Odds are based on tiles not yet seen. Discard safety and simulations are estimates: opponents don't discard at random, and they can win before you do.</p>
   </div>
 </section>
-<section class="view" id="view-detail" role="dialog" aria-modal="true" aria-label="Detail analisis">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Detail analisis</h2></header>
+<section class="view" id="view-detail" role="dialog" aria-modal="true" aria-label="Details">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Details</h2></header>
   <div class="vbody">
     <p class="muted small" id="drawsInfo" style="margin:0"></p>
     <div id="advice"></div>
   </div>
 </section>
-<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Kamera">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Kamera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
+<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Camera">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Camera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
   <div class="vbody">
     <div class="form" id="livePanel">
       <div class="live-controls" id="liveControls">
-      <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
+      <div class="seg wrap" id="liveTargets" role="group" aria-label="Camera is looking at"></div>
       <div class="live-stage" id="liveStage" hidden>
         <video id="liveVideo" playsinline muted autoplay></video>
-        <img id="liveImage" alt="Foto yang dideteksi" hidden>
+        <img id="liveImage" alt="Detected photo" hidden>
         <canvas id="liveCanvas" aria-hidden="true"></canvas>
       </div>
       <div class="photo-row">
-        <button class="btn primary" type="button" id="liveStart">Mulai kamera</button>
+        <button class="btn primary" type="button" id="liveStart">Start camera</button>
         <button class="btn" type="button" id="liveStop" hidden>Stop</button>
-        <button class="btn" type="button" id="liveFromPhoto">Deteksi dari foto</button>
+        <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
         <input type="file" id="liveFile" accept="image/*" hidden>
-        <label class="check small"><input type="checkbox" id="liveAuto" checked> Catat otomatis</label>
+        <label class="check small"><input type="checkbox" id="liveAuto" checked> Auto-record</label>
       </div>
       <div class="photo-row">
-        <button class="btn small" type="button" id="liveSnap" disabled>Simpan foto latihan</button>
-        <button class="btn small" type="button" id="liveZip" disabled>Unduh foto latihan (0)</button>
+        <button class="btn small" type="button" id="liveSnap" disabled>Save training photo</button>
+        <button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button>
       </div>
     </div>
     <p class="photo-msg" id="liveMsg"></p>
     <div class="readout" id="liveRead" hidden></div>
-      <div class="sub-head"><h3>Foto lewat Claude</h3></div>
+      <div class="sub-head"><h3>Photo via Claude</h3></div>
       <div class="photo-row">
-      <div class="seg" role="group" aria-label="Yang difoto">
-        <button type="button" id="scopeHand" aria-pressed="false">Tangan saya</button>
-        <button type="button" id="scopeTable" aria-pressed="true">Seluruh meja</button>
+      <div class="seg" role="group" aria-label="What to photograph">
+        <button type="button" id="scopeHand" aria-pressed="false">My hand</button>
+        <button type="button" id="scopeTable" aria-pressed="true">Whole table</button>
       </div>
     </div>
     <div class="photo-row">
       <button class="btn primary" type="button" id="camBtn" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-        Foto sekarang
+        Take photo
       </button>
-      <button class="btn" type="button" id="galBtn" disabled>Pilih dari galeri</button>
-      <button class="btn ghost" type="button" id="stopBtn" hidden>Berhenti</button>
+      <button class="btn" type="button" id="galBtn" disabled>Choose from gallery</button>
+      <button class="btn ghost" type="button" id="stopBtn" hidden>Stop</button>
       <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
       <input type="file" id="galInput" accept="image/*" multiple hidden>
     </div>
-    <p class="photo-msg" id="photoMsg">Menyiapkan pembaca foto…</p>
+    <p class="photo-msg" id="photoMsg">Preparing photo reader…</p>
     <div class="readout" id="readout" hidden></div>
-      <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
+      <p class="note-line">Tile model trained on the "Mahjong" dataset by Jon Chan (Roboflow Universe), CC BY 4.0. All detection runs on your phone; video never leaves the device.</p>
     </div>
   </div>
 </section>
-<section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Meja">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Meja</h2></header>
+<section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Table">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Table</h2></header>
   <div class="vbody">
-    <p class="muted small" style="margin:0">Kanan = pemain sesudah kamu. Ketuk tile untuk menghapus; tandai "Siap?" kalau lawan terlihat siap.</p>
+    <p class="muted small" style="margin:0">Right = the player after you. Tap a tile to remove it; mark "Ready?" when an opponent looks ready.</p>
     <div class="seats" id="seats"></div>
   </div>
 </section>
-<section class="view" id="view-game" role="dialog" aria-modal="true" aria-label="Angin &amp; Flower">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Angin &amp; Flower</h2></header>
+<section class="view" id="view-game" role="dialog" aria-modal="true" aria-label="Winds &amp; Flowers">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Winds &amp; Flowers</h2></header>
   <div class="vbody">
     <div class="round-row" id="roundRow">
       <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
+      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <div class="mini"><span>My Flowers</span><div class="flowers" id="flowers"></div></div>
     </div>
   </div>
 </section>
-<section class="view" id="view-abacus" role="dialog" aria-modal="true" aria-label="Sempoa tile">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Sempoa tile</h2><span class="spacer"></span><span class="muted small num" id="unseenTotal"></span></header>
+<section class="view" id="view-abacus" role="dialog" aria-modal="true" aria-label="Tile counter">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Tile counter</h2><span class="spacer"></span><span class="muted small num" id="unseenTotal"></span></header>
   <div class="vbody">
     <div class="bead-key">
-      <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
-      <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
-      <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
+      <span><i style="background:var(--brass);border-color:var(--brass)"></i>in your hand</span>
+      <span><i style="background:var(--muted);border-color:var(--muted)"></i>seen</span>
+      <span><i></i>unseen (you could still draw it)</span>
     </div>
     <div class="abacus" id="abacus"></div>
   </div>
 </section>
-<section class="view" id="view-history" role="dialog" aria-modal="true" aria-label="Langkah sebelumnya">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Langkah sebelumnya</h2></header>
+<section class="view" id="view-history" role="dialog" aria-modal="true" aria-label="Previous moves">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Previous moves</h2></header>
   <div class="vbody">
-    <div class="row"><button class="btn small" type="button" id="undoTop">Urungkan langkah terakhir</button></div>
+    <div class="row"><button class="btn small" type="button" id="undoTop">Undo last move</button></div>
     <div class="hist" id="hist"></div>
   </div>
 </section>
-<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Aturan Majé">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Aturan Majé</h2></header>
+<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Majé Rules">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Majé Rules</h2></header>
   <div class="vbody">
     <div class="rules">
       <ul>
-        <li>Hu (Mahjong): 4 sets + 1 pair (14 tile), <b>minimal 3 poin</b>. Tangan tanpa pola (Chicken Hand) bernilai 0.</li>
-        <li>Claim: Chi hanya dari pemain kiri (pemain sebelum kamu). Pong dan Kong dari siapa saja.</li>
-        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. Kalau dua orang Hu tile yang sama, yang di kanan pembuang yang menang.</li>
-        <li>Flower langsung dibuka, lalu ambil tile ganti dari dead wall. Kong: umumkan, lalu ambil tile ganti.</li>
-        <li>Self-draw: ketiga lawan bayar. Discard win: hanya pembuang yang bayar.</li>
-        <li>Dealer tetap kalau menang; kalau tidak, pindah ke pemain berikutnya. Rounds: East, South, West, North.</li>
+        <li>Hu (Mahjong): 4 sets + 1 pair (14 tiles), <b>at least 3 points</b>. A hand with no pattern (Chicken Hand) scores 0.</li>
+        <li>Claims: Chi only from the player on your left (the player before you). Pong and Kong from anyone.</li>
+        <li>2 players claiming a discard: Hu &gt; Kong/Pong &gt; Chow. If two players Hu on the same tile, the one to the discarder's right wins.</li>
+        <li>Flowers are revealed right away, then draw a replacement tile from the dead wall. Kong: declare it, then draw a replacement tile.</li>
+        <li>Self-draw: all three opponents pay. Discard win: only the discarder pays.</li>
+        <li>The dealer stays on after a win; otherwise it passes to the next player. Rounds: East, South, West, North.</li>
       </ul>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Common Winning Hand</div>
         <div class="ptable">
-          <div>Chicken Hand <b>0</b></div><div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
-          <div>Sequence Hand / All Chows <b>1</b></div><div>No Orphan / All Simples <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
+          <div>Chicken Hand <b>0</b></div><div>All Chow <b>1</b></div><div>No Orphan <b>1</b></div><div>Pure Straight <b>3</b></div><div>All Pongs <b>3</b></div>
           <div>Mix Orphans <b>3</b></div><div>Pure Orphans <b>5</b></div><div>Half Flush <b>3</b></div><div>Full Flush <b>7</b></div>
         </div>
       </div>
       <div>
         <div class="eyebrow" style="margin-bottom:6px">Additional Point</div>
         <div class="ptable">
+          <div>Seat Wind <b>1</b></div><div>Round Wind <b>1</b></div><div>Dragon (per Pong/Kong) <b>1</b></div>
           <div>Robbing a Kong <b>1</b></div><div>Suitable Flower <b>1/Flower</b></div><div>No Flower <b>1</b></div>
           <div>Self Draw <b>1</b></div><div>Last Tile <b>1</b></div><div>Concealed Hand <b>1</b></div>
         </div>
@@ -631,19 +633,19 @@ body.view-open { overflow: hidden; }
         </div>
       </div>
       <div>
-        <div class="eyebrow" style="margin-bottom:6px">Aturan meja (sudah dikonfirmasi)</div>
+        <div class="eyebrow" style="margin-bottom:6px">Table rules (confirmed)</div>
         <ul>
-          <li>Chi hanya dari pemain kiri.</li>
-          <li>Versi yang lebih besar menggantikan versi kecilnya, tidak ditumpuk: Full Flush menggantikan Half Flush · Pure Orphans menggantikan Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand menggantikan All Pongs · All Honor menggantikan Half Flush, Mix Orphans, dan All Pongs · Heavenly Gates menggantikan Full Flush.</li>
-          <li>Pola dari jenis berbeda tetap dijumlah, mis. Little Dragon 5 + Half Flush 3 = 8.</li>
+          <li>Chi only from the player on your left.</li>
+          <li>The bigger version replaces the smaller one, they don't stack: Full Flush replaces Half Flush · Pure Orphans replaces Mix Orphans · Great Dragon &gt; Little Dragon &gt; Dragon per pong · Great Wind &gt; Little Wind &gt; Seat/Round Wind · Kong Hand replaces All Pongs · All Honor replaces Half Flush, Mix Orphans and All Pongs · Heavenly Gates replaces Full Flush.</li>
+          <li>Patterns of different kinds still add up, e.g. Little Dragon 5 + Half Flush 3 = 8.</li>
         </ul>
       </div>
-      <p class="note-line">Concealed Hand yang menang tarik sendiri dihitung Self Draw. Robbing a Kong dan Last Tile tidak dihitung otomatis. Pair di Sequence Hand dibaca sebagai tile 2–8 (sesuai kata "simple" di buku).</p>
+      <p class="note-line">A Concealed Hand won by self-draw counts as Self Draw. Robbing a Kong and Last Tile are not scored automatically. The pair in All Chow is read as a 2–8 tile (the "simple" in the book).</p>
     </div>
   </div>
 </section>
-<section class="view" id="view-settings" role="dialog" aria-modal="true" aria-label="Pengaturan">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Pengaturan</h2></header>
+<section class="view" id="view-settings" role="dialog" aria-modal="true" aria-label="Settings">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Settings</h2></header>
   <div class="vbody">
     <div class="form">
       <div class="field">
@@ -689,17 +691,17 @@ body.view-open { overflow: hidden; }
 <div class="dock" id="dock">
   <div class="inner">
     <button class="btn primary" type="button" id="dockCam">Scan tangan</button>
-    <button class="btn" type="button" id="dockPad">+ Ketik tile</button>
-    <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
+    <button class="btn" type="button" id="dockPad">+ Type tiles</button>
+    <button class="btn" type="button" id="dockUndo" aria-label="Undo last move">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
     </button>
   </div>
 </div>
 
-<div class="sheet" id="sheet" hidden role="dialog" aria-label="Ketik tile">
+<div class="sheet" id="sheet" hidden role="dialog" aria-label="Type tiles">
   <div class="inner">
     <div class="sec-head">
-      <h2>Ketik tile</h2>
+      <h2>Type tiles</h2>
       <span class="spacer"></span>
       <button class="btn small" type="button" id="sheetUndo">Urungkan</button>
       <button class="btn small primary" type="button" id="sheetClose">Selesai</button>
@@ -707,8 +709,8 @@ body.view-open { overflow: hidden; }
     <div class="zones" id="zones" role="group" aria-label="Masukkan ke"></div>
     <div id="meldBox" hidden>
       <div class="row" style="margin-bottom:8px">
-        <span class="muted small">Set milik</span>
-        <div class="seg" role="group" aria-label="Set milik" id="meldWho"></div>
+        <span class="muted small">Set owner</span>
+        <div class="seg" role="group" aria-label="Set owner" id="meldWho"></div>
       </div>
       <div class="row">
         <div class="draft" id="draft"><span class="muted small">Ketuk 3 atau 4 tile di bawah</span></div>
@@ -1086,9 +1088,9 @@ body.view-open { overflow: hidden; }
   }
 
   var RULE_ROUTES = [
-    { rule: 'allChows', name: 'Sequence Hand', pts: 1 },
-    { rule: 'allSimples', name: 'All Simples', pts: 1 },
-    { rule: 'chowsSimples', name: 'Sequence Hand + All Simples', pts: 2 },
+    { rule: 'allChows', name: 'All Chow', pts: 1 },
+    { rule: 'allSimples', name: 'No Orphan', pts: 1 },
+    { rule: 'chowsSimples', name: 'All Chow + No Orphan', pts: 2 },
     { rule: 'allPongs', name: 'All Pongs', pts: 3 },
     { rule: 'flush0', name: 'Half Flush Characters', pts: 3 },
     { rule: 'flush1', name: 'Half Flush Dots', pts: 3 },
@@ -1107,7 +1109,7 @@ body.view-open { overflow: hidden; }
     if (hit) return hit;
     var open = openCount(cfg) > 0, four = (cfg.sets || 4) === 4, S = setsNeeded(cfg), list = [];
     if (!cfg.scoring) {
-      list.push({ kind: 'std', name: 'Tangan lengkap', pts: 0, g: 0 });
+      list.push({ kind: 'std', name: 'Complete hand', pts: 0, g: 0 });
       if (!open && four && cfg.sevenPairs) list.push({ kind: 'chiitoi', name: '7 Pairs', pts: 0, g: 0 });
       if (!open && four && cfg.thirteenOrphans) list.push({ kind: 'kokushi', name: '13 Orphans', pts: 0, g: 0 });
       routeCache.set(key, list);
@@ -1197,7 +1199,15 @@ body.view-open { overflow: hidden; }
 
   /* ---------- Hitung poin (Majé House Rules) ---------- */
 
-  var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1 };
+  var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1, 'Last Tile': 1, 'Robbing a Kong': 1 };
+  // Kombinasi tambahan (poin kecil yang menempel pada tangan utama): ditampilkan setelah kombinasi utama.
+  var SECONDARY = { 'Seat Wind': 1, 'Round Wind': 1, 'Dragon': 1 };
+  function patternRank(name) { return EXTRA[name] ? 2 : SECONDARY[name] ? 1 : 0; }
+  function orderPatterns(p) {
+    return p.map(function (x, i) { return [x, i]; })
+      .sort(function (a, b) { return patternRank(a[0][0]) - patternRank(b[0][0]) || a[1] - b[1]; })
+      .map(function (x) { return x[0]; });
+  }
 
   function decompositions(c, S) {
     var out = [], a = c.slice(), sets = [];
@@ -1262,8 +1272,8 @@ body.view-open { overflow: hidden; }
       if (roundP) p.push(['Round Wind', 1]);
     }
     var fl = flushOf(tiles);
-    if (chows === sets.length && isSimple(pair)) p.push(['Sequence Hand', 1]);
-    if (tiles.every(isSimple)) p.push(['All Simples', 1]);
+    if (chows === sets.length && isSimple(pair)) p.push(['All Chow', 1]);
+    if (tiles.every(isSimple)) p.push(['No Orphan', 1]);
     for (var su = 0; su < 3; su++) {
       var b = su * 9, has = [false, false, false];
       sets.forEach(function (s) { if (s.type === 'chow' && s.t >= b && s.t < b + 9 && (s.t - b) % 3 === 0) has[(s.t - b) / 3] = true; });
@@ -1292,7 +1302,7 @@ body.view-open { overflow: hidden; }
     var S = setsNeeded(cfg), best = null;
     function consider(p) {
       var pts = total(p);
-      if (!best || pts > best.points) best = { points: pts, patterns: p };
+      if (!best || pts > best.points) best = { points: pts, patterns: orderPatterns(p) };
     }
     decompositions(c, S).forEach(function (d) {
       consider(scoreStd(d.sets.concat(melds), d.pair, cfg, selfDraw, concealed, opts));
@@ -1308,7 +1318,7 @@ body.view-open { overflow: hidden; }
         else {
           if (fl.one) p7.push(fl.hasHonor ? ['Half Flush', 3] : ['Full Flush', 7]);
           if (tiles.every(isTermOrHonor)) p7.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
-          if (tiles.every(isSimple)) p7.push(['All Simples', 1]);
+          if (tiles.every(isSimple)) p7.push(['No Orphan', 1]);
         }
         addExtras(p7, cfg, selfDraw, true, opts);
         consider(p7);
@@ -1339,8 +1349,12 @@ body.view-open { overflow: hidden; }
   }
 
   function mainPattern(sc) {
-    var top = null;
-    sc.patterns.forEach(function (x) { if (!EXTRA[x[0]] && (!top || x[1] > top[1])) top = x; });
+    var top = null, topRank = 9;
+    sc.patterns.forEach(function (x) {
+      var r = patternRank(x[0]);
+      if (r === 2) return;
+      if (r < topRank || (r === topRank && x[1] > top[1])) { top = x; topRank = r; }
+    });
     return top ? top[0] : 'Chicken Hand';
   }
 
@@ -1463,16 +1477,16 @@ body.view-open { overflow: hidden; }
   // Peluang tile t jadi tile penentu Hu lawan, kalau lawan sudah siap (sebelum membaca polanya).
   // Aturan HK tidak punya furiten, jadi tile yang sudah dia buang tidak 100% aman.
   function baseWait(t, pond, melds, known) {
-    if (pond.indexOf(t) >= 0) return { w: 0.012, why: 'sudah dibuang lawan ini' };
+    if (pond.indexOf(t) >= 0) return { w: 0.012, why: 'already discarded by this player' };
     for (var i = 0; i < melds.length; i++) {
-      if (meldType(melds[i]) === 'pong' && melds[i][0] === t) return { w: 0.004, why: 'sudah dia Pong' };
+      if (meldType(melds[i]) === 'pong' && melds[i][0] === t) return { w: 0.004, why: 'already in their Pong' };
     }
     if (t >= 27) {
       var k = known[t];
-      if (k >= 4) return { w: 0, why: 'semua salinan terlihat' };
-      if (k === 3) return { w: 0.01, why: '3 salinan terlihat' };
-      if (k === 2) return { w: 0.03, why: '2 salinan terlihat' };
-      return { w: 0.05, why: 'honor yang belum banyak terlihat' };
+      if (k >= 4) return { w: 0, why: 'all copies seen' };
+      if (k === 3) return { w: 0.01, why: '3 copies seen' };
+      if (k === 2) return { w: 0.03, why: '2 copies seen' };
+      return { w: 0.05, why: 'honor tile, few copies seen' };
     }
     var n = t % 9 + 1, b = t - (n - 1);
     var w = (n === 1 || n === 9) ? 0.06 : (n === 2 || n === 8) ? 0.09 : 0.12;
@@ -1483,12 +1497,12 @@ body.view-open { overflow: hidden; }
     else {
       var lo = inPond(n - 3), hi = inPond(n + 3);
       if (lo && hi) { w *= 0.75; why.push('suji ' + (n - 3) + '-' + (n + 3)); }
-      else if (lo || hi) { w *= 0.88; why.push('setengah suji'); }
+      else if (lo || hi) { w *= 0.88; why.push('half suji'); }
     }
     function gone(x) { return x < 1 || x > 9 || known[b + x - 1] >= 4; }
-    if ((gone(n + 1) || gone(n + 2)) && (gone(n - 1) || gone(n - 2))) { w *= 0.5; why.push('tetangganya sudah habis'); }
-    if (known[t] >= 3) { w *= 0.7; why.push('3 salinan terlihat'); }
-    return { w: w, why: why.join(', ') || 'tile tengah, belum ada petunjuk' };
+    if ((gone(n + 1) || gone(n + 2)) && (gone(n - 1) || gone(n - 2))) { w *= 0.5; why.push('neighbours all seen'); }
+    if (known[t] >= 3) { w *= 0.7; why.push('3 copies seen'); }
+    return { w: w, why: why.join(', ') || 'middle tile, no clues yet' };
   }
 
   // opp: { pond:[ids], melds:[[ids]], alert, seatWind }; ctx: { roundWind, known, unseen, minPoints }
@@ -1520,7 +1534,7 @@ body.view-open { overflow: hidden; }
     }
     var pongs = melds.filter(function (m) { return meldType(m) !== 'chow'; }).length;
     if (pongs >= 2 && pongs === melds.length) {
-      reads.push({ kind: 'pongs', conf: Math.min(0.85, 0.35 + 0.15 * pongs), name: 'All Pongs', avoid: 'tile yang masih banyak sisa (bisa jadi pair/pong)' });
+      reads.push({ kind: 'pongs', conf: Math.min(0.85, 0.35 + 0.15 * pongs), name: 'All Pongs', avoid: 'tiles with many copies left (pair/pong material)' });
     }
     var dragonP = melds.filter(function (m) { return meldType(m) !== 'chow' && m[0] >= 31; }).map(function (m) { return m[0]; });
     if (dragonP.length >= 2) {
@@ -1547,9 +1561,9 @@ body.view-open { overflow: hidden; }
     if (melds.length && (ctx.minPoints || 0) >= 3 && banked === 0 && !opp.alert) {
       var anyBig = [0, 1, 2].some(function (x) { return meldFeasible('flush' + x, melds); }) ||
         meldFeasible('allPongs', melds) || meldFeasible('outside', melds);
-      if (!anyBig) { threat *= 0.6; notes.push('set terbukanya tidak cocok pola besar, susah capai ' + ctx.minPoints + ' poin'); }
+      if (!anyBig) { threat *= 0.6; notes.push('open sets do not fit any big pattern; hard to reach ' + ctx.minPoints + ' points'); }
     }
-    if (banked) notes.push('sudah punya ' + banked + ' poin dari Pong honor');
+    if (banked) notes.push('already has ' + banked + ' points from honor Pongs');
     var wait = new Array(34), why = new Array(34);
     for (var t = 0; t < 34; t++) {
       var r = baseWait(t, pond, melds, ctx.known), w = r.w, ww = r.why;
@@ -1557,14 +1571,14 @@ body.view-open { overflow: hidden; }
         var rd = reads[q], cf = rd.conf;
         if (rd.kind === 'flush') {
           if (t < 27 && suitOf(t) !== rd.suit) w *= 1 - 0.85 * cf;
-          else { w *= 1 + (t < 27 ? 0.9 : 0.6) * cf; ww = 'cocok dengan tebakan ' + rd.name; }
+          else { w *= 1 + (t < 27 ? 0.9 : 0.6) * cf; ww = 'fits the likely ' + rd.name; }
         } else if (rd.kind === 'pongs') {
           if (ctx.unseen[t] >= 2) { w *= 1 + 0.5 * cf; } else w *= 1 - 0.5 * cf;
         } else if (rd.kind === 'honors') {
-          if (rd.tiles.indexOf(t) >= 0) { w *= 1 + 2.5 * cf; ww = 'bisa melengkapi ' + rd.name; }
+          if (rd.tiles.indexOf(t) >= 0) { w *= 1 + 2.5 * cf; ww = 'could complete ' + rd.name; }
         } else if (rd.kind === 'outside') {
           if (t < 27 && t % 9 >= 3 && t % 9 <= 5) w *= 1 - 0.8 * cf;
-          else if (isTermOrHonor(t)) { w *= 1 + 0.6 * cf; ww = 'cocok dengan tebakan Mix Orphans'; }
+          else if (isTermOrHonor(t)) { w *= 1 + 0.6 * cf; ww = 'fits the likely Mix Orphans'; }
         }
       }
       wait[t] = clamp(w, 0, 0.5);
@@ -1813,7 +1827,7 @@ body.view-open { overflow: hidden; }
     }
     // cc = tangan lengkap saat menang; tiap jalur/pola yang terpenuhi dihitung (bisa lebih dari satu).
     function record(sc, cc) {
-      var name = sc ? mainPattern(sc) : 'Tangan lengkap';
+      var name = sc ? mainPattern(sc) : 'Complete hand';
       patterns[name] = (patterns[name] || 0) + 1;
       ptsSum += sc ? sc.points : 0; wins++;
       for (var q = 0; q < routes.length; q++) {
@@ -3270,12 +3284,20 @@ body.view-open { overflow: hidden; }
   var ROUTE_LABEL = { 'Chicken Hand + Additional Point': 'Chicken Hand + poin tambahan' };
   // Daftar kombinasi menang yang mungkin, dengan peluangnya (dari simulasi) dan jaraknya (pasti).
   function combosBlock(an, sim) {
-    var rows = (an.routeList || []).map(function (r) {
+    var all = (an.routeList || []).map(function (r) {
       var p = sim && sim.routes ? (sim.routes[r.name] || 0) : null;
-      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p };
+      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p, kind: r.kind };
     });
-    if (!rows.length) return '<div class="hero-sub">Belum ada kombinasi yang mencapai ' + an.M + ' poin dengan tile tersisa.</div>';
-    rows.sort(function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; });
+    if (!all.length) return '<div class="hero-sub">Belum ada kombinasi yang mencapai ' + an.M + ' poin dengan tile tersisa.</div>';
+    var bySort = function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; };
+    // Seat Wind / Round Wind / Dragon = kombinasi tambahan, ditampilkan terpisah
+    var rows = all.filter(function (r) { return r.kind !== 'honor'; }).sort(bySort);
+    // tambahan hanya ditampilkan kalau peluangnya nyata (>= 0,5%), supaya tidak jadi daftar "<1%"
+    var sec = all.filter(function (r) { return r.kind === 'honor' && (r.p == null || r.p >= 0.005); }).sort(bySort);
+    var secHtml = sec.length ? '<div class="combo-sec"><span class="eyebrow">Tambahan</span>' + sec.slice(0, 4).map(function (r) {
+      return '<span class="pill">' + esc(r.name) + ' <span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></span>';
+    }).join('') + '</div>' : '';
+    if (!rows.length) return secHtml || '<div class="hero-sub">Belum ada kombinasi utama yang mencapai ' + an.M + ' poin.</div>';
     // tampilkan yang punya peluang nyata; kalau sedikit, tambahkan 2 jalur terdekat sebagai gambaran
     var shown = rows.filter(function (r) { return r.p == null || r.p >= 0.005; }).slice(0, 5);
     if (shown.length < 2) {
@@ -3288,7 +3310,7 @@ body.view-open { overflow: hidden; }
         '<div class="combo-top"><b>' + esc(r.name) + '</b><span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></div>' +
         '<div class="combo-bar"><i style="width:' + w + '%"></i></div>' +
         '<div class="combo-sub">' + (an.scoring ? r.g + ' poin · ' : '') + (r.d === 0 ? 'tinggal 1 tile' : r.d + ' langkah') + ' · ' + r.uk + ' tile membantu</div></div>';
-    }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' kombinasi lain, lihat Detail</div>' : '') + '</div>';
+    }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' kombinasi lain, lihat Detail</div>' : '') + secHtml + '</div>';
   }
   function renderHero(an) {
     if (!an) return;
@@ -3608,14 +3630,14 @@ body.view-open { overflow: hidden; }
   if (inArtifact || !canCamera) {
     $('liveControls').hidden = true;
     msg(inArtifact
-      ? 'Kamera live tidak diizinkan di dalam Claude. Buka versi GitHub Pages untuk memakai kamera live; di sini tetap bisa pakai Foto.'
-      : 'Browser ini tidak memberi akses kamera (butuh HTTPS). Buka lewat GitHub Pages.');
+      ? 'Live camera is not available inside Claude. Open the GitHub Pages version to use the live camera; here you can still use Photo.'
+      : 'This browser does not allow camera access (HTTPS required). Open it via GitHub Pages.');
     return;
   }
-  msg('Arahkan kamera ke tanganmu (tile berdiri menghadap kamera) atau ke buangan satu pemain. Mesin mencatat otomatis kalau hasilnya stabil.');
+  msg('Point the camera at your hand (tiles standing, facing the camera) or at one player’s discards. Results are recorded automatically once they are stable.');
 
   /* ---------- target (yang sedang dilihat kamera) ---------- */
-  var TARGETS = [['hand', 'Tangan saya'], ['right', 'Buangan Kanan'], ['across', 'Buangan Depan'], ['left', 'Buangan Kiri'], ['me', 'Buangan saya']];
+  var TARGETS = [['hand', 'My hand'], ['right', 'Right discards'], ['across', 'Across discards'], ['left', 'Left discards'], ['me', 'My discards']];
   function renderTargets() {
     $('liveTargets').innerHTML = TARGETS.map(function (x) {
       return '<button type="button" data-live-target="' + x[0] + '" aria-pressed="' + (st.target === x[0]) + '">' + x[1] + '</button>';
@@ -3628,7 +3650,7 @@ body.view-open { overflow: hidden; }
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
       s.src = src; s.async = true; s.crossOrigin = 'anonymous';
-      s.onload = resolve; s.onerror = function () { reject(new Error('gagal memuat ' + src)); };
+      s.onload = resolve; s.onerror = function () { reject(new Error('failed to load ' + src)); };
       document.head.appendChild(s);
     });
   }
@@ -3642,7 +3664,7 @@ body.view-open { overflow: hidden; }
   function loadModel() {
     if (st.modelState === 'ready' || st.modelState === 'loading') return Promise.resolve();
     st.modelState = 'loading';
-    msg('Memuat model pengenal tile…', true);
+    msg('Loading tile model…', true);
     return fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw { missing: true };
       return r.json();
@@ -3660,14 +3682,14 @@ body.view-open { overflow: hidden; }
     }).then(function (session) {
       st.session = session;
       st.modelState = 'ready';
-      msg('Model siap. Tahan kamera stabil beberapa detik sampai hasilnya muncul.');
+      msg('Model ready. Hold the camera steady for a second or two.');
     }).catch(function (e) {
       if (e && e.missing) {
         st.modelState = 'missing';
-        msg('Model pengenal tile belum dipasang. Kamera tetap bisa dipakai untuk mengumpulkan foto latihan.');
+        msg('Tile model not installed yet. You can still use the camera to collect training photos.');
       } else {
         st.modelState = 'error';
-        msg('Model gagal dimuat (' + (e && e.message ? e.message : 'koneksi') + '). Coba muat ulang halaman.');
+        msg('Could not load the model (' + (e && e.message ? e.message : 'connection') + '). Try reloading the page.');
       }
     });
   }
@@ -3694,8 +3716,8 @@ body.view-open { overflow: hidden; }
       loop();
     }).catch(function (e) {
       msg(e && e.name === 'NotAllowedError'
-        ? 'Izin kamera ditolak. Izinkan kamera untuk situs ini di pengaturan browser, lalu coba lagi.'
-        : 'Kamera tidak bisa dibuka: ' + (e && e.message ? e.message : 'tidak diketahui'));
+        ? 'Camera permission denied. Allow the camera for this site in your browser settings, then try again.'
+        : 'Could not open the camera: ' + (e && e.message ? e.message : 'unknown error'));
     });
   }
   function stop() {
@@ -3829,15 +3851,15 @@ body.view-open { overflow: hidden; }
       var img = $('liveImage'), url = URL.createObjectURL(file);
       img.onload = function () {
         $('liveVideo').hidden = true; img.hidden = false; $('liveStage').hidden = false;
-        msg('Mendeteksi tile di foto…', true);
+        msg('Reading photo…', true);
         var t0 = performance.now();
         detect(img).then(function (dets) {
           draw(dets, img);
-          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tile';
-          msg(dets.length ? 'Selesai. Periksa kotak di foto; hasilnya di bawah.' : 'Tidak ada tile yang terdeteksi. Coba foto lebih dekat dan terang.');
+          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tiles';
+          msg(dets.length ? 'Done. Check the boxes on the photo; the result is below.' : 'No tiles detected. Try a closer, brighter photo.');
           st.appliedKey = null; st.stable = null;
           if (dets.length) apply(frameResult(dets));
-        }).catch(function (e) { msg('Deteksi gagal: ' + (e && e.message ? e.message : e)); });
+        }).catch(function (e) { msg('Detection failed: ' + (e && e.message ? e.message : e)); });
       };
       img.src = url;
     });
@@ -3857,9 +3879,9 @@ body.view-open { overflow: hidden; }
       onFrame(frameResult(dets));
       var dt = performance.now() - t0;
       st.fps = st.fps ? st.fps * 0.8 + (1000 / dt) * 0.2 : 1000 / dt;
-      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tile';
+      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tiles';
     }).catch(function (e) {
-      msg('Deteksi gagal: ' + (e && e.message ? e.message : e));
+      msg('Detection failed: ' + (e && e.message ? e.message : e));
     }).then(function () {
       st.busy = false;
       var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
@@ -3890,48 +3912,48 @@ body.view-open { overflow: hidden; }
     var box = $('liveRead');
     var key = st.target + ':' + r.key;
     if (st.appliedKey === key) return;
-    var h = '<div class="eyebrow">Kamera melihat · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
-      '<div>' + r.tiles.length + ' tile: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
+    var h = '<div class="eyebrow">Camera sees · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
+      '<div>' + r.tiles.length + ' tiles: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
     var did = null;
     if (st.target === 'hand') {
       var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
       var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
       if (!plus.length && !minus.length) {
-        did = 'sama dengan catatan';
+        did = 'same as recorded';
       } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
         // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
-        API.setHand(r.tiles, 'Kamera: tangan ' + r.tiles.length + ' tile');
-        did = 'tersimpan otomatis (' + r.tiles.length + ' tile)';
-        backToMain('Tangan ' + r.tiles.length + ' tile tersimpan');
+        API.setHand(r.tiles, 'Camera: hand (' + r.tiles.length + ' tiles)');
+        did = 'saved automatically (' + r.tiles.length + ' tiles)';
+        backToMain('Hand saved (' + r.tiles.length + ' tiles)');
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
-        did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
-        backToMain('Ambil ' + MJ.tileName(plus[0]) + ' · lihat saran');
+        did = 'recorded: Draw ' + MJ.tileName(plus[0]);
+        backToMain('Drew ' + MJ.tileName(plus[0]) + ' · see advice');
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
-        did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
+        did = 'recorded: Discard ' + MJ.tileName(minus[0]);
       } else if (auto && S.cur.hand.length === 0 && full) {
-        API.setHand(r.tiles, 'Kamera: tangan awal');
-        did = 'tercatat sebagai tangan awal';
-        backToMain('Tangan tercatat · lihat kombinasi menang');
+        API.setHand(r.tiles, 'Camera: starting hand');
+        did = 'recorded as starting hand';
+        backToMain('Hand recorded · see winning combinations');
       } else if (auto && S.cur.hand.length === 0) {
-        did = 'terbaca ' + r.tiles.length + ' tile, butuh ' + need + ' — geser kamera sampai semua tile masuk';
+        did = 'read ' + r.tiles.length + ' tiles, need ' + need + ' — move the camera until all tiles are in view';
       } else {
-        h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';
+        h += '<div class="muted">Differs from the record: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Use camera result</button></div>';
       }
       if (r.flowers.length && r.flowers.length > S.cur.myFlowers.length) API.setFlowers(r.flowers);
     } else {
       var seat = st.target, old = S.cur.ponds[seat];
       var added = API.multisetDiff(r.tiles, old), gone = API.multisetDiff(old, r.tiles);
       if (!added.length) {
-        did = gone.length ? 'tile tidak kelihatan semua, catatan lama tetap dipakai' : 'sama dengan catatan';
+        did = gone.length ? 'not all tiles visible, keeping the previous record' : 'same as recorded';
       } else if (auto && !gone.length) {
         added.forEach(function (t) { API.recordDiscard(seat, t); });
-        did = 'tercatat: ' + API.label(seat) + ' buang ' + API.tilesText(added);
+        did = 'recorded: ' + API.label(seat) + ' discarded ' + API.tilesText(added);
       } else {
-        h += '<div class="muted">Beda dengan catatan: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Ganti buangan dengan hasil kamera</button></div>';
+        h += '<div class="muted">Differs from the record: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
+          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Replace discards with camera result</button></div>';
       }
     }
     if (did) { h += '<div class="muted">' + did + '</div>'; st.appliedKey = key; }
@@ -3955,10 +3977,10 @@ body.view-open { overflow: hidden; }
     cv.toBlob(function (b) {
       if (!b) return;
       if (st.shots.length >= 120) st.shots.shift();
-      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'meja-' + Date.now() });
+      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'table-' + Date.now() });
       $('liveZip').disabled = false;
-      $('liveZip').textContent = 'Unduh foto latihan (' + st.shots.length + ')';
-      API.toast('Foto latihan disimpan (' + st.shots.length + ')');
+      $('liveZip').textContent = 'Download training photos (' + st.shots.length + ')';
+      API.toast('Training photo saved (' + st.shots.length + ')');
     }, 'image/jpeg', 0.9);
   }
   function downloadZip() {
@@ -3966,15 +3988,15 @@ body.view-open { overflow: hidden; }
     (window.JSZip ? Promise.resolve() : loadScript(JSZIP_URL)).then(function () {
       var zip = new window.JSZip();
       st.shots.forEach(function (s) { zip.file('images/' + s.name + '.jpg', s.blob); });
-      zip.file('README.txt', 'Foto tile meja mahjong untuk melatih ulang model Sempoa Mahjong.\nKirim zip ini ke Claude untuk dilabeli dan dipakai melatih model.\n');
+      zip.file('README.txt', 'Photos of mahjong table tiles for retraining the Sempoa Mahjong model.\nSend this zip to Claude to be labelled and used to train the model.\n');
       return zip.generateAsync({ type: 'blob' });
     }).then(function (blob) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'sempoa-foto-latihan-' + new Date().toISOString().slice(0, 10) + '.zip';
+      a.download = 'sempoa-training-photos-' + new Date().toISOString().slice(0, 10) + '.zip';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
-    }).catch(function () { API.toast('Gagal membuat zip. Coba lagi.'); });
+    }).catch(function () { API.toast('Could not create the zip. Try again.'); });
   }
 
   /* ---------- tombol ---------- */
@@ -3989,7 +4011,7 @@ body.view-open { overflow: hidden; }
       return;
     }
     if (el.dataset.liveApply && st.pending) {
-      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Kamera: tangan');
+      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Camera: hand');
       else API.setPond(st.target, st.pending.tiles);
       st.appliedKey = st.target + ':' + st.pending.key;
       $('liveRead').hidden = true;

@@ -153,11 +153,11 @@ function pts(hand, cfgOver, selfDraw) {
 }
 eq('chicken open ron', pts('456p789s111z55p', { melds: [T(['1m','2m','3m'])] }), '0 Chicken Hand:0');
 eq('chicken open tsumo', pts('456p789s111z55p', { melds: [T(['1m','2m','3m'])] }, true), '1 Chicken Hand:0,Self Draw:1');
-eq('half flush concealed', pts('123555789s22266z'), '6 Seat Wind:1,Round Wind:1,Half Flush:3,Concealed Hand:1');
+eq('half flush concealed', pts('123555789s22266z'), '6 Half Flush:3,Seat Wind:1,Round Wind:1,Concealed Hand:1');
 eq('half flush, East seat', pts('123555789s22266z', { seatWind: 0, roundWind: 0 }), '4 Half Flush:3,Concealed Hand:1');
 eq('full flush', pts('12334567899922p'), '8 Full Flush:7,Concealed Hand:1');
-eq('all pongs + dragon', pts('555p222m999s77711z'), '5 Dragon:1,All Pongs:3,Concealed Hand:1');
-eq('sequence + simples', pts('234567m345p67855s'), '3 Sequence Hand:1,All Simples:1,Concealed Hand:1');
+eq('all pongs + dragon', pts('555p222m999s77711z'), '5 All Pongs:3,Dragon:1,Concealed Hand:1');
+eq('sequence + simples', pts('234567m345p67855s'), '3 All Chow:1,No Orphan:1,Concealed Hand:1');
 eq('seven pairs', pts('1144p22m88s55m66p77z'), '5 7 Pairs:4,Concealed Hand:1');
 eq('little dragon', pts('123456m55577766z'), '9 Little Dragon:5,Half Flush:3,Concealed Hand:1');
 eq('great dragon', pts('123m555666777z99p'), '12 Great Dragon:8,Mix Orphans:3,Concealed Hand:1');
@@ -166,14 +166,14 @@ eq('pure straight', pts('123456789m11p567s'), '4 Pure Straight:3,Concealed Hand:
 eq('mix orphans', pts('123p123s789p11155z'), '5 Mix Orphans:3,Concealed Hand:1'.replace('5 ', '4 ') );
 eq('13 orphans', pts('19m19p19s12345677z'), '14 13 Orphans:13,Concealed Hand:1');
 eq('nine gates', pts('11123456789995m'), '16 Heavenly Gates:15,Concealed Hand:1');
-eq('no flower + suitable flower', pts('234567m345p67855s', { flowers: 0 }), '4 Sequence Hand:1,All Simples:1,Concealed Hand:1,No Flower:1');
-eq('suitable flower x1', pts('234567m345p67855s', { flowers: 2, flowerMatch: 1 }), '4 Sequence Hand:1,All Simples:1,Concealed Hand:1,Suitable Flower:1');
+eq('no flower + suitable flower', pts('234567m345p67855s', { flowers: 0 }), '4 All Chow:1,No Orphan:1,Concealed Hand:1,No Flower:1');
+eq('suitable flower x1', pts('234567m345p67855s', { flowers: 2, flowerMatch: 1 }), '4 All Chow:1,No Orphan:1,Concealed Hand:1,Suitable Flower:1');
 
 // versi besar menggantikan versi kecil; jenis berbeda tetap dijumlah
 eq('great wind replaces seat/round, all pongs stays', pts('11122233344455p'.replace('11122233344455p','111222333444z55p')), '20 Great Wind:13,All Pongs:3,Half Flush:3,Concealed Hand:1');
 eq('little wind replaces winds', pts('111222333z44z123m'), '17 Little Wind:10,Mix Orphans:3,Half Flush:3,Concealed Hand:1');
 eq('full flush replaces half flush', pts('11122233344455p').includes('Half Flush'), false);
-eq('kong hand replaces all pongs', pts('55p', { melds: [T(['1m','1m','1m','1m']), T(['2p','2p','2p','2p']), T(['7z','7z','7z','7z']), T(['9s','9s','9s','9s'])] }, true), '14 Dragon:1,Kong Hand:12,Self Draw:1');
+eq('kong hand replaces all pongs', pts('55p', { melds: [T(['1m','1m','1m','1m']), T(['2p','2p','2p','2p']), T(['7z','7z','7z','7z']), T(['9s','9s','9s','9s'])] }, true), '14 Kong Hand:12,Dragon:1,Self Draw:1');
 eq('little dragon + half flush summed', pts('123456m55577766z').startsWith('9 '), true);
 
 // --- baca lawan & bertahan ---
@@ -190,7 +190,7 @@ eq('two dragon pongs -> third dragon hot', dragOpp.wait[MJ.parseTile('5z')] > 0.
 const weakOpp = MJ.readOpponent({ pond: P(['1z','2z','9m','1p','9s','3z','4z','8m']), melds: [P(['4m','5m','6m']), P(['5p','5p','5p'])], seatWind: 3 }, ctx0);
 const sameShape = MJ.tenpaiChance(8, 2);
 eq('weak open hand: lower threat', weakOpp.threat < sameShape, true);
-eq('weak open hand: note explains', weakOpp.notes.join(' ').includes('susah'), true);
+eq('weak open hand: note explains', weakOpp.notes.join(' ').includes('hard to reach'), true);
 // keputusan: tangan masih jauh, lawan sangat siap -> bertahan, buang yang paling aman
 const anFold = MJ.analyze({
   hand: MJ.parseHand('147m258p369s1234z5s'), visible: new Array(34).fill(0), cfg: MAJE, drawsLeft: 8,
