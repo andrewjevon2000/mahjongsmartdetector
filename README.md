@@ -19,10 +19,23 @@ Buka: `https://andrewjevon2000.github.io/mahjongsmartdetector/`
 | `model/` | `mahjong.onnx` + `meta.json` (hasil `tools/train.py`) |
 | `test/engine.test.js` | Tes mesin (`node test/engine.test.js`) |
 
+## Model saat ini
+
+YOLO11n, 512 px, 30 epoch di Apple M1 (dataset v83: 6.294 latih / 788 validasi / 568 uji).
+
+| | mAP50 | mAP50-95 |
+|---|---|---|
+| Validasi | 87,0% | 66,4% |
+| Uji | 84,4% | 65,3% |
+
+Tile biasa (Characters/Dots/Bamboo/Winds/Dragons) umumnya 80–97%. Yang paling lemah adalah
+Flower/Season (39–70%) dan 9 Characters (74%). Kalau tile di mejamu sering salah baca, kumpulkan
+foto lewat tombol **Simpan foto latihan**, labeli, gabungkan ke dataset, lalu latih ulang.
+
 ## Melatih ulang model
 
 ```bash
-python3 tools/train.py ~/Downloads/<dataset-roboflow-yolo>.zip 60
+python3 tools/train.py ~/Downloads/<dataset-roboflow-yolo>.zip 30 512
 python3 build.py
 ```
 

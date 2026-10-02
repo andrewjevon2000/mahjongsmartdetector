@@ -192,23 +192,25 @@
   function draw(dets, v) {
     v = v || $('liveVideo');
     var cv = $('liveCanvas'), dd = dims(v);
-    var rect = v.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-    cv.width = Math.round(rect.width * dpr); cv.height = Math.round(rect.height * dpr);
+    if (!dd[0] || !dd[1]) return;
+    // kanvas memakai ukuran piksel sumber; CSS yang menskalakannya ke layar
+    cv.width = dd[0]; cv.height = dd[1];
     var ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, cv.width, cv.height);
-    var sx = cv.width / dd[0], sy = cv.height / dd[1];
-    ctx.lineWidth = 2 * dpr;
-    ctx.font = '600 ' + Math.round(13 * dpr) + 'px "Spline Sans Mono", monospace';
+    var u = Math.max(1, dd[0] / 400);
+    ctx.lineWidth = 2 * u;
+    ctx.font = '600 ' + Math.round(11 * u) + 'px "Spline Sans Mono", monospace';
     dets.forEach(function (b) {
-      var x = b.x1 * sx, y = b.y1 * sy, w = (b.x2 - b.x1) * sx, h = (b.y2 - b.y1) * sy;
+      var x = b.x1, y = b.y1, w = b.x2 - b.x1, h = b.y2 - b.y1;
       ctx.strokeStyle = '#dcb45a';
       ctx.strokeRect(x, y, w, h);
       var label = b.tile != null ? shortLabel(b.tile) : b.flower != null ? 'F' + b.flower : '?';
-      var tw = ctx.measureText(label).width + 8 * dpr;
+      var tw = ctx.measureText(label).width + 8 * u, th = 15 * u;
+      var ly = y - th < 0 ? y : y - th;
       ctx.fillStyle = '#dcb45a';
-      ctx.fillRect(x, y - 18 * dpr, tw, 18 * dpr);
+      ctx.fillRect(x, ly, tw, th);
       ctx.fillStyle = '#2a1f06';
-      ctx.fillText(label, x + 4 * dpr, y - 5 * dpr);
+      ctx.fillText(label, x + 4 * u, ly + th - 4 * u);
     });
   }
 

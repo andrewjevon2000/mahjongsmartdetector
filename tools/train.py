@@ -1,7 +1,7 @@
 """Latih model pengenal tile untuk Kamera live Sempoa Mahjong.
 
 Pakai:
-    python3 tools/train.py ~/Downloads/<dataset-roboflow-yolo>.zip [epochs]
+    python3 tools/train.py ~/Downloads/<dataset-roboflow-yolo>.zip [epochs] [imgsz]
 
 Hasil:
     model/mahjong.onnx  + model/meta.json   (dibaca oleh index.html)
@@ -65,25 +65,26 @@ def main():
         print(__doc__)
         sys.exit(1)
     zip_path = Path(sys.argv[1]).expanduser()
-    epochs = int(sys.argv[2]) if len(sys.argv) > 2 else 60
+    epochs = int(sys.argv[2]) if len(sys.argv) > 2 else 30
+    imgsz = int(sys.argv[3]) if len(sys.argv) > 3 else 512
     data_yaml, names = prepare(zip_path)
     print(f"Dataset siap: {len(names)} kelas -> {data_yaml}")
 
     model = YOLO("yolo11n.pt")
     model.train(
-        data=str(data_yaml), imgsz=640, epochs=epochs, batch=16, device="mps",
-        patience=15, project=str(ROOT / "runs"), name="maje", exist_ok=True,
-        workers=4, plots=False, verbose=False,
+        data=str(data_yaml), imgsz=imgsz, epochs=epochs, batch=16, device="mps",
+        patience=10, project=str(ROOT / "runs"), name="maje", exist_ok=True,
+        workers=6, plots=False, verbose=False,
     )
     best = ROOT / "runs" / "maje" / "weights" / "best.pt"
-    metrics = YOLO(str(best)).val(data=str(data_yaml), imgsz=640, device="mps", plots=False, verbose=False)
-    onnx_path = YOLO(str(best)).export(format="onnx", imgsz=640, opset=17, simplify=True, dynamic=False)
+    metrics = YOLO(str(best)).val(data=str(data_yaml), imgsz=imgsz, device="mps", plots=False, verbose=False)
+    onnx_path = YOLO(str(best)).export(format="onnx", imgsz=imgsz, opset=17, simplify=True, dynamic=False)
 
     out_dir = ROOT / "model"
     out_dir.mkdir(exist_ok=True)
     shutil.copy(onnx_path, out_dir / "mahjong.onnx")
     meta = {
-        "imgsz": 640,
+        "imgsz": imgsz,
         "model": "model/mahjong.onnx",
         "classes": names,
         "map": {n: tile_code(n) for n in names if tile_code(n)},
