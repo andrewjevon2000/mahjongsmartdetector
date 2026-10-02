@@ -362,6 +362,59 @@ details.panel[open] > summary::after { content: "−"; }
 .ptable { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 16px; }
 .ptable div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .ptable b { font-family: var(--f-num); color: var(--brass-2); font-weight: 600; }
+
+/* ---------- tampilan sederhana ---------- */
+.hero { background: linear-gradient(180deg, var(--felt-3), var(--felt-2)); border-color: rgba(220,180,90,0.35); }
+#hero { display: flex; flex-direction: column; gap: 14px; }
+.hero-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hero-main { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.hero-text { flex: 1 1 150px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+#hero > .hero-text { flex: 0 0 auto; }
+.hero-verb { font-size: 12px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+.hero-title { font-family: var(--f-display); font-size: 30px; line-height: 1.1; text-wrap: balance; }
+.hero-sub { font-size: 14px; color: var(--muted); }
+.hero-rings { display: flex; gap: 14px; margin-left: auto; }
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.ring { position: relative; width: 60px; height: 60px; display: grid; place-items: center; }
+.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .bg { fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 5; }
+.ring .fg { fill: none; stroke: var(--brass); stroke-width: 5; stroke-linecap: round; transition: stroke-dasharray 400ms ease; }
+.ring.safe .fg { stroke: var(--safe); } .ring.mid .fg { stroke: var(--mid); } .ring.risk .fg { stroke: var(--risk); }
+.ring b { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600; }
+.hero-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hero-actions .btn.big { font-size: 17px; padding: 14px 20px; min-height: 54px; flex: 1 1 200px; }
+.mode-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid currentColor; }
+.mode-pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.hero-alt { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.16); font-size: 13.5px; }
+.hero-alt .spacer { flex: 1; }
+.claim-card { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 10px; }
+.claim-card .hero-title { font-size: 36px; }
+.claim-card .btn { background: var(--brass-ink); color: var(--brass-2); border-color: transparent; }
+.claim-card .btn.ghost { background: transparent; color: var(--brass-ink); border-color: rgba(42,31,6,0.4); }
+.steps { display: grid; gap: 10px; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; font-size: 14.5px; }
+.step i { font-style: normal; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.1); font-family: var(--f-num); font-weight: 600; }
+.step.done i { background: var(--brass); color: var(--brass-ink); }
+.progress.big { height: 8px; border-radius: 4px; }
+.want { display: flex; gap: 4px 8px; flex-wrap: wrap; align-items: center; }
+.want .t { width: 30px; } .want .num { font-size: 11px; color: var(--muted); margin-right: 2px; }
+.opp-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.opp { appearance: none; border: 1px solid var(--line); background: rgba(0,0,0,0.14); border-radius: 12px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: inherit; min-width: 0; }
+.opp .ring { width: 44px; height: 44px; } .opp .ring b { font-size: 12px; }
+.opp .nm { font-size: 13px; font-weight: 600; }
+.opp .rd { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.2; }
+.opp.alert { border-color: var(--mid); }
+.chip.winds { display: inline-flex; gap: 3px; padding: 3px 8px; align-items: center; background: transparent; cursor: pointer; color: inherit; }
+.chip.winds .t { width: 16px; }
+.chip.winds { min-height: 30px; padding-block: 2px; }
+@media (max-width: 430px) { .brand h1 { display: none; } }
+.banner.compact { padding: 8px 12px; } .banner.compact p { font-size: 13px; }
+.sub-head { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.sub-head h3 { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+details.panel > summary .muted { margin-left: 2px; }
+body.simple .note-line { display: none; }
+body.simple #abacusPanel .bead-key { display: none; }
+
 @media (min-width: 640px) {
   .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .abacus { gap: 10px 8px; }
@@ -375,47 +428,41 @@ details.panel[open] > summary::after { content: "−"; }
   <header class="top">
     <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
     <span class="spacer"></span>
+    <button class="chip winds" type="button" id="windChip" data-open="gamePanel" aria-label="Round Wind, Seat Wind, dan Flower"></button>
     <span class="chip num" id="turnChip">Giliran 1</span>
   </header>
 
-  <div class="banner" id="exampleBanner" hidden>
-    <p>Ini contoh game supaya kamu bisa lihat cara kerjanya. Semua angka di bawah dihitung dari tile contoh ini.</p>
+  <div class="banner compact" id="exampleBanner" hidden>
+    <p>Contoh game, supaya kamu bisa lihat cara kerjanya.</p>
     <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
   </div>
 
-  <section class="panel" aria-labelledby="handTitle">
+  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Langkah berikutnya">
+    <div id="hero"></div>
+  </section>
+
+  <section class="panel" id="handPanel" aria-labelledby="handTitle">
     <div class="sec-head">
-      <h2 id="handTitle">Tangan kamu</h2>
+      <h2 id="handTitle">Tanganmu</h2>
       <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
     </div>
-    <div class="round-row" id="roundRow">
-      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
-    </div>
     <div class="melds" id="myMelds"></div>
     <div class="rack" id="rack"></div>
-    <div class="status-line" id="statusLine"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
+    <div class="opp-strip" id="oppStrip"></div>
   </section>
 
-  <section class="panel" aria-labelledby="adviceTitle" id="advicePanel">
-    <div class="sec-head">
-      <h2 id="adviceTitle">Saran &amp; peluang</h2>
-      <span class="spacer"></span>
-      <span class="muted small" id="drawsInfo"></span>
-    </div>
+  <details class="panel" id="detailPanel">
+    <summary><h2>Detail analisis</h2><span class="muted small" id="drawsInfo"></span></summary>
     <div id="advice"></div>
-  </section>
+  </details>
 
-  <section class="panel" id="livePanel" aria-labelledby="liveTitle">
-    <div class="sec-head">
-      <h2 id="liveTitle">Kamera live</h2>
-      <span class="spacer"></span>
-      <span class="muted small num" id="liveFps"></span>
-    </div>
-    <div class="live-controls" id="liveControls">
+  <details class="panel" id="inputPanel">
+    <summary><h2>Kamera &amp; foto</h2></summary>
+    <div class="form" id="livePanel">
+      <div class="sub-head"><h3>Kamera live</h3><span class="spacer"></span><span class="muted small num" id="liveFps"></span></div>
+      <div class="live-controls" id="liveControls">
       <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
       <div class="live-stage" id="liveStage" hidden>
         <video id="liveVideo" playsinline muted autoplay></video>
@@ -436,14 +483,8 @@ details.panel[open] > summary::after { content: "−"; }
     </div>
     <p class="photo-msg" id="liveMsg"></p>
     <div class="readout" id="liveRead" hidden></div>
-    <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
-  </section>
-
-  <section class="panel" aria-labelledby="photoTitle">
-    <div class="sec-head">
-      <h2 id="photoTitle">Baca dari foto</h2>
-    </div>
-    <div class="photo-row">
+      <div class="sub-head"><h3>Foto lewat Claude</h3></div>
+      <div class="photo-row">
       <div class="seg" role="group" aria-label="Yang difoto">
         <button type="button" id="scopeHand" aria-pressed="false">Tangan saya</button>
         <button type="button" id="scopeTable" aria-pressed="true">Seluruh meja</button>
@@ -461,39 +502,39 @@ details.panel[open] > summary::after { content: "−"; }
     </div>
     <p class="photo-msg" id="photoMsg">Menyiapkan pembaca foto…</p>
     <div class="readout" id="readout" hidden></div>
-  </section>
-
-  <section class="panel" aria-labelledby="tableTitle">
-    <div class="sec-head">
-      <h2 id="tableTitle">Ingatan meja</h2>
-      <span class="spacer"></span>
-      <span class="muted small">Kanan = pemain sesudah kamu</span>
+      <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
     </div>
+  </details>
+
+  <details class="panel" id="tablePanel">
+    <summary><h2>Meja</h2><span class="muted small">buangan &amp; set lawan</span></summary>
     <div class="seats" id="seats"></div>
-  </section>
+  </details>
 
-  <section class="panel" aria-labelledby="abacusTitle">
-    <div class="sec-head">
-      <h2 id="abacusTitle">Sempoa tile</h2>
-      <span class="spacer"></span>
-      <span class="muted small num" id="unseenTotal"></span>
+  <details class="panel" id="gamePanel">
+    <summary><h2>Angin &amp; Flower</h2></summary>
+    <div class="round-row" id="roundRow">
+      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
     </div>
+  </details>
+
+  <details class="panel" id="abacusPanel">
+    <summary><h2>Sempoa tile</h2><span class="muted small num" id="unseenTotal"></span></summary>
     <div class="bead-key">
       <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
       <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
       <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
     </div>
     <div class="abacus" id="abacus"></div>
-  </section>
+  </details>
 
-  <section class="panel" aria-labelledby="histTitle">
-    <div class="sec-head">
-      <h2 id="histTitle">Langkah sebelumnya</h2>
-      <span class="spacer"></span>
-      <button class="btn small" type="button" id="undoTop">Urungkan</button>
-    </div>
+  <details class="panel" id="histPanel">
+    <summary><h2>Langkah sebelumnya</h2></summary>
+    <div class="row" style="margin-bottom:8px"><button class="btn small" type="button" id="undoTop">Urungkan langkah terakhir</button></div>
     <div class="hist" id="hist"></div>
-  </section>
+  </details>
 
   <details class="panel" id="rulesPanel">
     <summary><h2>Aturan Majé</h2></summary>
@@ -573,6 +614,10 @@ details.panel[open] > summary::after { content: "−"; }
         <input type="number" id="wallLeft" min="0" max="140" inputmode="numeric">
       </div>
       <div class="field">
+        <label for="uiMode">Tampilan</label>
+        <select id="uiMode"><option value="simple">Sederhana · satu instruksi per giliran</option><option value="full">Lengkap · semua analisis terbuka</option></select>
+      </div>
+      <div class="field">
         <label for="tier">Cara baca foto</label>
         <select id="tier"><option value="default">Standar · lebih cepat</option><option value="complex">Teliti · lebih lama, lebih akurat</option></select>
       </div>
@@ -589,7 +634,7 @@ details.panel[open] > summary::after { content: "−"; }
 <div class="dock" id="dock">
   <div class="inner">
     <button class="btn primary" type="button" id="dockPad">+ Ketik tile</button>
-    <button class="btn" type="button" id="dockCam">Foto</button>
+    <button class="btn" type="button" id="dockCam">Kamera</button>
     <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
     </button>

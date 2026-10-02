@@ -246,7 +246,7 @@
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null
   };
 
   function act(label, type, fn, extra) {
@@ -393,6 +393,7 @@
         simCache.set(j.key, acc);
         acc = null; done = 0; ji++;
         renderAdvice(lastAn);
+        renderHero(lastAn);
       } else {
         var bar = document.querySelector('#simBar i');
         if (bar) bar.style.width = Math.round(simProgress * 100) + '%';
@@ -451,6 +452,7 @@
   }
   function renderRoundRow(an) {
     $('roundRow').hidden = !S.cfg.scoring;
+    $('gamePanel').hidden = !S.cfg.scoring;
     $('roundWind').value = String(S.cfg.roundWind);
     $('seatWind').value = String(S.cfg.seatWind);
     var mine = S.cfg.seatWind + 1;
@@ -494,30 +496,12 @@
     var need13 = 3 * S0 + 1;
     $('handCount').textContent = n + ' tile' + (myMelds.length ? ' + ' + myMelds.length + ' set terbuka' : '') + ' · normal ' + need13 + '/' + (need13 + 1);
 
-    var st = '';
-    if (an.phase === 'bad') {
-      st = '<span class="pill mid">Jumlah belum pas</span><span class="small muted">Butuh ' + need13 + ' tile (menunggu tarikan) atau ' + (need13 + 1) + ' (baru ambil).</span>';
-    } else if (an.complete && an.validWin) {
-      st = '<span class="pill gold">Menang sah · ' + an.score.points + ' poin</span><span class="small">Nyatakan HU.</span>';
-    } else {
-      var v = an.phase === 'discard' ? an.vdNow : an.vd;
-      var sh = an.phase === 'discard' ? an.shantenNow : an.shanten;
-      st = '<span class="pill' + (v === 0 && an.phase === 'draw' ? ' gold' : '') + '">' + vdLabel(v, an) + '</span>';
-      if (scoringOn(an) && sh < v) {
-        st += '<span class="small muted">Tangan lengkap biasa ' + (sh <= 0 ? (sh < 0 ? 'sudah jadi' : 'tinggal 1 tile') : sh + ' langkah') + ', tapi belum ' + an.M + ' poin.</span>';
-      } else if (an.phase === 'discard') {
-        st += '<span class="small muted">Giliranmu membuang. Tanda emas = saran buang.</span>';
-      } else {
-        st += '<span class="small muted num">' + an.ukeire.total + ' tile berguna masih di luar</span>';
-      }
-    }
-    if (an.over.length) st += '<span class="pill risk">Tercatat lebih dari 4: ' + esc(tilesText(an.over)) + '</span>';
-    $('statusLine').innerHTML = st;
 
     var ra = $('rackActions');
     if (ui.selHand != null && S.cur.hand.indexOf(ui.selHand) >= 0) {
-      var t = ui.selHand;
-      ra.innerHTML = (an.phase === 'discard' ? '<button class="btn primary" type="button" data-act="discard">Buang ' + esc(name(t)) + '</button>' : '') +
+      var t = ui.selHand, oo = optMap[t];
+      var info = oo ? '<span class="small muted" style="flex-basis:100%">' + esc(name(t)) + ': ' + (oo.vd === 0 ? 'siap menang' : oo.vd >= 99 ? 'buntu' : oo.vd + ' langkah') + ' · ' + oo.ukeire + ' tile berguna · risiko ' + pct(oo.risk) + '</span>' : '';
+      ra.innerHTML = info + (an.phase === 'discard' ? '<button class="btn primary" type="button" data-act="discard">Buang ' + esc(name(t)) + '</button>' : '') +
         '<button class="btn" type="button" data-act="remove">Hapus dari tangan</button>' +
         '<button class="btn ghost" type="button" data-act="cancel">Batal</button>';
       ra.hidden = false;
@@ -871,6 +855,7 @@
       $('wallLeft').placeholder = 'otomatis: ' + an.wall;
     }
     $('tier').value = S.cfg.tier || 'default';
+    $('uiMode').value = S.cfg.ui || 'simple';
     $('resetRow').innerHTML = ui.confirmReset
       ? '<span class="small">Hapus catatan game ini?</span><button class="btn small primary" type="button" id="resetYes">Ya, mulai baru</button><button class="btn small ghost" type="button" id="resetNo">Batal</button>'
       : '<button class="btn" type="button" id="resetBtn">Mulai game baru</button>';
@@ -879,10 +864,14 @@
   function render() {
     var an = analysis();
     lastAn = an;
+    applyUiMode();
     $('turnChip').textContent = 'Giliran ' + S.turn;
     $('exampleBanner').hidden = !S.example;
     renderRoundRow(an);
+    renderTopChips();
     renderRack(an);
+    renderHero(an);
+    renderOppStrip(an);
     renderAdvice(an);
     renderSeats();
     renderAbacus(an);
@@ -1309,6 +1298,138 @@
     toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
   }
 
+  /* ---------- tampilan sederhana: kartu langkah berikutnya ---------- */
+  function ring(p, cls) {
+    var r = 22, c = 2 * Math.PI * r, v = p == null ? 0 : Math.max(0, Math.min(1, p));
+    return '<span class="ring' + (cls ? ' ' + cls : '') + '"><svg viewBox="0 0 56 56" aria-hidden="true"><circle class="bg" cx="28" cy="28" r="22"/><circle class="fg" cx="28" cy="28" r="22" stroke-dasharray="' + (v * c).toFixed(1) + ' ' + c.toFixed(1) + '"/></svg><b>' + (p == null ? '…' : pct(p)) + '</b></span>';
+  }
+  function ringWrap(p, label, cls) { return '<div class="ring-wrap">' + ring(p, cls) + '<span>' + label + '</span></div>'; }
+  function riskCls(r) { return r < 0.02 ? 'safe' : r < 0.1 ? 'mid' : 'risk'; }
+  function modePill(mode) {
+    return '<span class="mode-pill mode-' + mode + '">' + ({ attack: 'Serang', careful: 'Hati-hati', fold: 'Bertahan' }[mode] || 'Serang') + '</span>';
+  }
+  function wantChips(tiles, max) {
+    var list = tiles.slice().sort(function (a, b) { return b.n - a.n; }).slice(0, max || 8);
+    if (!list.length) return '<div class="hero-sub">Belum ada tile yang langsung membantu.</div>';
+    return '<div class="want">' + list.map(function (x) { return tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span>'; }).join('') +
+      (tiles.length > list.length ? '<span class="num">+' + (tiles.length - list.length) + ' lagi</span>' : '') + '</div>';
+  }
+  function openPanel(id) {
+    var el = $(id);
+    if (!el) return;
+    el.open = true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function applyUiMode() {
+    var simple = (S.cfg.ui || 'simple') === 'simple';
+    document.body.classList.toggle('simple', simple);
+    if (!simple) ['detailPanel', 'tablePanel', 'histPanel'].forEach(function (id) { $(id).open = true; });
+  }
+  function renderTopChips() {
+    var fl = S.cur.myFlowers.length;
+    $('windChip').innerHTML = tileHTML(27 + S.cfg.roundWind, 'xs') + tileHTML(27 + S.cfg.seatWind, 'xs') + (fl ? '<span class="num small">✿' + fl + '</span>' : '');
+    $('windChip').hidden = !S.cfg.scoring;
+  }
+  function renderOppStrip(an) {
+    var box = $('oppStrip');
+    if (!an.reads || an.phase === 'bad') { box.innerHTML = ''; return; }
+    box.innerHTML = OPPS.map(function (o) {
+      var r = an.reads[o], top = r.reads[0];
+      var cls = r.threat >= 0.5 ? 'risk' : r.threat >= 0.25 ? 'mid' : 'safe';
+      return '<button type="button" class="opp' + (S.cur.alert[o] ? ' alert' : '') + '" data-open="tablePanel" aria-label="' + LBL[o] + ', kemungkinan siap ' + pct(r.threat) + '">' +
+        ring(r.threat, cls) + '<span class="nm">' + LBL[o] + '</span><span class="rd">' + (top ? esc(top.name) : (r.threat >= 0.5 ? 'mungkin siap' : 'belum siap')) + '</span></button>';
+    }).join('');
+  }
+  function claimKey(cl) { return cl.from + ':' + cl.t + ':' + S.events.length; }
+  function renderHero(an) {
+    if (!an) return;
+    var box = $('hero'), h = '';
+    var over = an.over && an.over.length
+      ? '<div class="hero-alt"><span>Tercatat lebih dari 4: ' + esc(tilesText(an.over)) + '</span><span class="spacer"></span><button class="btn small" type="button" data-open="tablePanel">Periksa</button></div>' : '';
+
+    if (an.phase === 'bad') {
+      var S0 = MJ.setsNeeded(an.cfg), need = 3 * S0 + 1, have = S.cur.hand.length;
+      h += '<div class="hero-head"><span class="eyebrow">Mulai</span></div>' +
+        '<div class="hero-text"><div class="hero-title">' + (have === 0 ? 'Masukkan tile tanganmu' : have < need ? (need - have) + ' tile lagi' : 'Kelebihan ' + (have - need - 1) + ' tile') + '</div>' +
+        '<div class="hero-sub num">' + have + ' / ' + need + ' tile</div></div>' +
+        '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
+        '<div class="steps">' +
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Foto atau ketik tile tanganmu</span></div>' +
+        '<div class="step"><i>2</i><span>Ikuti saran: buang tile yang ditandai</span></div>' +
+        '<div class="step"><i>3</i><span>Tiap giliran, catat buangan lawan dan tile yang kamu ambil</span></div></div>' +
+        '<div class="hero-actions"><button class="btn primary big" type="button" data-open="inputPanel">Kamera / Foto</button><button class="btn big" type="button" data-act="pad-hand">Ketik tile</button></div>' + over;
+      box.innerHTML = h;
+      return;
+    }
+
+    if (an.complete && an.validWin) {
+      var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (selfDraw ? 'Tarik sendiri' : 'Dari buangan ' + LBL[S.cur.lastIn.from]) + '</span>' +
+        '<div class="hero-title">HU! ' + an.score.points + ' poin</div>' +
+        '<div class="chips">' + an.score.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
+        '<div class="small">' + (selfDraw ? 'Ketiga lawan membayar.' : 'Hanya ' + LBL[S.cur.lastIn.from] + ' yang membayar.') + '</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="new-game">Game baru</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+
+    if (an.phase === 'draw') {
+      var cl = an.claim, sim = simFor(an, null), tenpai = an.vd === 0;
+      if (cl && cl.options.length && ui.skipClaim !== claimKey(cl)) {
+        var hu = null, better = null, others = [];
+        cl.options.forEach(function (o, i) {
+          o._i = i;
+          if (o.type === 'hu' && o.valid) hu = o;
+          else if (o.type !== 'hu' && o.better && !better) better = o;
+          else others.push(o);
+        });
+        if (hu) {
+          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Buangan ' + LBL[cl.from] + ' · ' + esc(name(cl.t)) + '</span><div class="hero-title">HU! ' + hu.points + ' poin</div>' +
+            '<div class="small">' + esc(patternList(hu.patterns)) + '</div>' +
+            '<div class="hero-actions"><button class="btn big" type="button" data-claim="' + hu._i + '">Nyatakan HU</button><button class="btn ghost" type="button" data-act="skip-claim">Lewati</button></div></div>';
+        } else if (better) {
+          var lbl = { pong: 'Pong', kong: 'Kong', chi: 'Chi' }[better.type];
+          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Buangan ' + LBL[cl.from] + '</span><div class="hero-title">' + lbl + '!</div>' +
+            '<div class="row">' + better.tiles.map(function (t) { return tileHTML(t, 'md'); }).join('') + '<span class="small">' + (better.type === 'kong' ? 'lalu ambil tile ganti' : better.discard >= 0 ? 'lalu buang ' + esc(name(better.discard)) : '') + '</span></div>' +
+            '<div class="hero-actions"><button class="btn big" type="button" data-claim="' + better._i + '">Ambil</button><button class="btn ghost" type="button" data-act="skip-claim">Lewati</button></div></div>';
+        } else if (others.length) {
+          h += '<div class="hero-alt"><span>' + others.map(function (o) {
+            return o.type === 'hu' ? 'HU belum sah (' + o.points + ' poin)' : { pong: 'Pong', kong: 'Kong', chi: 'Chi' }[o.type] + ' bisa, tapi tidak disarankan';
+          }).join(' · ') + '</span><span class="spacer"></span><button class="btn small ghost" type="button" data-open="detailPanel">Detail</button></div>';
+        }
+      }
+      h += '<div class="hero-head"><span class="eyebrow">Giliranmu mengambil</span>' + (an.threat >= 0.5 ? modePill('careful') : '') + '</div>' +
+        '<div class="hero-main"><div class="hero-text"><div class="hero-title">' + (tenpai ? 'Siap menang' : an.vd >= 99 ? 'Belum ada jalur ' + an.M + ' poin' : an.vd + ' langkah lagi') + '</div>' +
+        '<div class="hero-sub">' + (tenpai ? 'Tile yang memenangkan' : 'Tile yang kamu cari') + '</div>' + wantChips(an.ukeire.tiles, 8) + '</div>' +
+        '<div class="hero-rings">' + ringWrap(endOf(sim, 'any'), 'menang') + ringWrap(an.pNext, tenpai ? 'tarikan ini' : 'berguna') + '</div></div>' +
+        '<div class="hero-actions"><button class="btn primary big" type="button" data-act="pad-hand">+ Tile yang kuambil</button><button class="btn ghost" type="button" data-open="detailPanel">Kenapa?</button></div>' + over;
+      box.innerHTML = h;
+      return;
+    }
+
+    var best = an.best, rec = an.rec || best, mode = an.mode || 'attack';
+    var bsim = simFor(an, rec.t);
+    if (an.complete && !an.validWin) {
+      h += '<div class="hero-alt"><span>Tangan lengkap, tapi baru ' + an.score.points + ' poin dari minimal ' + an.M + '. Lanjut bentuk pola.</span></div>';
+    }
+    h += '<div class="hero-head"><span class="eyebrow">Langkah berikutnya</span>' + modePill(mode) + '</div>' +
+      '<div class="hero-main">' + tileHTML(rec.t, 'lg') +
+      '<div class="hero-text"><div class="hero-verb">Buang</div><div class="hero-title">' + esc(name(rec.t)) + '</div>' +
+      '<div class="hero-sub">' + (rec.vd === 0 ? 'Siap menang · ' : rec.vd >= 99 ? '' : rec.vd + ' langkah lagi · ') + rec.ukeire + ' tile ' + (rec.vd === 0 ? 'penentu' : 'berguna') + '</div></div>' +
+      '<div class="hero-rings">' + ringWrap(endOf(bsim, 'any'), 'menang') + ringWrap(rec.risk, 'risiko', riskCls(rec.risk)) + '</div></div>';
+    if (mode !== 'attack') {
+      var who = an.threatWho, rd = who && an.reads[who] && an.reads[who].reads[0];
+      h += '<div class="hero-sub">' + LBL[who] + ' mungkin sudah siap' + (rd ? ' · ' + esc(rd.name) : '') + (mode === 'fold' ? '. Amankan dulu.' : '. Pilih yang lebih aman.') + '</div>';
+    }
+    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="discard-best" data-t="' + rec.t + '">Buang ' + esc(name(rec.t)) + '</button><button class="btn ghost" type="button" data-open="detailPanel">Kenapa?</button></div>';
+    if (rec.t !== best.t) {
+      var asim = simFor(an, best.t);
+      h += '<div class="hero-alt">' + tileHTML(best.t, 'sm') + '<span>Menyerang: buang ' + esc(name(best.t)) + ' · menang ' + pct(endOf(asim, 'any')) + ' · risiko ' + pct(best.risk) + '</span><span class="spacer"></span><button class="btn small" type="button" data-act="discard-best" data-t="' + best.t + '">Buang</button></div>';
+    }
+    h += over;
+    box.innerHTML = h;
+  }
+
   /* ---------- events ---------- */
   document.addEventListener('click', function (e) {
     var el = e.target.closest('button');
@@ -1334,6 +1455,12 @@
           ui.selHand = null; render(); return;
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
         case 'pad-hand': openSheet('hand'); return;
+        case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); return;
+        case 'new-game':
+          S = newRound(S.cfg); simCache.clear(); ui.skipClaim = null;
+          save(); render(); openSheet('hand');
+          toast('Game baru. Masukkan tile tanganmu.');
+          return;
         case 'toggle-opts': ui.showAllOpts = !ui.showAllOpts; renderAdvice(lastAn); return;
         case 'pond-remove':
           var sp = ui.selPond;
@@ -1349,6 +1476,7 @@
         case 'meld-cancel': ui.selMeld = null; renderSeats(); return;
       }
     }
+    if (d.open) { openPanel(d.open); return; }
     if (d.claim != null) { doClaim(+d.claim); return; }
     if (d.flower) {
       var fn = +d.flower, has = S.cur.myFlowers.indexOf(fn) >= 0;
@@ -1389,10 +1517,7 @@
       case 'dockPad': openSheet(); return;
       case 'sheetClose': closeSheet(); return;
       case 'dockUndo': case 'undoTop': case 'sheetUndo': undo(); return;
-      case 'dockCam':
-        if (photoReady) $('camInput').click();
-        else { $('photoTitle').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast($('photoMsg').textContent.split('.')[0]); }
-        return;
+      case 'dockCam': openPanel('inputPanel'); return;
       case 'camBtn': $('camInput').click(); return;
       case 'galBtn': $('galInput').click(); return;
       case 'stopBtn': if (photoCtl) photoCtl.abort(); return;
@@ -1448,6 +1573,7 @@
     save(); render();
   });
   $('tier').addEventListener('change', function (e) { S.cfg.tier = e.target.value; save(); });
+  $('uiMode').addEventListener('change', function (e) { S.cfg.ui = e.target.value; save(); applyUiMode(); });
 
   var resizeT = null;
   window.addEventListener('resize', function () {
