@@ -395,6 +395,15 @@ details.panel[open] > summary::after { content: "−"; }
 .mode-pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .hero-alt { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.16); font-size: 13.5px; }
 .hero-alt .spacer { flex: 1; }
+.hero-div { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
+.hero-title.num { font-family: var(--f-display); font-size: 40px; }
+.combos { display: grid; gap: 9px; }
+.combo-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; align-items: baseline; }
+.combo-top .num { font-weight: 600; }
+.combo-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; margin-top: 4px; }
+.combo-bar i { display: block; height: 100%; background: var(--brass); border-radius: 3px; transition: width 400ms ease; }
+.combo-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.combo.faint { opacity: 0.6; }
 .claim-card { border-radius: 14px; padding: 14px; background: var(--brass); color: var(--brass-ink); display: flex; flex-direction: column; gap: 10px; }
 .claim-card .hero-title { font-size: 36px; }
 .claim-card .btn { background: var(--brass-ink); color: var(--brass-2); border-color: transparent; }
@@ -420,8 +429,24 @@ details.panel[open] > summary::after { content: "−"; }
 .sub-head { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
 .sub-head h3 { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
 details.panel > summary .muted { margin-left: 2px; }
-body.simple .note-line { display: none; }
-body.simple #abacusPanel .bead-key { display: none; }
+
+
+/* ---------- layar panggilan (view) ---------- */
+.view { position: fixed; inset: 0; z-index: 30; background: var(--felt); overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; padding: 0 16px calc(28px + env(safe-area-inset-bottom, 0px)); }
+.view.open { display: block; }
+body.view-open { overflow: hidden; }
+.vhead { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; margin: 0 -16px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: linear-gradient(var(--felt) 82%, transparent); }
+.vhead h2 { font-size: 21px; }
+.vhead .spacer { flex: 1; }
+.iconbtn { appearance: none; border: 1px solid var(--line-2); background: var(--felt-3); color: inherit; width: 40px; height: 40px; border-radius: 12px; font-size: 22px; line-height: 1; display: grid; place-items: center; flex: none; }
+.iconbtn.back { font-size: 26px; padding-bottom: 3px; }
+.vbody { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.vbody > .panel { background: transparent; border: 0; padding: 0; }
+.menu-list { display: grid; gap: 8px; }
+.menu-item { appearance: none; border: 1px solid var(--line); background: var(--felt-2); color: inherit; border-radius: 14px; padding: 14px 16px; font-size: 16px; font-weight: 600; text-align: left; display: flex; align-items: center; gap: 12px; min-height: 54px; }
+.menu-item small { font-weight: 400; color: var(--muted); margin-left: auto; font-size: 13px; text-align: right; }
+.menu-item.danger { color: var(--risk); }
+.top .iconbtn { width: 36px; height: 36px; font-size: 20px; }
 
 @media (min-width: 640px) {
   .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -436,8 +461,9 @@ body.simple #abacusPanel .bead-key { display: none; }
   <header class="top">
     <div class="brand"><span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="2.5" y="3" width="19" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 9.5 H21.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3 V21 M12 3 V21 M16 3 V21" stroke="currentColor" stroke-width="1" opacity="0.55"/><g fill="currentColor"><ellipse cx="8" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="16" cy="6.2" rx="2.1" ry="1.5"/><ellipse cx="8" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="12.6" rx="2.1" ry="1.5"/><ellipse cx="12" cy="16" rx="2.1" ry="1.5"/><ellipse cx="16" cy="17.8" rx="2.1" ry="1.5"/></g></svg></span><h1>Sempoa Mahjong</h1></div>
     <span class="spacer"></span>
-    <button class="chip winds" type="button" id="windChip" data-open="gamePanel" aria-label="Round Wind, Seat Wind, dan Flower"></button>
+    <button class="chip winds" type="button" id="windChip" data-view="game" aria-label="Round Wind, Seat Wind, dan Flower"></button>
     <span class="chip num" id="turnChip">Giliran 1</span>
+    <button class="iconbtn" type="button" id="menuBtn" data-view="menu" aria-label="Menu">⋯</button>
   </header>
 
   <div class="banner compact" id="exampleBanner" hidden>
@@ -445,31 +471,52 @@ body.simple #abacusPanel .bead-key { display: none; }
     <button class="btn small primary" id="exampleNew" type="button">Mulai game sendiri</button>
   </div>
 
-  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Langkah berikutnya">
-    <div id="hero"></div>
-  </section>
-
   <section class="panel" id="handPanel" aria-labelledby="handTitle">
     <div class="sec-head">
       <h2 id="handTitle">Tanganmu</h2>
-      <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
+      <span class="spacer"></span>
+      <button class="btn small" type="button" data-view="camera">Scan</button>
     </div>
     <div class="melds" id="myMelds"></div>
     <div class="rack" id="rack"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
-    <div class="opp-strip" id="oppStrip"></div>
+  </section>
+  <section class="panel hero" id="heroPanel" aria-live="polite" aria-label="Potensi menang dan langkah berikutnya">
+    <div id="hero"></div>
   </section>
 
-  <details class="panel" id="detailPanel">
-    <summary><h2>Detail analisis</h2><span class="muted small" id="drawsInfo"></span></summary>
-    <div id="advice"></div>
-  </details>
+  <section class="opp-strip" id="oppStrip" aria-label="Lawan"></section>
 
-  <details class="panel" id="inputPanel">
-    <summary><h2>Kamera &amp; foto</h2></summary>
+</div>
+
+<section class="view" id="view-menu" role="dialog" aria-modal="true" aria-label="Menu">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Menu</h2></header>
+  <div class="vbody">
+    <div class="menu-list">
+      <button class="menu-item" type="button" data-view="table">Meja <small>buangan &amp; set lawan</small></button>
+      <button class="menu-item" type="button" data-view="detail">Detail analisis <small>peluang, pola, grafik</small></button>
+      <button class="menu-item" type="button" data-view="history">Langkah sebelumnya</button>
+      <button class="menu-item" type="button" data-view="abacus">Sempoa tile <small>sisa tiap tile</small></button>
+      <button class="menu-item" type="button" data-view="game">Angin &amp; Flower</button>
+      <button class="menu-item" type="button" data-view="rules">Aturan Majé</button>
+      <button class="menu-item" type="button" data-view="settings">Pengaturan</button>
+      <button class="menu-item danger" type="button" data-act="menu-new-game">Game baru</button>
+    </div>
+    <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
+  </div>
+</section>
+<section class="view" id="view-detail" role="dialog" aria-modal="true" aria-label="Detail analisis">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Detail analisis</h2></header>
+  <div class="vbody">
+    <p class="muted small" id="drawsInfo" style="margin:0"></p>
+    <div id="advice"></div>
+  </div>
+</section>
+<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Kamera">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Kamera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
+  <div class="vbody">
     <div class="form" id="livePanel">
-      <div class="sub-head"><h3>Kamera live</h3><span class="spacer"></span><span class="muted small num" id="liveFps"></span></div>
       <div class="live-controls" id="liveControls">
       <div class="seg wrap" id="liveTargets" role="group" aria-label="Kamera sedang melihat"></div>
       <div class="live-stage" id="liveStage" hidden>
@@ -512,40 +559,46 @@ body.simple #abacusPanel .bead-key { display: none; }
     <div class="readout" id="readout" hidden></div>
       <p class="note-line">Model pengenal tile dilatih dari dataset "Mahjong" oleh Jon Chan (Roboflow Universe), lisensi CC BY 4.0. Semua deteksi berjalan di HP-mu; video tidak dikirim ke mana pun.</p>
     </div>
-  </details>
-
-  <details class="panel" id="tablePanel">
-    <summary><h2>Meja</h2><span class="muted small">buangan &amp; set lawan</span></summary>
+  </div>
+</section>
+<section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Meja">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Meja</h2></header>
+  <div class="vbody">
+    <p class="muted small" style="margin:0">Kanan = pemain sesudah kamu. Ketuk tile untuk menghapus; tandai "Siap?" kalau lawan terlihat siap.</p>
     <div class="seats" id="seats"></div>
-  </details>
-
-  <details class="panel" id="gamePanel">
-    <summary><h2>Angin &amp; Flower</h2></summary>
+  </div>
+</section>
+<section class="view" id="view-game" role="dialog" aria-modal="true" aria-label="Angin &amp; Flower">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Angin &amp; Flower</h2></header>
+  <div class="vbody">
     <div class="round-row" id="roundRow">
       <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
       <label class="mini"><span>Seat Wind saya</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
       <div class="mini"><span>Flower saya</span><div class="flowers" id="flowers"></div></div>
     </div>
-  </details>
-
-  <details class="panel" id="abacusPanel">
-    <summary><h2>Sempoa tile</h2><span class="muted small num" id="unseenTotal"></span></summary>
+  </div>
+</section>
+<section class="view" id="view-abacus" role="dialog" aria-modal="true" aria-label="Sempoa tile">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Sempoa tile</h2><span class="spacer"></span><span class="muted small num" id="unseenTotal"></span></header>
+  <div class="vbody">
     <div class="bead-key">
       <span><i style="background:var(--brass);border-color:var(--brass)"></i>di tanganmu</span>
       <span><i style="background:var(--muted);border-color:var(--muted)"></i>sudah terlihat</span>
       <span><i></i>belum terlihat (masih mungkin kamu tarik)</span>
     </div>
     <div class="abacus" id="abacus"></div>
-  </details>
-
-  <details class="panel" id="histPanel">
-    <summary><h2>Langkah sebelumnya</h2></summary>
-    <div class="row" style="margin-bottom:8px"><button class="btn small" type="button" id="undoTop">Urungkan langkah terakhir</button></div>
+  </div>
+</section>
+<section class="view" id="view-history" role="dialog" aria-modal="true" aria-label="Langkah sebelumnya">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Langkah sebelumnya</h2></header>
+  <div class="vbody">
+    <div class="row"><button class="btn small" type="button" id="undoTop">Urungkan langkah terakhir</button></div>
     <div class="hist" id="hist"></div>
-  </details>
-
-  <details class="panel" id="rulesPanel">
-    <summary><h2>Aturan Majé</h2></summary>
+  </div>
+</section>
+<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Aturan Majé">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Aturan Majé</h2></header>
+  <div class="vbody">
     <div class="rules">
       <ul>
         <li>Hu (Mahjong): 4 sets + 1 pair (14 tile), <b>minimal 3 poin</b>. Tangan tanpa pola (Chicken Hand) bernilai 0.</li>
@@ -588,10 +641,11 @@ body.simple #abacusPanel .bead-key { display: none; }
       </div>
       <p class="note-line">Concealed Hand yang menang tarik sendiri dihitung Self Draw. Robbing a Kong dan Last Tile tidak dihitung otomatis. Pair di Sequence Hand dibaca sebagai tile 2–8 (sesuai kata "simple" di buku).</p>
     </div>
-  </details>
-
-  <details class="panel" id="settings">
-    <summary><h2>Pengaturan</h2></summary>
+  </div>
+</section>
+<section class="view" id="view-settings" role="dialog" aria-modal="true" aria-label="Pengaturan">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Kembali">‹</button><h2>Pengaturan</h2></header>
+  <div class="vbody">
     <div class="form">
       <div class="field">
         <label for="preset">Jenis permainan</label>
@@ -622,10 +676,6 @@ body.simple #abacusPanel .bead-key { display: none; }
         <input type="number" id="wallLeft" min="0" max="140" inputmode="numeric">
       </div>
       <div class="field">
-        <label for="uiMode">Tampilan</label>
-        <select id="uiMode"><option value="simple">Sederhana · satu instruksi per giliran</option><option value="full">Lengkap · semua analisis terbuka</option></select>
-      </div>
-      <div class="field">
         <label for="tier">Cara baca foto</label>
         <select id="tier"><option value="default">Standar · lebih cepat</option><option value="complex">Teliti · lebih lama, lebih akurat</option></select>
       </div>
@@ -634,15 +684,13 @@ body.simple #abacusPanel .bead-key { display: none; }
       </div>
       <p class="note-line">Catatan game tersimpan di browser HP ini saja. Ganti HP atau hapus data browser berarti catatan hilang.</p>
     </div>
-  </details>
-
-  <p class="note-line">Peluang dihitung dari tile yang belum terlihat. Keamanan buangan dan simulasi adalah perkiraan: lawan tidak membuang tile secara acak, dan mereka juga bisa menang lebih dulu.</p>
-</div>
+  </div>
+</section>
 
 <div class="dock" id="dock">
   <div class="inner">
-    <button class="btn primary" type="button" id="dockPad">+ Ketik tile</button>
-    <button class="btn" type="button" id="dockCam">Kamera</button>
+    <button class="btn primary" type="button" id="dockCam">Scan tangan</button>
+    <button class="btn" type="button" id="dockPad">+ Ketik tile</button>
     <button class="btn" type="button" id="dockUndo" aria-label="Urungkan langkah terakhir">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
     </button>
@@ -1748,7 +1796,7 @@ body.simple #abacusPanel .bead-key { display: none; }
     for (var t = 0; t < 34; t++) for (var k = 0; k < unseen[t]; k++) pool0.push(t);
     var rnd = rngFrom(seed || 1);
     var tsumo = new Array(draws + 1).fill(0), any = new Array(draws + 1).fill(0), tenpai = new Array(draws + 1).fill(0);
-    var patterns = {}, ptsSum = 0, wins = 0;
+    var patterns = {}, routeWins = {}, ptsSum = 0, wins = 0;
     var pool = pool0.slice(), L = pool.length, perRound = 4;
     var maxDraws = Math.min(draws, Math.floor(L / perRound));
     function vdist(c, belief) {
@@ -1764,10 +1812,14 @@ body.simple #abacusPanel .bead-key { display: none; }
       var sc = scoreHand(c, cfg, selfDraw);
       return sc.points >= M ? sc : null;
     }
-    function record(sc) {
+    // cc = tangan lengkap saat menang; tiap jalur/pola yang terpenuhi dihitung (bisa lebih dari satu).
+    function record(sc, cc) {
       var name = sc ? mainPattern(sc) : 'Tangan lengkap';
       patterns[name] = (patterns[name] || 0) + 1;
       ptsSum += sc ? sc.points : 0; wins++;
+      for (var q = 0; q < routes.length; q++) {
+        if (routeDist(cc, S, routes[q], null) === -1) routeWins[routes[q].name] = (routeWins[routes[q].name] || 0) + 1;
+      }
     }
     if (active.length) {
       for (var sIdx = 0; sIdx < sims; sIdx++) {
@@ -1786,7 +1838,7 @@ body.simple #abacusPanel .bead-key { display: none; }
           c[d]++;
           if (shanten(c, cfg) === -1) {
             var sc = scoreOk(c, true);
-            if (sc) { wonTsumo = r + 1; if (wonAny < 0) { wonAny = r + 1; record(sc); } break; }
+            if (sc) { wonTsumo = r + 1; if (wonAny < 0) { wonAny = r + 1; record(sc, c); } break; }
           }
           var bestKey = 1e9, cands = [];
           for (var x = 0; x < 34; x++) {
@@ -1816,8 +1868,9 @@ body.simple #abacusPanel .bead-key { display: none; }
               var od = pool[r * perRound + o];
               c[od]++;
               var win = shanten(c, cfg) === -1 ? scoreOk(c, false) : null;
+              if (win) { wonAny = r + 1; record(win, c); }
               c[od]--;
-              if (win) { wonAny = r + 1; record(win); break; }
+              if (win) break;
             }
           }
           for (var o2 = 1; o2 < perRound; o2++) belief[pool[r * perRound + o2]]--;
@@ -1832,11 +1885,12 @@ body.simple #abacusPanel .bead-key { display: none; }
       for (var i2 = 0; i2 <= draws; i2++) { run += a[i2] || 0; out.push(run / sims); }
       return out;
     }
-    var pat = {};
+    var pat = {}, rp = {};
     Object.keys(patterns).forEach(function (n) { pat[n] = patterns[n] / sims; });
+    Object.keys(routeWins).forEach(function (n) { rp[n] = routeWins[n] / sims; });
     return {
       sims: sims, draws: maxDraws, tsumo: cumulative(tsumo), any: cumulative(any), tenpai: cumulative(tenpai),
-      patterns: pat, avgPoints: wins ? ptsSum / wins : 0
+      patterns: pat, routes: rp, avgPoints: wins ? ptsSum / wins : 0
     };
   }
 
@@ -2105,7 +2159,7 @@ body.simple #abacusPanel .bead-key { display: none; }
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null
   };
 
   function act(label, type, fn, extra) {
@@ -2225,14 +2279,17 @@ body.simple #abacusPanel .bead-key { display: none; }
   }
   function mergeSim(a, b, na, nb) {
     function mix(x, y) { return x.map(function (v, i) { return (v * na + (y[i] || 0) * nb) / (na + nb); }); }
-    var pat = {};
+    var pat = {}, rts = {};
     Object.keys(a.patterns).concat(Object.keys(b.patterns)).forEach(function (k) {
       pat[k] = ((a.patterns[k] || 0) * na + (b.patterns[k] || 0) * nb) / (na + nb);
+    });
+    Object.keys(a.routes || {}).concat(Object.keys(b.routes || {})).forEach(function (k) {
+      rts[k] = (((a.routes || {})[k] || 0) * na + ((b.routes || {})[k] || 0) * nb) / (na + nb);
     });
     var wa = a.any[a.draws] * na, wb = b.any[b.draws] * nb;
     return {
       sims: na + nb, draws: a.draws, tsumo: mix(a.tsumo, b.tsumo), any: mix(a.any, b.any), tenpai: mix(a.tenpai, b.tenpai),
-      patterns: pat, avgPoints: (wa + wb) ? (a.avgPoints * wa + b.avgPoints * wb) / (wa + wb) : 0
+      patterns: pat, routes: rts, avgPoints: (wa + wb) ? (a.avgPoints * wa + b.avgPoints * wb) / (wa + wb) : 0
     };
   }
   function runSims(jobs) {
@@ -2311,7 +2368,6 @@ body.simple #abacusPanel .bead-key { display: none; }
   }
   function renderRoundRow(an) {
     $('roundRow').hidden = !S.cfg.scoring;
-    $('gamePanel').hidden = !S.cfg.scoring;
     $('roundWind').value = String(S.cfg.roundWind);
     $('seatWind').value = String(S.cfg.seatWind);
     var mine = S.cfg.seatWind + 1;
@@ -2353,7 +2409,7 @@ body.simple #abacusPanel .bead-key { display: none; }
 
     var S0 = MJ.setsNeeded(an.cfg);
     var need13 = 3 * S0 + 1;
-    $('handCount').textContent = n + ' tile' + (myMelds.length ? ' + ' + myMelds.length + ' set terbuka' : '') + ' · normal ' + need13 + '/' + (need13 + 1);
+    $('handCount').textContent = n + ' tile' + (myMelds.length ? ' + ' + myMelds.length + ' set' : '');
 
 
     var ra = $('rackActions');
@@ -2714,7 +2770,6 @@ body.simple #abacusPanel .bead-key { display: none; }
       $('wallLeft').placeholder = 'otomatis: ' + an.wall;
     }
     $('tier').value = S.cfg.tier || 'default';
-    $('uiMode').value = S.cfg.ui || 'simple';
     $('resetRow').innerHTML = ui.confirmReset
       ? '<span class="small">Hapus catatan game ini?</span><button class="btn small primary" type="button" id="resetYes">Ya, mulai baru</button><button class="btn small ghost" type="button" id="resetNo">Batal</button>'
       : '<button class="btn" type="button" id="resetBtn">Mulai game baru</button>';
@@ -2723,7 +2778,6 @@ body.simple #abacusPanel .bead-key { display: none; }
   function render() {
     var an = analysis();
     lastAn = an;
-    applyUiMode();
     $('turnChip').textContent = 'Giliran ' + S.turn;
     $('exampleBanner').hidden = !S.example;
     renderRoundRow(an);
@@ -2742,6 +2796,7 @@ body.simple #abacusPanel .bead-key { display: none; }
 
   /* ---------- actions ---------- */
   function discardFromHand(t) {
+    closeView();
     act('Buang ' + name(t), 'discard', function (cur) {
       if (!removeOne(cur.hand, t)) return false;
       cur.ponds.me.push(t);
@@ -2840,6 +2895,7 @@ body.simple #abacusPanel .bead-key { display: none; }
   function doClaim(i) {
     var cl = lastAn && lastAn.claim;
     if (!cl) return;
+    closeView();
     var o = cl.options[i];
     if (!o) return;
     if (o.type === 'hu') {
@@ -3173,17 +3229,31 @@ body.simple #abacusPanel .bead-key { display: none; }
     return '<div class="want">' + list.map(function (x) { return tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span>'; }).join('') +
       (tiles.length > list.length ? '<span class="num">+' + (tiles.length - list.length) + ' lagi</span>' : '') + '</div>';
   }
-  function openPanel(id) {
-    var el = $(id);
+  var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', inputPanel: 'camera', gamePanel: 'game' };
+  function openPanel(id) { openView(PANEL_VIEW[id] || id); }
+  // Layar panggilan: satu layar penuh di atas layar utama, tutup dengan tombol kembali atau tombol back HP.
+  function openView(name) {
+    var el = $('view-' + name);
     if (!el) return;
-    el.open = true;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (ui.view) closeView(true);
+    closeSheet();
+    el.classList.add('open');
+    el.scrollTop = 0;
+    document.body.classList.add('view-open');
+    ui.view = name;
+    try { history.pushState({ sempoaView: name }, ''); } catch (e) { /* abaikan */ }
+    document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: true } }));
   }
-  function applyUiMode() {
-    var simple = (S.cfg.ui || 'simple') === 'simple';
-    document.body.classList.toggle('simple', simple);
-    if (!simple) ['detailPanel', 'tablePanel', 'histPanel'].forEach(function (id) { $(id).open = true; });
+  function closeView(silent) {
+    if (!ui.view) return;
+    var name = ui.view;
+    $('view-' + name).classList.remove('open');
+    document.body.classList.remove('view-open');
+    ui.view = null;
+    document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: false } }));
+    if (!silent && history.state && history.state.sempoaView === name) { try { history.back(); } catch (e) { /* abaikan */ } }
   }
+  window.addEventListener('popstate', function () { if (ui.view) closeView(true); });
   function renderTopChips() {
     var fl = S.cur.myFlowers.length;
     $('windChip').innerHTML = tileHTML(27 + S.cfg.roundWind, 'xs') + tileHTML(27 + S.cfg.seatWind, 'xs') + (fl ? '<span class="num small">✿' + fl + '</span>' : '');
@@ -3200,6 +3270,29 @@ body.simple #abacusPanel .bead-key { display: none; }
     }).join('');
   }
   function claimKey(cl) { return cl.from + ':' + cl.t + ':' + S.events.length; }
+  var ROUTE_LABEL = { 'Chicken Hand + Additional Point': 'Chicken Hand + poin tambahan' };
+  // Daftar kombinasi menang yang mungkin, dengan peluangnya (dari simulasi) dan jaraknya (pasti).
+  function combosBlock(an, sim) {
+    var rows = (an.routeList || []).map(function (r) {
+      var p = sim && sim.routes ? (sim.routes[r.name] || 0) : null;
+      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p };
+    });
+    if (!rows.length) return '<div class="hero-sub">Belum ada kombinasi yang mencapai ' + an.M + ' poin dengan tile tersisa.</div>';
+    rows.sort(function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; });
+    // tampilkan yang punya peluang nyata; kalau sedikit, tambahkan 2 jalur terdekat sebagai gambaran
+    var shown = rows.filter(function (r) { return r.p == null || r.p >= 0.005; }).slice(0, 5);
+    if (shown.length < 2) {
+      rows.filter(function (r) { return shown.indexOf(r) < 0; }).sort(function (a, b) { return a.d - b.d || b.uk - a.uk; })
+        .slice(0, 2 - shown.length + 1).forEach(function (r) { shown.push(r); });
+    }
+    return '<div class="combos">' + shown.map(function (r) {
+      var w = r.p == null ? 0 : Math.max(2, Math.round(r.p * 100));
+      return '<div class="combo' + (r.p != null && r.p < 0.005 ? ' faint' : '') + '">' +
+        '<div class="combo-top"><b>' + esc(r.name) + '</b><span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></div>' +
+        '<div class="combo-bar"><i style="width:' + w + '%"></i></div>' +
+        '<div class="combo-sub">' + (an.scoring ? r.g + ' poin · ' : '') + (r.d === 0 ? 'tinggal 1 tile' : r.d + ' langkah') + ' · ' + r.uk + ' tile membantu</div></div>';
+    }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' kombinasi lain, lihat Detail</div>' : '') + '</div>';
+  }
   function renderHero(an) {
     if (!an) return;
     var box = $('hero'), h = '';
@@ -3213,10 +3306,10 @@ body.simple #abacusPanel .bead-key { display: none; }
         '<div class="hero-sub num">' + have + ' / ' + need + ' tile</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Foto atau ketik tile tanganmu</span></div>' +
-        '<div class="step"><i>2</i><span>Ikuti saran: buang tile yang ditandai</span></div>' +
-        '<div class="step"><i>3</i><span>Tiap giliran, catat buangan lawan dan tile yang kamu ambil</span></div></div>' +
-        '<div class="hero-actions"><button class="btn primary big" type="button" data-open="inputPanel">Kamera / Foto</button><button class="btn big" type="button" data-act="pad-hand">Ketik tile</button></div>' + over;
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Scan tile tanganmu dengan kamera</span></div>' +
+        '<div class="step"><i>2</i><span>Lihat kombinasi menang yang mungkin dan peluangnya</span></div>' +
+        '<div class="step"><i>3</i><span>Ikuti saran buang; tiap giliran scan ulang atau ketik perubahan</span></div></div>' +
+        '<div class="hero-actions"><button class="btn primary big" type="button" data-view="camera">Scan tangan</button><button class="btn big" type="button" data-act="pad-hand">Ketik tile</button></div>' + over;
       box.innerHTML = h;
       return;
     }
@@ -3257,11 +3350,16 @@ body.simple #abacusPanel .bead-key { display: none; }
           }).join(' · ') + '</span><span class="spacer"></span><button class="btn small ghost" type="button" data-open="detailPanel">Detail</button></div>';
         }
       }
-      h += '<div class="hero-head"><span class="eyebrow">Giliranmu mengambil</span>' + (an.threat >= 0.5 ? modePill('careful') : '') + '</div>' +
-        '<div class="hero-main"><div class="hero-text"><div class="hero-title">' + (tenpai ? 'Siap menang' : an.vd >= 99 ? 'Belum ada jalur ' + an.M + ' poin' : an.vd + ' langkah lagi') + '</div>' +
-        '<div class="hero-sub">' + (tenpai ? 'Tile yang memenangkan' : 'Tile yang kamu cari') + '</div>' + wantChips(an.ukeire.tiles, 8) + '</div>' +
-        '<div class="hero-rings">' + ringWrap(endOf(sim, 'any'), 'menang') + ringWrap(an.pNext, tenpai ? 'tarikan ini' : 'berguna') + '</div></div>' +
-        '<div class="hero-actions"><button class="btn primary big" type="button" data-act="pad-hand">+ Tile yang kuambil</button><button class="btn ghost" type="button" data-open="detailPanel">Kenapa?</button></div>' + over;
+      var pw = endOf(sim, 'any');
+      h += '<div class="hero-head"><span class="eyebrow">Potensi menang</span><span class="hero-sub">sebelum dinding habis</span></div>' +
+        '<div class="hero-main"><div class="hero-text"><div class="hero-title num">' + (pw == null ? '…' : pct(pw)) + '</div>' +
+        '<div class="hero-sub">' + (tenpai ? 'Siap menang' : an.vd >= 99 ? 'Belum ada jalur ' + an.M + ' poin' : an.vd + ' langkah lagi') + '</div></div>' +
+        '<div class="hero-rings">' + ringWrap(an.pNext, tenpai ? 'tarikan ini' : 'berguna') + '</div></div>' +
+        combosBlock(an, sim) +
+        '<hr class="hero-div">' +
+        '<div class="hero-head"><span class="eyebrow">Langkah berikutnya</span>' + (an.threat >= 0.5 ? modePill('careful') : '') + '</div>' +
+        '<div class="hero-sub">' + (tenpai ? 'Tunggu tile ini' : 'Cari tile ini') + '</div>' + wantChips(an.ukeire.tiles, 8) +
+        '<div class="hero-actions"><button class="btn primary big" type="button" data-act="pad-hand">+ Tile yang kuambil</button><button class="btn ghost" type="button" data-open="detailPanel">Detail</button></div>' + over;
       box.innerHTML = h;
       return;
     }
@@ -3271,16 +3369,22 @@ body.simple #abacusPanel .bead-key { display: none; }
     if (an.complete && !an.validWin) {
       h += '<div class="hero-alt"><span>Tangan lengkap, tapi baru ' + an.score.points + ' poin dari minimal ' + an.M + '. Lanjut bentuk pola.</span></div>';
     }
-    h += '<div class="hero-head"><span class="eyebrow">Langkah berikutnya</span>' + modePill(mode) + '</div>' +
+    var pwd = endOf(bsim, 'any');
+    h += '<div class="hero-head"><span class="eyebrow">Potensi menang</span><span class="hero-sub">kalau buang ' + esc(name(rec.t)) + '</span></div>' +
+      '<div class="hero-main"><div class="hero-text"><div class="hero-title num">' + (pwd == null ? '…' : pct(pwd)) + '</div>' +
+      '<div class="hero-sub">' + (rec.vd === 0 ? 'Siap menang' : rec.vd >= 99 ? 'Belum ada jalur ' + an.M + ' poin' : rec.vd + ' langkah lagi') + '</div></div>' +
+      '<div class="hero-rings">' + ringWrap(rec.risk, 'risiko', riskCls(rec.risk)) + '</div></div>' +
+      combosBlock(an, bsim) +
+      '<hr class="hero-div">' +
+      '<div class="hero-head"><span class="eyebrow">Langkah berikutnya</span>' + modePill(mode) + '</div>' +
       '<div class="hero-main">' + tileHTML(rec.t, 'lg') +
       '<div class="hero-text"><div class="hero-verb">Buang</div><div class="hero-title">' + esc(name(rec.t)) + '</div>' +
-      '<div class="hero-sub">' + (rec.vd === 0 ? 'Siap menang · ' : rec.vd >= 99 ? '' : rec.vd + ' langkah lagi · ') + rec.ukeire + ' tile ' + (rec.vd === 0 ? 'penentu' : 'berguna') + '</div></div>' +
-      '<div class="hero-rings">' + ringWrap(endOf(bsim, 'any'), 'menang') + ringWrap(rec.risk, 'risiko', riskCls(rec.risk)) + '</div></div>';
+      '<div class="hero-sub">' + rec.ukeire + ' tile ' + (rec.vd === 0 ? 'penentu menang' : 'berguna') + ' masih di luar</div></div></div>';
     if (mode !== 'attack') {
       var who = an.threatWho, rd = who && an.reads[who] && an.reads[who].reads[0];
       h += '<div class="hero-sub">' + LBL[who] + ' mungkin sudah siap' + (rd ? ' · ' + esc(rd.name) : '') + (mode === 'fold' ? '. Amankan dulu.' : '. Pilih yang lebih aman.') + '</div>';
     }
-    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="discard-best" data-t="' + rec.t + '">Buang ' + esc(name(rec.t)) + '</button><button class="btn ghost" type="button" data-open="detailPanel">Kenapa?</button></div>';
+    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="discard-best" data-t="' + rec.t + '">Buang ' + esc(name(rec.t)) + '</button><button class="btn ghost" type="button" data-open="detailPanel">Detail</button></div>';
     if (rec.t !== best.t) {
       var asim = simFor(an, best.t);
       h += '<div class="hero-alt">' + tileHTML(best.t, 'sm') + '<span>Menyerang: buang ' + esc(name(best.t)) + ' · menang ' + pct(endOf(asim, 'any')) + ' · risiko ' + pct(best.risk) + '</span><span class="spacer"></span><button class="btn small" type="button" data-act="discard-best" data-t="' + best.t + '">Buang</button></div>';
@@ -3313,7 +3417,8 @@ body.simple #abacusPanel .bead-key { display: none; }
           }, { who: 'me' });
           ui.selHand = null; render(); return;
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
-        case 'pad-hand': openSheet('hand'); return;
+        case 'pad-hand': closeView(); openSheet('hand'); return;
+        case 'menu-new-game': ui.confirmReset = true; renderSettings(lastAn); openView('settings'); return;
         case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); return;
         case 'new-game':
           S = newRound(S.cfg); simCache.clear(); ui.skipClaim = null;
@@ -3336,6 +3441,8 @@ body.simple #abacusPanel .bead-key { display: none; }
       }
     }
     if (d.open) { openPanel(d.open); return; }
+    if (d.view) { openView(d.view); return; }
+    if (el.hasAttribute('data-close-view')) { closeView(); return; }
     if (d.claim != null) { doClaim(+d.claim); return; }
     if (d.flower) {
       var fn = +d.flower, has = S.cur.myFlowers.indexOf(fn) >= 0;
@@ -3376,7 +3483,7 @@ body.simple #abacusPanel .bead-key { display: none; }
       case 'dockPad': openSheet(); return;
       case 'sheetClose': closeSheet(); return;
       case 'dockUndo': case 'undoTop': case 'sheetUndo': undo(); return;
-      case 'dockCam': openPanel('inputPanel'); return;
+      case 'dockCam': openView('camera'); return;
       case 'camBtn': $('camInput').click(); return;
       case 'galBtn': $('galInput').click(); return;
       case 'stopBtn': if (photoCtl) photoCtl.abort(); return;
@@ -3387,7 +3494,7 @@ body.simple #abacusPanel .bead-key { display: none; }
       case 'exampleNew':
         S = newRound(S.cfg);
         simCache.clear();
-        save(); render(); openSheet('hand');
+        save(); render(); closeView(); openSheet('hand');
         toast('Game baru. Atur angin ronde & kursimu, lalu masukkan tile tangan.');
         return;
       case 'resetBtn': ui.confirmReset = true; renderSettings(lastAn); return;
@@ -3397,7 +3504,7 @@ body.simple #abacusPanel .bead-key { display: none; }
         S = newRound(S.cfg);
         simCache.clear();
         $('readout').hidden = true;
-        save(); render();
+        save(); render(); closeView(); openSheet('hand');
         toast('Game baru dimulai. Cek angin ronde & kursimu.');
         return;
     }
@@ -3432,7 +3539,6 @@ body.simple #abacusPanel .bead-key { display: none; }
     save(); render();
   });
   $('tier').addEventListener('change', function (e) { S.cfg.tier = e.target.value; save(); });
-  $('uiMode').addEventListener('change', function (e) { S.cfg.ui = e.target.value; save(); applyUiMode(); });
 
   var resizeT = null;
   window.addEventListener('resize', function () {
@@ -3443,6 +3549,7 @@ body.simple #abacusPanel .bead-key { display: none; }
   render();
   window.Sempoa = {
     state: function () { return S; },
+    closeView: function () { closeView(); },
     lastAnalysis: function () { return lastAn; },
     tilesText: tilesText, multisetDiff: multisetDiff, toast: toast,
     label: function (seat) { return LBL[seat]; },
@@ -3790,12 +3897,14 @@ body.simple #abacusPanel .bead-key { display: none; }
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
         did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
+        backToMain('Ambil ' + MJ.tileName(plus[0]) + ' · lihat saran');
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
         did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
       } else if (auto && S.cur.hand.length === 0) {
         API.setHand(r.tiles, 'Kamera: tangan awal');
         did = 'tercatat sebagai tangan awal';
+        backToMain('Tangan tercatat · lihat kombinasi menang');
       } else {
         h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
           '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';
@@ -3818,6 +3927,11 @@ body.simple #abacusPanel .bead-key { display: none; }
     st.pending = r;
     box.innerHTML = h;
     box.hidden = false;
+  }
+
+  // Setelah tangan tercatat dari kamera, kembali ke layar utama supaya hasilnya langsung terlihat.
+  function backToMain(msg) {
+    setTimeout(function () { if (API.closeView) API.closeView(); API.toast(msg); }, 600);
   }
 
   /* ---------- foto latihan (untuk melatih ulang dengan tile mejamu) ---------- */
@@ -3880,6 +3994,12 @@ body.simple #abacusPanel .bead-key { display: none; }
   });
   $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
   document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
+  // Layar Kamera dibuka dari tombol: langsung nyalakan kamera; ditutup: matikan.
+  document.addEventListener('sempoa:view', function (e) {
+    if (!e.detail || e.detail.name !== 'camera') return;
+    if (e.detail.open) { if (!st.running && st.modelState !== 'error') start(); }
+    else if (st.running) stop();
+  });
 })();
 
 </script>

@@ -237,5 +237,17 @@ let t2 = Date.now();
 const anP = MJ.analyze({ hand: MJ.parseHand('234m67m345p79p23s55s'), visible: new Array(34).fill(0), ponds: { right: [], across: [], left: [] }, cfg: MAJE, drawsLeft: 12 });
 console.log('analyze maje ms', Date.now() - t2, 'best', MJ.tileStr(anP.best.t), 'vd', anP.best.vd, 'uk', anP.best.ukeire, 'routes', anP.routeList.slice(0, 4).map(r => r.name + ' d' + r.d + ' g' + r.g).join(' | '));
 
+
+// peluang per kombinasi: tiap jalur yang terpenuhi dicatat; yang terbesar harus <= peluang menang total
+{
+  const hs = H('234m67m345p7p23s55s');
+  const us = MJ.unseenCounts(hs, new Array(34).fill(0)).unseen;
+  const r = MJ.simulate(hs, MAJE, us, 12, 200, 5);
+  const names = Object.keys(r.routes);
+  eq('routes recorded', names.length > 0, true);
+  eq('route prob <= total', Math.max(...names.map(n => r.routes[n])) <= r.any[r.draws] + 1e-9, true);
+  console.log('route probs:', names.map(n => n + ' ' + (r.routes[n] * 100).toFixed(0) + '%').join(' | '), '| total', (r.any[r.draws] * 100).toFixed(0) + '%');
+}
+
 console.log(fail ? `\n${fail} FAILED, ${pass} passed` : `\nall ${pass} passed`);
 process.exit(fail ? 1 : 0);

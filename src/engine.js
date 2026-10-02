@@ -1065,7 +1065,7 @@
     for (var t = 0; t < 34; t++) for (var k = 0; k < unseen[t]; k++) pool0.push(t);
     var rnd = rngFrom(seed || 1);
     var tsumo = new Array(draws + 1).fill(0), any = new Array(draws + 1).fill(0), tenpai = new Array(draws + 1).fill(0);
-    var patterns = {}, ptsSum = 0, wins = 0;
+    var patterns = {}, routeWins = {}, ptsSum = 0, wins = 0;
     var pool = pool0.slice(), L = pool.length, perRound = 4;
     var maxDraws = Math.min(draws, Math.floor(L / perRound));
     function vdist(c, belief) {
@@ -1081,10 +1081,14 @@
       var sc = scoreHand(c, cfg, selfDraw);
       return sc.points >= M ? sc : null;
     }
-    function record(sc) {
+    // cc = tangan lengkap saat menang; tiap jalur/pola yang terpenuhi dihitung (bisa lebih dari satu).
+    function record(sc, cc) {
       var name = sc ? mainPattern(sc) : 'Tangan lengkap';
       patterns[name] = (patterns[name] || 0) + 1;
       ptsSum += sc ? sc.points : 0; wins++;
+      for (var q = 0; q < routes.length; q++) {
+        if (routeDist(cc, S, routes[q], null) === -1) routeWins[routes[q].name] = (routeWins[routes[q].name] || 0) + 1;
+      }
     }
     if (active.length) {
       for (var sIdx = 0; sIdx < sims; sIdx++) {
@@ -1103,7 +1107,7 @@
           c[d]++;
           if (shanten(c, cfg) === -1) {
             var sc = scoreOk(c, true);
-            if (sc) { wonTsumo = r + 1; if (wonAny < 0) { wonAny = r + 1; record(sc); } break; }
+            if (sc) { wonTsumo = r + 1; if (wonAny < 0) { wonAny = r + 1; record(sc, c); } break; }
           }
           var bestKey = 1e9, cands = [];
           for (var x = 0; x < 34; x++) {
@@ -1133,8 +1137,9 @@
               var od = pool[r * perRound + o];
               c[od]++;
               var win = shanten(c, cfg) === -1 ? scoreOk(c, false) : null;
+              if (win) { wonAny = r + 1; record(win, c); }
               c[od]--;
-              if (win) { wonAny = r + 1; record(win); break; }
+              if (win) break;
             }
           }
           for (var o2 = 1; o2 < perRound; o2++) belief[pool[r * perRound + o2]]--;
@@ -1149,11 +1154,12 @@
       for (var i2 = 0; i2 <= draws; i2++) { run += a[i2] || 0; out.push(run / sims); }
       return out;
     }
-    var pat = {};
+    var pat = {}, rp = {};
     Object.keys(patterns).forEach(function (n) { pat[n] = patterns[n] / sims; });
+    Object.keys(routeWins).forEach(function (n) { rp[n] = routeWins[n] / sims; });
     return {
       sims: sims, draws: maxDraws, tsumo: cumulative(tsumo), any: cumulative(any), tenpai: cumulative(tenpai),
-      patterns: pat, avgPoints: wins ? ptsSum / wins : 0
+      patterns: pat, routes: rp, avgPoints: wins ? ptsSum / wins : 0
     };
   }
 

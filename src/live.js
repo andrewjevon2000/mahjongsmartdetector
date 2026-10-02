@@ -319,12 +319,14 @@
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
         did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
+        backToMain('Ambil ' + MJ.tileName(plus[0]) + ' · lihat saran');
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
         did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
       } else if (auto && S.cur.hand.length === 0) {
         API.setHand(r.tiles, 'Kamera: tangan awal');
         did = 'tercatat sebagai tangan awal';
+        backToMain('Tangan tercatat · lihat kombinasi menang');
       } else {
         h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
           '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';
@@ -347,6 +349,11 @@
     st.pending = r;
     box.innerHTML = h;
     box.hidden = false;
+  }
+
+  // Setelah tangan tercatat dari kamera, kembali ke layar utama supaya hasilnya langsung terlihat.
+  function backToMain(msg) {
+    setTimeout(function () { if (API.closeView) API.closeView(); API.toast(msg); }, 600);
   }
 
   /* ---------- foto latihan (untuk melatih ulang dengan tile mejamu) ---------- */
@@ -409,4 +416,10 @@
   });
   $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
   document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
+  // Layar Kamera dibuka dari tombol: langsung nyalakan kamera; ditutup: matikan.
+  document.addEventListener('sempoa:view', function (e) {
+    if (!e.detail || e.detail.name !== 'camera') return;
+    if (e.detail.open) { if (!st.running && st.modelState !== 'error') start(); }
+    else if (st.running) stop();
+  });
 })();
