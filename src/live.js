@@ -15,7 +15,7 @@
   var COUNTDOWN_MS = 3000, STABLE_FRAMES = 3;
   var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  if (!$('liveStart')) return;
+  if (!$('liveStage')) return;
   var inArtifact = !!(window.claude && typeof window.claude.use === 'function');
   var canCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
 
@@ -32,8 +32,8 @@
     el.className = 'photo-msg' + (work ? ' work' : '');
   }
 
-  if (inArtifact || !canCamera) {
-    $('liveStart').disabled = true;
+  st.blocked = inArtifact || !canCamera;
+  if (st.blocked) {
     msg(inArtifact
       ? 'Live scanning is not available inside Claude. Open the GitHub Pages version to scan.'
       : 'This browser does not allow camera access (HTTPS required).');
@@ -88,11 +88,8 @@
   /* ---------- camera ---------- */
   function showScanner(on) {
     $('liveStage').hidden = !on;
-    $('scanCtl').hidden = !on;
-    var empty = API.state().cur.hand.length === 0;
-    $('scanBar').hidden = on || !empty;
-    $('dockCam').hidden = on || empty;
     if (!on) { $('scanCount').hidden = true; $('liveFps').textContent = ''; }
+    API.setScanning(on);
   }
   function start() {
     if (st.running) return;
@@ -329,14 +326,14 @@
       var img = $('liveImage'), url = URL.createObjectURL(file);
       img.onload = function () {
         $('liveVideo').hidden = true; img.hidden = false;
-        $('liveStage').hidden = false; $('scanBar').hidden = true;
+        $('liveStage').hidden = false;
         msg('Reading photo…', true);
         detect(img).then(function (dets) {
           draw(dets, img);
           if ($('liveKeep').checked) keepShot(img);
           var r = frameResult(dets);
           setTimeout(function () {
-            $('liveStage').hidden = true; $('scanBar').hidden = API.state().cur.hand.length > 0;
+            $('liveStage').hidden = true;
             if (!dets.length) { msg('No tiles found. Try a closer, brighter photo.'); return; }
             msg('');
             API.scanned(r.tiles, r.flowers);
@@ -381,7 +378,7 @@
     var el = e.target.closest('button');
     if (!el) return;
     switch (el.id) {
-      case 'liveStart': case 'dockCam': if (!$('liveStart').disabled) start(); else API.toast($('liveMsg').textContent); return;
+      case 'dockCam': if (!st.blocked) start(); else API.toast($('liveMsg').textContent); return;
       case 'liveStop': stop(); msg(''); return;
       case 'liveLock': lock(); return;
       case 'liveFromPhoto': $('liveFile').click(); return;
@@ -390,5 +387,5 @@
   });
   $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
   document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
-  window.SempoaScan = { start: start };
+  window.SempoaScan = { start: function () { if (!st.blocked) start(); } };
 })();

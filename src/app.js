@@ -247,7 +247,7 @@
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null, scanning: false
   };
 
   function act(label, type, fn, extra) {
@@ -489,16 +489,13 @@
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
     }).join('') : '';
 
-    if ($('liveStage').hidden) $('scanBar').hidden = n > 0;
-    // one scan button per screen: the panel's while the hand is empty, the dock's afterwards
-    $('dockCam').hidden = n === 0 || !$('liveStage').hidden;
     var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
     rack.classList.toggle('pending', !!ui.pending);
     if (ui.pending && n) {
       var okCount = n === needN || n === needN + 1;
       cb.innerHTML = '<span><b>' + n + ' tiles scanned</b>' + (okCount ? ' · correct?' : ' · need ' + needN) + '</span>' +
-        '<span class="small muted" style="flex-basis:100%">Tap a wrong tile to take it out; + Type tiles to add one.</span>' +
-        '<span class="spacer"></span><button class="btn small primary" type="button" data-act="confirm-scan">Confirm</button>';
+        '<span class="small muted" style="flex-basis:100%">Tap a wrong tile to take it out.</span>' +
+        '';
       cb.hidden = false;
     } else { cb.hidden = true; cb.innerHTML = ''; }
     var myMelds = S.cur.melds.me;
@@ -870,7 +867,6 @@
       }).join('') + '</div></div>';
     }).join('') : '<p class="muted small" style="margin:0">No moves recorded yet. Every draw, discard, open set (Chi/Pong/Kong), Flower, and photo will show up here.</p>';
     $('undoTop').disabled = !S.undo.length;
-    $('dockUndo').disabled = !S.undo.length;
     $('sheetUndo').disabled = !S.undo.length;
   }
 
@@ -910,6 +906,7 @@
     renderHistory();
     renderSettings(an);
     if (!$('sheet').hidden) renderSheet(an);
+    renderDock(an);
     runSims(simJobs(an));
   }
 
@@ -1420,6 +1417,11 @@
   }
   function renderHero(an) {
     if (!an) return;
+    renderHeroInner(an);
+    var box = $('hero');
+    if (an.phase !== 'bad' && !S.cur.winResult && !box.querySelector('.hero-more')) box.insertAdjacentHTML('beforeend', '<button class="hero-more" type="button" data-open="detailPanel">Details</button>');
+  }
+  function renderHeroInner(an) {
     var box = $('hero'), h = '';
     var over = an.over && an.over.length
       ? '<div class="hero-alt"><span>More than 4 recorded: ' + esc(tilesText(an.over)) + '</span><span class="spacer"></span><button class="btn small" type="button" data-open="tablePanel">Check</button></div>' : '';
@@ -1431,7 +1433,7 @@
         '<div class="hero-sub num">' + have + ' / ' + need + ' tiles</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> and point at one row of tiles</span></div>' +
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> at the bottom and point at one row of tiles</span></div>' +
         '<div class="step"><i>2</i><span>Check the scanned tiles and tap <b>Confirm</b></span></div>' +
         '<div class="step"><i>3</i><span>See the winning combinations and their odds, then follow the next move</span></div></div>' + over;
       box.innerHTML = h;
@@ -1546,6 +1548,52 @@
     renderSetup();
     openView('setup');
   }
+  /* ---------- bottom action bar ---------- */
+  var ICON = {
+    cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    photo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5L5 20"/></svg>',
+    type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>',
+    undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+  };
+  function mainBtn(label, attrs) { return '<button class="btn primary main" type="button" ' + attrs + '>' + label + '</button>'; }
+  function icBtn(icon, label, attrs, disabled) {
+    return '<button class="btn ic" type="button" ' + attrs + ' aria-label="' + label + '"' + (disabled ? ' disabled' : '') + '>' + ICON[icon] + '<span>' + label + '</span></button>';
+  }
+  // One primary action, always at the bottom; secondary actions as small icon buttons.
+  function renderDock(an) {
+    var h = '', undoBtn = icBtn('undo', 'Undo', 'id="dockUndo"', !S.undo.length);
+    var scanBtn = icBtn('cam', 'Scan', 'id="dockCam"'), typeBtn = icBtn('type', 'Type', 'id="dockPad"'), photoBtn = icBtn('photo', 'Photo', 'id="liveFromPhoto"');
+    var n = S.cur.hand.length;
+    if (ui.scanning) {
+      h = mainBtn('Lock', 'id="liveLock"') + icBtn('x', 'Cancel', 'id="liveStop"');
+    } else if (S.cur.winResult) {
+      h = mainBtn('New game', 'data-act="new-game"');
+    } else if (!an || an.phase === 'bad' && n === 0) {
+      h = mainBtn('Scan hand', 'id="dockCam"') + photoBtn + typeBtn;
+    } else if (ui.pending) {
+      h = mainBtn('Confirm ' + n + ' tiles', 'data-act="confirm-scan"') + scanBtn + typeBtn;
+    } else if (an.phase === 'bad') {
+      h = mainBtn('Scan hand', 'id="dockCam"') + typeBtn + undoBtn;
+    } else if (an.complete && (an.validWin || !an.options)) {
+      h = mainBtn('Check score', 'data-act="win-check" data-from="' + (S.cur.lastIn && S.cur.lastIn.from || 'wall') + '"') + scanBtn + undoBtn;
+    } else if (an.phase === 'draw') {
+      var cl = an.claim, claimBtn = '';
+      if (cl && cl.options.length && ui.skipClaim !== claimKey(cl)) {
+        cl.options.forEach(function (o, i) {
+          if (claimBtn) return;
+          if (o.type === 'hu' && o.valid) claimBtn = mainBtn('Check HU', 'data-act="win-check" data-from="' + cl.from + '" data-t="' + cl.t + '"');
+          else if (o.type !== 'hu' && o.better) claimBtn = mainBtn({ pong: 'Pong', kong: 'Kong', chi: 'Chi' }[o.type] + ' ' + esc(name(cl.t)), 'data-claim="' + i + '"');
+        });
+      }
+      h = claimBtn ? claimBtn + icBtn('x', 'Skip', 'data-act="skip-claim"') : mainBtn('Scan hand', 'id="dockCam"') + typeBtn + undoBtn;
+    } else {
+      var rec = an.rec || an.best;
+      h = mainBtn('Discard ' + esc(name(rec.t)), 'data-act="discard-best" data-t="' + rec.t + '"') + scanBtn + typeBtn + undoBtn;
+    }
+    $('dockInner').innerHTML = h;
+  }
+
   function startNewGame() {
     S.cfg.roundWind = ui.setup.round; S.cfg.seatWind = ui.setup.seat;
     S = newRound(S.cfg);
@@ -1553,7 +1601,7 @@
     var ro = $('readout'); if (ro) ro.hidden = true;
     save(); render(); closeView();
     toast('Round ' + WIND_EN[S.cfg.roundWind] + ' · Seat ' + WIND_EN[S.cfg.seatWind] + '. Scan your hand.');
-    if (window.SempoaScan && !$('liveStart').disabled) window.SempoaScan.start();
+    if (window.SempoaScan) window.SempoaScan.start();
   }
 
   /* ---------- HU check: ask before scoring ---------- */
@@ -1794,6 +1842,7 @@
       S.example = false;
       act(label, 'photo', function (cur) { cur.hand = list.slice(); cur.drawn = null; }, { who: 'me' });
     },
+    setScanning: function (on) { ui.scanning = !!on; renderDock(lastAn); },
     scanned: function (tiles, flowers) {
       S.example = false;
       act('Scan: hand (' + tiles.length + ' tiles)', 'photo', function (cur) {
