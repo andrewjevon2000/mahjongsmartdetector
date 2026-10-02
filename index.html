@@ -474,9 +474,8 @@ body.view-open { overflow: hidden; }
   <section class="panel" id="handPanel" aria-labelledby="handTitle">
     <div class="sec-head">
       <h2 id="handTitle">Tanganmu</h2>
-      <span class="muted small num" id="handCount"></span>
       <span class="spacer"></span>
-      <button class="btn small" type="button" data-view="camera">Scan</button>
+      <span class="muted small num" id="handCount"></span>
     </div>
     <div class="melds" id="myMelds"></div>
     <div class="rack" id="rack"></div>
@@ -3235,25 +3234,23 @@ body.view-open { overflow: hidden; }
   function openView(name) {
     var el = $('view-' + name);
     if (!el) return;
-    if (ui.view) closeView(true);
+    if (ui.view) closeView();
     closeSheet();
     el.classList.add('open');
     el.scrollTop = 0;
     document.body.classList.add('view-open');
     ui.view = name;
-    try { history.pushState({ sempoaView: name }, ''); } catch (e) { /* abaikan */ }
     document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: true } }));
   }
-  function closeView(silent) {
+  function closeView() {
     if (!ui.view) return;
     var name = ui.view;
     $('view-' + name).classList.remove('open');
     document.body.classList.remove('view-open');
     ui.view = null;
+    window.scrollTo(0, 0);
     document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: false } }));
-    if (!silent && history.state && history.state.sempoaView === name) { try { history.back(); } catch (e) { /* abaikan */ } }
   }
-  window.addEventListener('popstate', function () { if (ui.view) closeView(true); });
   function renderTopChips() {
     var fl = S.cur.myFlowers.length;
     $('windChip').innerHTML = tileHTML(27 + S.cfg.roundWind, 'xs') + tileHTML(27 + S.cfg.seatWind, 'xs') + (fl ? '<span class="num small">✿' + fl + '</span>' : '');
@@ -3306,10 +3303,9 @@ body.view-open { overflow: hidden; }
         '<div class="hero-sub num">' + have + ' / ' + need + ' tile</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Scan tile tanganmu dengan kamera</span></div>' +
-        '<div class="step"><i>2</i><span>Lihat kombinasi menang yang mungkin dan peluangnya</span></div>' +
-        '<div class="step"><i>3</i><span>Ikuti saran buang; tiap giliran scan ulang atau ketik perubahan</span></div></div>' +
-        '<div class="hero-actions"><button class="btn primary big" type="button" data-view="camera">Scan tangan</button><button class="btn big" type="button" data-act="pad-hand">Ketik tile</button></div>' + over;
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Ketuk <b>Scan tangan</b> di bawah, arahkan ke tile tanganmu</span></div>' +
+        '<div class="step"><i>2</i><span>Begitu 13 tile terbaca, tangan tersimpan otomatis</span></div>' +
+        '<div class="step"><i>3</i><span>Lihat kombinasi menang dan peluangnya, lalu ikuti saran buang</span></div></div>' + over;
       box.innerHTML = h;
       return;
     }
@@ -3550,6 +3546,7 @@ body.view-open { overflow: hidden; }
   window.Sempoa = {
     state: function () { return S; },
     closeView: function () { closeView(); },
+    handNeed: function () { return 3 * MJ.setsNeeded(cfgNow()) + 1; },
     lastAnalysis: function () { return lastAn; },
     tilesText: tilesText, multisetDiff: multisetDiff, toast: toast,
     label: function (seat) { return LBL[seat]; },
@@ -3588,7 +3585,8 @@ body.view-open { overflow: hidden; }
   var ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.webgpu.min.js';
   var ORT_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
   var JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
-  var CONF = 0.45, IOU = 0.45, WINDOW = 8, NEED = 5;
+  var CONF = 0.45, IOU = 0.45, WINDOW = 6, NEED = 3, MIN_INTERVAL = 220;
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   var panel = $('livePanel');
   if (!panel) return;
@@ -3655,7 +3653,8 @@ body.view-open { overflow: hidden; }
       var ort = window.ort;
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1;
-      var providers = navigator.gpu ? ['webgpu', 'wasm'] : ['wasm'];
+      // iPhone: WebGPU di WebKit masih rawan menghentikan halaman; WASM lebih stabil.
+      var providers = (!IOS && navigator.gpu) ? ['webgpu', 'wasm'] : ['wasm'];
       return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: providers, graphOptimizationLevel: 'all' })
         .catch(function () { return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: ['wasm'] }); });
     }).then(function (session) {
@@ -3676,7 +3675,7 @@ body.view-open { overflow: hidden; }
   /* ---------- kamera ---------- */
   function start() {
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 960 }, height: { ideal: 540 } }, audio: false
     }).then(function (stream) {
       st.stream = stream;
       var v = $('liveVideo');
@@ -3712,6 +3711,7 @@ body.view-open { overflow: hidden; }
 
   /* ---------- deteksi ---------- */
   function dims(el) { return el.tagName === 'VIDEO' ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+  var prepBuf = null;
   var prep = document.createElement('canvas');
   var prepCtx = prep.getContext('2d', { willReadFrequently: true });
   function preprocess(video, size) {
@@ -3724,7 +3724,9 @@ body.view-open { overflow: hidden; }
     prepCtx.fillRect(0, 0, size, size);
     prepCtx.drawImage(video, 0, 0, vw, vh, dx, dy, w, h);
     var px = prepCtx.getImageData(0, 0, size, size).data;
-    var n = size * size, data = new Float32Array(3 * n);
+    var n = size * size;
+    if (!prepBuf || prepBuf.length !== 3 * n) prepBuf = new Float32Array(3 * n);
+    var data = prepBuf;
     for (var i = 0, j = 0; i < n; i++, j += 4) {
       data[i] = px[j] / 255; data[i + n] = px[j + 1] / 255; data[i + 2 * n] = px[j + 2] / 255;
     }
@@ -3860,7 +3862,8 @@ body.view-open { overflow: hidden; }
       msg('Deteksi gagal: ' + (e && e.message ? e.message : e));
     }).then(function () {
       st.busy = false;
-      if (st.running) requestAnimationFrame(loop);
+      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
+      if (st.running) setTimeout(function () { requestAnimationFrame(loop); }, wait);
     });
   }
 
@@ -3892,8 +3895,14 @@ body.view-open { overflow: hidden; }
     var did = null;
     if (st.target === 'hand') {
       var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
+      var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
       if (!plus.length && !minus.length) {
         did = 'sama dengan catatan';
+      } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
+        // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
+        API.setHand(r.tiles, 'Kamera: tangan ' + r.tiles.length + ' tile');
+        did = 'tersimpan otomatis (' + r.tiles.length + ' tile)';
+        backToMain('Tangan ' + r.tiles.length + ' tile tersimpan');
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
         did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
@@ -3901,10 +3910,12 @@ body.view-open { overflow: hidden; }
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
         did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
-      } else if (auto && S.cur.hand.length === 0) {
+      } else if (auto && S.cur.hand.length === 0 && full) {
         API.setHand(r.tiles, 'Kamera: tangan awal');
         did = 'tercatat sebagai tangan awal';
         backToMain('Tangan tercatat · lihat kombinasi menang');
+      } else if (auto && S.cur.hand.length === 0) {
+        did = 'terbaca ' + r.tiles.length + ' tile, butuh ' + need + ' — geser kamera sampai semua tile masuk';
       } else {
         h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
           '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';

@@ -10,7 +10,8 @@
   var ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.webgpu.min.js';
   var ORT_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
   var JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
-  var CONF = 0.45, IOU = 0.45, WINDOW = 8, NEED = 5;
+  var CONF = 0.45, IOU = 0.45, WINDOW = 6, NEED = 3, MIN_INTERVAL = 220;
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   var panel = $('livePanel');
   if (!panel) return;
@@ -77,7 +78,8 @@
       var ort = window.ort;
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1;
-      var providers = navigator.gpu ? ['webgpu', 'wasm'] : ['wasm'];
+      // iPhone: WebGPU di WebKit masih rawan menghentikan halaman; WASM lebih stabil.
+      var providers = (!IOS && navigator.gpu) ? ['webgpu', 'wasm'] : ['wasm'];
       return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: providers, graphOptimizationLevel: 'all' })
         .catch(function () { return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: ['wasm'] }); });
     }).then(function (session) {
@@ -98,7 +100,7 @@
   /* ---------- kamera ---------- */
   function start() {
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 960 }, height: { ideal: 540 } }, audio: false
     }).then(function (stream) {
       st.stream = stream;
       var v = $('liveVideo');
@@ -134,6 +136,7 @@
 
   /* ---------- deteksi ---------- */
   function dims(el) { return el.tagName === 'VIDEO' ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+  var prepBuf = null;
   var prep = document.createElement('canvas');
   var prepCtx = prep.getContext('2d', { willReadFrequently: true });
   function preprocess(video, size) {
@@ -146,7 +149,9 @@
     prepCtx.fillRect(0, 0, size, size);
     prepCtx.drawImage(video, 0, 0, vw, vh, dx, dy, w, h);
     var px = prepCtx.getImageData(0, 0, size, size).data;
-    var n = size * size, data = new Float32Array(3 * n);
+    var n = size * size;
+    if (!prepBuf || prepBuf.length !== 3 * n) prepBuf = new Float32Array(3 * n);
+    var data = prepBuf;
     for (var i = 0, j = 0; i < n; i++, j += 4) {
       data[i] = px[j] / 255; data[i + n] = px[j + 1] / 255; data[i + 2 * n] = px[j + 2] / 255;
     }
@@ -282,7 +287,8 @@
       msg('Deteksi gagal: ' + (e && e.message ? e.message : e));
     }).then(function () {
       st.busy = false;
-      if (st.running) requestAnimationFrame(loop);
+      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
+      if (st.running) setTimeout(function () { requestAnimationFrame(loop); }, wait);
     });
   }
 
@@ -314,8 +320,14 @@
     var did = null;
     if (st.target === 'hand') {
       var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
+      var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
       if (!plus.length && !minus.length) {
         did = 'sama dengan catatan';
+      } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
+        // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
+        API.setHand(r.tiles, 'Kamera: tangan ' + r.tiles.length + ' tile');
+        did = 'tersimpan otomatis (' + r.tiles.length + ' tile)';
+        backToMain('Tangan ' + r.tiles.length + ' tile tersimpan');
       } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
         API.recordDraw(plus[0]);
         did = 'tercatat: Ambil ' + MJ.tileName(plus[0]);
@@ -323,10 +335,12 @@
       } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
         API.discard(minus[0]);
         did = 'tercatat: Buang ' + MJ.tileName(minus[0]);
-      } else if (auto && S.cur.hand.length === 0) {
+      } else if (auto && S.cur.hand.length === 0 && full) {
         API.setHand(r.tiles, 'Kamera: tangan awal');
         did = 'tercatat sebagai tangan awal';
         backToMain('Tangan tercatat · lihat kombinasi menang');
+      } else if (auto && S.cur.hand.length === 0) {
+        did = 'terbaca ' + r.tiles.length + ' tile, butuh ' + need + ' — geser kamera sampai semua tile masuk';
       } else {
         h += '<div class="muted">Beda dengan catatan: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
           '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Pakai hasil kamera</button></div>';

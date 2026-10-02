@@ -1322,25 +1322,23 @@
   function openView(name) {
     var el = $('view-' + name);
     if (!el) return;
-    if (ui.view) closeView(true);
+    if (ui.view) closeView();
     closeSheet();
     el.classList.add('open');
     el.scrollTop = 0;
     document.body.classList.add('view-open');
     ui.view = name;
-    try { history.pushState({ sempoaView: name }, ''); } catch (e) { /* abaikan */ }
     document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: true } }));
   }
-  function closeView(silent) {
+  function closeView() {
     if (!ui.view) return;
     var name = ui.view;
     $('view-' + name).classList.remove('open');
     document.body.classList.remove('view-open');
     ui.view = null;
+    window.scrollTo(0, 0);
     document.dispatchEvent(new CustomEvent('sempoa:view', { detail: { name: name, open: false } }));
-    if (!silent && history.state && history.state.sempoaView === name) { try { history.back(); } catch (e) { /* abaikan */ } }
   }
-  window.addEventListener('popstate', function () { if (ui.view) closeView(true); });
   function renderTopChips() {
     var fl = S.cur.myFlowers.length;
     $('windChip').innerHTML = tileHTML(27 + S.cfg.roundWind, 'xs') + tileHTML(27 + S.cfg.seatWind, 'xs') + (fl ? '<span class="num small">✿' + fl + '</span>' : '');
@@ -1393,10 +1391,9 @@
         '<div class="hero-sub num">' + have + ' / ' + need + ' tile</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Scan tile tanganmu dengan kamera</span></div>' +
-        '<div class="step"><i>2</i><span>Lihat kombinasi menang yang mungkin dan peluangnya</span></div>' +
-        '<div class="step"><i>3</i><span>Ikuti saran buang; tiap giliran scan ulang atau ketik perubahan</span></div></div>' +
-        '<div class="hero-actions"><button class="btn primary big" type="button" data-view="camera">Scan tangan</button><button class="btn big" type="button" data-act="pad-hand">Ketik tile</button></div>' + over;
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Ketuk <b>Scan tangan</b> di bawah, arahkan ke tile tanganmu</span></div>' +
+        '<div class="step"><i>2</i><span>Begitu 13 tile terbaca, tangan tersimpan otomatis</span></div>' +
+        '<div class="step"><i>3</i><span>Lihat kombinasi menang dan peluangnya, lalu ikuti saran buang</span></div></div>' + over;
       box.innerHTML = h;
       return;
     }
@@ -1637,6 +1634,7 @@
   window.Sempoa = {
     state: function () { return S; },
     closeView: function () { closeView(); },
+    handNeed: function () { return 3 * MJ.setsNeeded(cfgNow()) + 1; },
     lastAnalysis: function () { return lastAn; },
     tilesText: tilesText, multisetDiff: multisetDiff, toast: toast,
     label: function (seat) { return LBL[seat]; },
