@@ -471,6 +471,7 @@
     var cols = wide ? Math.max(n, 10) : Math.max(7, Math.ceil(n / 2));
     var rack = $('rack');
     rack.style.setProperty('--cols', cols);
+    rack.style.setProperty('--cols-c', Math.max(n, 13));
     var optMap = {};
     if (an.options) an.options.forEach(function (o) { optMap[o.t] = o; });
     var best = an.best, recT = an.rec ? an.rec.t : null;
@@ -917,6 +918,7 @@
     renderSettings(an);
     if (!$('sheet').hidden) renderSheet(an);
     renderDock(an);
+    document.body.classList.toggle('in-turn', !ui.pending && !ui.scanning && (an.phase === 'draw' || an.phase === 'discard') && !S.cur.winResult);
     runSims(simJobs(an));
   }
 
@@ -1397,6 +1399,14 @@
         ring(r.threat, cls) + '<span class="nm">' + LBL[o] + '</span><span class="rd">' + (top ? esc(top.name) : (r.threat >= 0.5 ? 'may be ready' : 'not ready')) + '</span></button>';
     }).join('');
   }
+  // Turn card header: Turn N · (1) Draw → (2) Discard, current step highlighted.
+  function turnSteps(step) {
+    function pill(n, label) {
+      var cls = step === n ? 'on' : step > n ? 'done' : '';
+      return '<span class="tstep ' + cls + '"><i>' + (step > n ? '✓' : n) + '</i>' + label + '</span>';
+    }
+    return '<div class="turn-head"><span class="eyebrow">Turn ' + S.turn + '</span>' + pill(1, 'Draw') + '<span class="tarrow">→</span>' + pill(2, 'Discard') + '</div>';
+  }
   function claimKey(cl) { return cl.from + ':' + cl.t + ':' + S.events.length; }
   var ROUTE_LABEL = { 'Chicken Hand + Additional Point': 'Chicken Hand + bonus points' };
   // List of possible winning combinations, with their odds (simulated) and distance (exact).
@@ -1504,15 +1514,15 @@
         }
       }
       var pw = endOf(sim, 'any');
+      h += '<div class="turn-card">' + turnSteps(1) +
+        '<div class="hero-title">Draw a tile</div>' +
+        '<div class="hero-sub">Then add it with the button below.' + (tenpai ? ' Any of these wins:' : ' Hoping for:') + '</div>' + wantChips(an.ukeire.tiles, 8) +
+        (an.threat >= 0.5 ? '<div class="hero-sub">' + modePill('careful') + ' an opponent may be ready</div>' : '') + '</div>';
       h += '<div class="hero-head"><span class="eyebrow">Winning chances</span><span class="hero-sub">before the wall runs out</span></div>' +
         '<div class="hero-main"><div class="hero-text"><div class="hero-title num">' + (pw == null ? '…' : pct(pw)) + '</div>' +
         '<div class="hero-sub">' + (tenpai ? 'Ready to win' : an.vd >= 99 ? 'No route to ' + an.M + ' points yet' : an.vd + (an.vd === 1 ? ' step' : ' steps') + ' to go') + '</div></div>' +
         '<div class="hero-rings">' + ringWrap(an.pNext, tenpai ? 'this draw' : 'useful') + '</div></div>' +
-        combosBlock(an, sim) +
-        '<hr class="hero-div">' +
-        '<div class="hero-head"><span class="eyebrow">Next move</span>' + (an.threat >= 0.5 ? modePill('careful') : '') + '</div>' +
-        '<div class="hero-sub">' + (tenpai ? 'Wait for these tiles' : 'Look for these tiles') + '</div>' + wantChips(an.ukeire.tiles, 8) +
-        '<div class="hero-actions"><button class="btn primary big" type="button" data-act="pad-hand">+ Tile I drew</button><button class="btn ghost" type="button" data-open="detailPanel">Details</button></div>' + over;
+        combosBlock(an, sim) + over;
       box.innerHTML = h;
       return;
     }
@@ -1523,25 +1533,24 @@
       h += '<div class="hero-alt"><span>Hand complete, but about ' + an.score.points + ' of the minimum ' + an.M + ' points.</span><span class="spacer"></span><button class="btn small" type="button" data-act="win-check" data-from="' + (S.cur.lastIn && S.cur.lastIn.from || 'wall') + '">Check score</button></div>';
     }
     var pwd = endOf(bsim, 'any');
+    var why = '';
+    if (mode !== 'attack') {
+      var who = an.threatWho, rd = who && an.reads[who] && an.reads[who].reads[0];
+      why = LBL[who] + ' may be ready' + (rd ? ' · ' + esc(rd.name) : '') + (mode === 'fold' ? '. Play safe first.' : '. Picking the safer option.');
+    }
+    h += '<div class="turn-card">' + turnSteps(2) +
+      '<div class="hero-main">' + tileHTML(rec.t, 'lg') +
+      '<div class="hero-text"><div class="hero-verb">Discard ' + modePill(mode) + '</div><div class="hero-title">' + esc(name(rec.t)) + '</div>' +
+      '<div class="hero-sub">' + (why || (rec.ukeire + (rec.vd === 0 ? ' winning' : ' useful') + ' tiles still out there')) + '</div></div></div></div>';
+    if (rec.t !== best.t) {
+      var asim0 = simFor(an, best.t);
+      h += '<div class="hero-alt">' + tileHTML(best.t, 'sm') + '<span>Attack instead: ' + esc(name(best.t)) + ' · win ' + pct(endOf(asim0, 'any')) + ' · risk ' + pct(best.risk) + '</span><span class="spacer"></span><button class="btn small" type="button" data-act="discard-best" data-t="' + best.t + '">Discard</button></div>';
+    }
     h += '<div class="hero-head"><span class="eyebrow">Winning chances</span><span class="hero-sub">if you discard ' + esc(name(rec.t)) + '</span></div>' +
       '<div class="hero-main"><div class="hero-text"><div class="hero-title num">' + (pwd == null ? '…' : pct(pwd)) + '</div>' +
       '<div class="hero-sub">' + (rec.vd === 0 ? 'Ready to win' : rec.vd >= 99 ? 'No route to ' + an.M + ' points yet' : rec.vd + (rec.vd === 1 ? ' step' : ' steps') + ' to go') + '</div></div>' +
       '<div class="hero-rings">' + ringWrap(rec.risk, 'risk', riskCls(rec.risk)) + '</div></div>' +
-      combosBlock(an, bsim) +
-      '<hr class="hero-div">' +
-      '<div class="hero-head"><span class="eyebrow">Next move</span>' + modePill(mode) + '</div>' +
-      '<div class="hero-main">' + tileHTML(rec.t, 'lg') +
-      '<div class="hero-text"><div class="hero-verb">Discard</div><div class="hero-title">' + esc(name(rec.t)) + '</div>' +
-      '<div class="hero-sub">' + rec.ukeire + (rec.vd === 0 ? ' winning' : ' useful') + ' tiles still out there</div></div></div>';
-    if (mode !== 'attack') {
-      var who = an.threatWho, rd = who && an.reads[who] && an.reads[who].reads[0];
-      h += '<div class="hero-sub">' + LBL[who] + ' may be ready' + (rd ? ' · ' + esc(rd.name) : '') + (mode === 'fold' ? '. Play safe first.' : '. Pick the safer option.') + '</div>';
-    }
-    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="discard-best" data-t="' + rec.t + '">Discard ' + esc(name(rec.t)) + '</button><button class="btn ghost" type="button" data-open="detailPanel">Details</button></div>';
-    if (rec.t !== best.t) {
-      var asim = simFor(an, best.t);
-      h += '<div class="hero-alt">' + tileHTML(best.t, 'sm') + '<span>Attack: discard ' + esc(name(best.t)) + ' · win ' + pct(endOf(asim, 'any')) + ' · risk ' + pct(best.risk) + '</span><span class="spacer"></span><button class="btn small" type="button" data-act="discard-best" data-t="' + best.t + '">Discard</button></div>';
-    }
+      combosBlock(an, bsim);
     h += over;
     box.innerHTML = h;
   }
@@ -1600,7 +1609,7 @@
           else if (o.type !== 'hu' && o.better) claimBtn = mainBtn({ pong: 'Pong', kong: 'Kong', chi: 'Chi' }[o.type] + ' ' + esc(name(cl.t)), 'data-claim="' + i + '"');
         });
       }
-      h = claimBtn ? claimBtn + icBtn('x', 'Skip', 'data-act="skip-claim"') : mainBtn('Scan hand', 'id="dockCam"') + typeBtn + undoBtn;
+      h = claimBtn ? claimBtn + icBtn('x', 'Skip', 'data-act="skip-claim"') : mainBtn('Add drawn tile', 'data-act="pad-hand"') + scanBtn + undoBtn;
     } else {
       var rec = an.rec || an.best;
       h = mainBtn('Discard ' + esc(name(rec.t)), 'data-act="discard-best" data-t="' + rec.t + '"') + scanBtn + typeBtn + undoBtn;

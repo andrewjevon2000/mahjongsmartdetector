@@ -488,6 +488,30 @@ body.view-open { overflow: hidden; }
 .hero-more::after { content: " ›"; }
 .app { padding-block-end: 150px; }
 
+
+/* ---------- turn focus: once the hand is confirmed ---------- */
+.turn-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; margin: -2px -2px 4px; border-radius: 16px; background: rgba(220,180,90,0.10); border: 1px solid rgba(220,180,90,0.45); }
+.turn-card .hero-title { font-size: 30px; }
+.turn-card .hero-verb { display: flex; align-items: center; gap: 8px; }
+.turn-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.turn-head .eyebrow { margin-right: 4px; }
+.tstep { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--line-2); }
+.tstep i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.1); font: 600 12px var(--f-num); }
+.tstep.on { color: var(--brass-ink); background: var(--brass); border-color: transparent; }
+.tstep.on i { background: rgba(42,31,6,0.15); }
+.tstep.done { color: var(--text); }
+.tstep.done i { background: var(--safe); color: #0d2a1d; }
+.tarrow { color: var(--faint); }
+body.in-turn #heroPanel { order: -1; }
+body.in-turn #exampleBanner { order: -2; }
+body.in-turn .top { order: -3; }
+body.in-turn #handPanel { padding: 10px 12px; gap: 8px; }
+body.in-turn #handPanel .sec-head h2 { font-size: 15px; font-family: var(--f-body); font-weight: 600; color: var(--muted); }
+body.in-turn #rack { grid-template-columns: repeat(var(--cols-c, 14), minmax(0, 1fr)); gap: 6px 3px; padding: 2px 0 4px; }
+body.in-turn #rack .slot { gap: 0; }
+body.in-turn #rack .slot .q { display: none; }
+body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px; }
+
 @media (min-width: 640px) {
   .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .abacus { gap: 10px 8px; }
