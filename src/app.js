@@ -247,7 +247,7 @@
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null, scanning: false, combo: null
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null, scanning: false, combo: null, oppSkip: null
   };
 
   function act(label, type, fn, extra) {
@@ -936,7 +936,7 @@
     ui.selHand = null;
     ui.zone = 'pond:right';
     render();
-    toast('Discarded ' + name(t) + '. Next: record Right’s discard.');
+    toast('Discarded ' + name(t) + '. Now tap what Right discards.');
   }
   function addTile(zone, t) {
     var an = lastAn;
@@ -966,7 +966,7 @@
         toast(hu ? 'HU! ' + LBL[seat] + '’s discard wins your hand' : 'You can claim ' + LBL[seat] + '’s discard — see the suggestion');
         return;
       }
-      if (next) { ui.zone = next; renderSheet(lastAn); toast(LBL[seat] + ' discards ' + name(t) + ' · next: ' + zoneLabel(next)); }
+      if (next) { ui.zone = next; if (!$('sheet').hidden) renderSheet(lastAn); toast(LBL[seat] + ' discarded ' + name(t) + (next === 'hand' ? ' · your turn: draw a tile' : ' · next: ' + LBL[next.slice(5)])); }
       return;
     }
     if (zone === 'extra') {
@@ -1022,8 +1022,8 @@
       else { closeSheet(); toast('Set recorded. Now discard a tile from the rack.'); }
     } else {
       ui.zone = 'pond:' + who;
-      renderSheet(lastAn);
-      toast(LBL[who] + ' set recorded · next: ' + LBL[who] + ' discard');
+      closeSheet();
+      toast(LBL[who] + ' set recorded · now tap what ' + LBL[who] + ' discards');
     }
   }
   function doClaim(i) {
@@ -1402,6 +1402,47 @@
     }).join('');
   }
   // Turn card header: Turn N · (1) Draw → (2) Discard, current step highlighted.
+  // Whose discard we are waiting for after my discard: 'right' | 'across' | 'left', or null when it is my draw.
+  var NEXT_SEAT = { me: 'right', right: 'across', across: 'left', left: 'me' };
+  function oppTurn(an) {
+    if (!an || an.phase !== 'draw' || ui.pending || ui.scanning || S.cur.winResult) return null;
+    if (ui.oppSkip === S.events.length) return null;
+    var ev = S.events, start = -1, i;
+    for (i = ev.length - 1; i >= 0; i--) {
+      if (ev[i].who === 'me' && ev[i].type === 'discard') { start = i; break; }
+      if (ev[i].who === 'me' && ev[i].type !== 'edit') return null;
+    }
+    if (start < 0) return null;
+    var next = 'right';
+    for (i = start + 1; i < ev.length; i++) {
+      var e = ev[i];
+      if (e.who === 'me' && e.type !== 'edit') return null;
+      if (e.type === 'discard' && OPPS.indexOf(e.who) >= 0) next = NEXT_SEAT[e.who];
+      else if (e.type === 'meld' && OPPS.indexOf(e.who) >= 0) next = e.who;
+    }
+    return next === 'me' ? null : next;
+  }
+  function seatSteps(w) {
+    var order = ['right', 'across', 'left'], at = order.indexOf(w);
+    function pill(s, k) {
+      var cls = k === at ? 'on' : k < at ? 'done' : '';
+      return '<span class="tstep ' + cls + '"><i>' + (k < at ? '✓' : k + 1) + '</i>' + LBL[s] + '</span>';
+    }
+    return '<div class="turn-head seat-steps">' + order.map(pill).join('') + '<span class="tstep you">You</span></div>';
+  }
+  // One-tap grid: tap the tile this opponent threw away.
+  function discardPad(an, w) {
+    var rows = [[0, 9], [9, 9], [18, 9], [27, 7]], h = '<div class="dpad" role="group" aria-label="Tile ' + LBL[w] + ' discarded">';
+    rows.forEach(function (r) {
+      h += '<div class="dpad-row">';
+      for (var t = r[0]; t < r[0] + r[1]; t++) {
+        var left = an.unseen ? an.unseen[t] : 4;
+        h += '<button type="button" class="dkey" data-odisc="' + t + '"' + (left ? '' : ' disabled') + ' aria-label="' + esc(name(t)) + '">' + tileHTML(t) + '</button>';
+      }
+      h += '</div>';
+    });
+    return h + '</div>';
+  }
   function turnSteps(step) {
     function pill(n, label) {
       var cls = step === n ? 'on' : step > n ? 'done' : '';
@@ -1544,6 +1585,19 @@
         }
       }
       var pw = endOf(sim, 'any');
+      var waitFor = oppTurn(an);
+      if (waitFor) {
+        h += '<div class="turn-card">' + seatSteps(waitFor) +
+          '<div class="hero-title">What did ' + LBL[waitFor] + ' discard?</div>' +
+          '<div class="hero-sub">Tap the tile. It moves on to the next player by itself.</div>' + discardPad(an, waitFor) +
+          '<div class="row"><button class="btn small ghost" type="button" data-act="opp-set">Someone called Pong / Chi / Kong</button></div></div>';
+        h += '<div class="hero-head"><span class="eyebrow">Winning chances</span><span class="hero-sub">before the wall runs out</span></div>' +
+          '<div class="hero-main"><div class="hero-text"><div class="hero-title num">' + (pw == null ? '…' : pct(pw)) + '</div>' +
+          '<div class="hero-sub">' + (tenpai ? 'Ready to win' : an.vd >= 99 ? 'No route to ' + an.M + ' points yet' : an.vd + (an.vd === 1 ? ' step' : ' steps') + ' to go') + '</div></div></div>' +
+          combosBlock(an, sim) + over;
+        box.innerHTML = h;
+        return;
+      }
       h += '<div class="turn-card">' + turnSteps(1) +
         '<div class="hero-title">Draw a tile</div>' +
         '<div class="hero-sub">Then add it with the button below.' + (tenpai ? ' Any of these wins:' : ' Hoping for:') + '</div>' + wantChips(an.ukeire.tiles, 8) +
@@ -1639,7 +1693,10 @@
           else if (o.type !== 'hu' && o.better) claimBtn = mainBtn({ pong: 'Pong', kong: 'Kong', chi: 'Chi' }[o.type] + ' ' + esc(name(cl.t)), 'data-claim="' + i + '"');
         });
       }
-      h = claimBtn ? claimBtn + icBtn('x', 'Skip', 'data-act="skip-claim"') : mainBtn('Add drawn tile', 'data-act="pad-hand"') + scanBtn + undoBtn;
+      var wf = oppTurn(an);
+      h = claimBtn ? claimBtn + icBtn('x', 'Skip', 'data-act="skip-claim"')
+        : wf ? '<button class="btn main" type="button" data-act="opp-skip">Skip to my draw</button>' + undoBtn
+        : mainBtn('Add drawn tile', 'data-act="pad-hand"') + scanBtn + undoBtn;
     } else {
       var rec = an.rec || an.best;
       h = mainBtn('Discard ' + esc(name(rec.t)), 'data-act="discard-best" data-t="' + rec.t + '"') + scanBtn + typeBtn + undoBtn;
@@ -1741,12 +1798,14 @@
           ui.selHand = null; render(); return;
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
         case 'pad-hand': closeView(); openSheet('hand'); return;
+        case 'opp-skip': ui.oppSkip = S.events.length; render(); toast('Your turn: draw a tile'); return;
+        case 'opp-set': var wf0 = oppTurn(lastAn); if (wf0) ui.meldWho = wf0; ui.draft = []; openSheet('meld'); return;
         case 'menu-new-game': openSetup(); return;
         case 'confirm-scan': ui.doubt = []; ui.pending = false; ui.selHand = null; render(); toast('Hand confirmed'); return;
         case 'rescan': ui.pending = false; ui.selHand = null; if (window.SempoaScan) window.SempoaScan.start(); return;
         case 'win-check': openWin(d.from, d.t != null && d.t !== '' ? +d.t : null); return;
         case 'win-declare': declareWin(); return;
-        case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); return;
+        case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); renderDock(lastAn); return;
         case 'new-game': openSetup(); return;
         case 'toggle-opts': ui.showAllOpts = !ui.showAllOpts; renderAdvice(lastAn); return;
         case 'pond-remove':
@@ -1775,6 +1834,11 @@
       act((has ? 'Remove ' : 'Got ') + FLOWER_NAME[fn], 'edit', function (cur) {
         if (has) removeOne(cur.myFlowers, fn); else cur.myFlowers.push(fn);
       }, { who: 'me' });
+      return;
+    }
+    if (d.odisc != null) {
+      var ws = oppTurn(lastAn);
+      if (ws) { closeSheet(); addTile('pond:' + ws, +d.odisc); }
       return;
     }
     if (d.combo != null) {
