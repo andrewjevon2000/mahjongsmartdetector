@@ -249,5 +249,18 @@ console.log('analyze maje ms', Date.now() - t2, 'best', MJ.tileStr(anP.best.t), 
   console.log('route probs:', names.map(n => n + ' ' + (r.routes[n] * 100).toFixed(0) + '%').join(' | '), '| total', (r.any[r.draws] * 100).toFixed(0) + '%');
 }
 
+
+// combination guide: Half Flush Bamboo on a mostly-bamboo hand -> drop the non-bamboo tiles
+{
+  const cfgG = Object.assign({}, MAJE);
+  const hg = H('123s456s789s55s3m7p6z');
+  const routes = MJ.buildRoutes(cfgG);
+  const hf = routes.find(r => r.name === 'Half Flush Bamboo');
+  const g = MJ.routeGuide(hg, cfgG, new Array(34).fill(4), hf);
+  eq('guide drops off-suit tiles', ['3m','7p'].every(s => g.drop.map(MJ.tileStr).includes(s)), true);
+  eq('guide keeps bamboo', g.keep.every(x => x >= 18), true);
+  eq('guide collects bamboo/honors only', g.need.every(x => x.t >= 18), true);
+}
+
 console.log(fail ? `\n${fail} FAILED, ${pass} passed` : `\nall ${pass} passed`);
 process.exit(fail ? 1 : 0);

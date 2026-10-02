@@ -710,6 +710,32 @@
     return rows.filter(function (r) { if (seenName[r.name]) return false; seenName[r.name] = 1; return true; });
   }
 
+  // Guide for one combination: which tiles to collect, which can go, which to keep.
+  function routeGuide(c, cfg, unseen, route) {
+    var S = setsNeeded(cfg), phase = handPhase(c, cfg), cc = c.slice();
+    var base = routeDist(cc, S, route, unseen), dists = {}, best = INF, t;
+    for (t = 0; t < 34; t++) {
+      if (!cc[t]) continue;
+      cc[t]--; dists[t] = routeDist(cc, S, route, unseen); cc[t]++;
+      if (dists[t] < best) best = dists[t];
+    }
+    var target = phase === 'discard' ? best : base, drop = [], keep = [];
+    for (t = 0; t < 34; t++) {
+      if (!cc[t]) continue;
+      if (dists[t] <= target) drop.push(t); else keep.push(t);
+    }
+    if (phase === 'discard' && drop.length) cc[drop[0]]--;
+    var d0 = routeDist(cc, S, route, unseen), need = [];
+    for (t = 0; t < 34; t++) {
+      if (cc[t] >= 4 || !unseen[t]) continue;
+      cc[t]++;
+      if (routeDist(cc, S, route, unseen) < d0) need.push({ t: t, n: unseen[t] });
+      cc[t]--;
+    }
+    need.sort(function (a, b) { return b.n - a.n || a.t - b.t; });
+    return { dist: target, drop: drop, keep: keep, need: need };
+  }
+
   // P(minimal satu sukses dalam k tarikan) — hipergeometrik tanpa pengembalian.
   function pAtLeastOne(U, K, k) {
     if (K <= 0 || k <= 0 || U <= 0) return 0;
@@ -1182,7 +1208,7 @@
     shantenKokushi: shantenKokushi, handPhase: handPhase, handSize: handSize,
     setsNeeded: setsNeeded, unseenCounts: unseenCounts, ukeire: ukeire,
     pAtLeastOne: pAtLeastOne, dangerVs: dangerVs, readOpponent: readOpponent, discardRisk: discardRisk, tenpaiChance: tenpaiChance, analyze: analyze, simulate: simulate,
-    buildRoutes: buildRoutes, validDistance: validDistance, scoreHand: scoreHand,
+    buildRoutes: buildRoutes, validDistance: validDistance, routeGuide: routeGuide, scoreHand: scoreHand,
     winningTiles: winningTiles, claimOptions: claimOptions, meldType: meldType, minPts: minPts,
     HONOR_GLYPHS: HONOR_GLYPHS, HONOR_NAMES: HONOR_NAMES, SUIT_NAMES: SUIT_NAMES
   };

@@ -247,7 +247,7 @@
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null, scanning: false
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null, scanning: false, combo: null
   };
 
   function act(label, type, fn, extra) {
@@ -475,6 +475,7 @@
     var optMap = {};
     if (an.options) an.options.forEach(function (o) { optMap[o.t] = o; });
     var best = an.best, recT = an.rec ? an.rec.t : null;
+    var guide = comboGuide(an);
     rack.innerHTML = n ? ord.list.map(function (t, i) {
       var cls = 'slot', q = '';
       var o = optMap[t];
@@ -484,6 +485,7 @@
         if (t === recT) cls += ' best';
         else if (o.vd > best.vd) cls += ' worse';
       }
+      if (guide) cls += guide.keep.indexOf(t) >= 0 ? ' g-keep' : ' g-drop';
       if (ui.selHand === t) cls += ' sel';
       var label = name(t) + (o ? ', if discarded: ' + vdLabel(o.vd, an) + ', ' + o.ukeire + ' useful tiles' : '');
       return '<button type="button" class="' + cls + '" data-t="' + t + '" aria-label="' + esc(label) + '">' +
@@ -1355,10 +1357,10 @@
   function modePill(mode) {
     return '<span class="mode-pill mode-' + mode + '">' + ({ attack: 'Attack', careful: 'Careful', fold: 'Defend' }[mode] || 'Attack') + '</span>';
   }
-  function wantChips(tiles, max) {
-    var list = tiles.slice().sort(function (a, b) { return b.n - a.n; }).slice(0, max || 8);
+  function wantChips(tiles, max, keepOrder) {
+    var list = (keepOrder ? tiles.slice() : tiles.slice().sort(function (a, b) { return b.n - a.n; })).slice(0, max || 8);
     if (!list.length) return '<div class="hero-sub">No tile helps directly yet.</div>';
-    return '<div class="want">' + list.map(function (x) { return tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span>'; }).join('') +
+    return '<div class="want">' + list.map(function (x) { return '<span class="wc">' + tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span></span>'; }).join('') +
       (tiles.length > list.length ? '<span class="num">+' + (tiles.length - list.length) + ' more</span>' : '') + '</div>';
   }
   var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', gamePanel: 'game' };
@@ -1410,10 +1412,35 @@
   function claimKey(cl) { return cl.from + ':' + cl.t + ':' + S.events.length; }
   var ROUTE_LABEL = { 'Chicken Hand + Additional Point': 'Chicken Hand + bonus points' };
   // List of possible winning combinations, with their odds (simulated) and distance (exact).
+  // Guide for the tapped combination: tiles to collect, tiles that don't fit, tiles to keep.
+  var guideCache = { key: null, val: null };
+  function comboGuide(an) {
+    if (!ui.combo || !an || !an.routesAll || ui.pending || ui.scanning || (an.phase !== 'draw' && an.phase !== 'discard')) return null;
+    var r = an.routesAll.filter(function (x) { return x.name === ui.combo; })[0];
+    if (!r) return null;
+    var key = ui.combo + '|' + an.counts.join('') + '|' + an.unseen.join('');
+    if (guideCache.key !== key) guideCache = { key: key, val: MJ.routeGuide(an.counts.slice(), an.cfg, an.unseen, r) };
+    return guideCache.val;
+  }
+  function guideHTML(an, g) {
+    if (!g) return '';
+    var h = '<div class="guide">';
+    var r = an.routesAll.filter(function (x) { return x.name === ui.combo; })[0];
+    var need = g.need.slice();
+    if (r && r.kind === 'honor') need.sort(function (a, b) { return (b.t >= 27) - (a.t >= 27) || b.n - a.n || a.t - b.t; });
+    h += '<div class="guide-lbl">' + (an.phase === 'draw' ? 'Draw or claim one of these' : 'Collect these') + '</div>' + wantChips(need, 10, true);
+    if (g.drop.length) {
+      h += '<div class="guide-lbl">' + (an.phase === 'discard' ? 'Discard one of these' : 'Don\'t fit, let them go') + '</div>' +
+        '<div class="want">' + g.drop.map(function (t) { return tileHTML(t, 'sm'); }).join('') + '</div>';
+    } else {
+      h += '<div class="guide-lbl">Every tile in your hand fits</div>';
+    }
+    return h + '<div class="combo-sub">Gold tiles in your hand are the ones to keep.</div></div>';
+  }
   function combosBlock(an, sim) {
     var all = (an.routeList || []).map(function (r) {
       var p = sim && sim.routes ? (sim.routes[r.name] || 0) : null;
-      return { name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p, kind: r.kind };
+      return { raw: r.name, name: ROUTE_LABEL[r.name] || r.name, g: r.g, d: r.d, uk: r.uk, p: p, kind: r.kind };
     });
     if (!all.length) return '<div class="hero-sub">No combination reaches ' + an.M + ' points with the tiles left.</div>';
     var bySort = function (a, b) { return (b.p || 0) - (a.p || 0) || a.d - b.d || b.uk - a.uk; };
@@ -1422,8 +1449,10 @@
     // bonuses shown only when the odds are real (>= 0.5%), so it does not become a list of "<1%"
     var sec = all.filter(function (r) { return r.kind === 'honor' && (r.p == null || r.p >= 0.005); }).sort(bySort);
     var secHtml = sec.length ? '<div class="combo-sec"><span class="eyebrow">Bonus</span>' + sec.slice(0, 4).map(function (r) {
-      return '<span class="pill">' + esc(r.name) + ' <span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></span>';
+      return '<button type="button" class="pill' + (ui.combo === r.raw ? ' gold' : '') + '" data-combo="' + esc(r.raw) + '" aria-expanded="' + (ui.combo === r.raw) + '">' + esc(r.name) + ' <span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></button>';
     }).join('') + '</div>' : '';
+    var secOpen = sec.slice(0, 4).filter(function (r) { return r.raw === ui.combo; })[0];
+    if (secOpen) secHtml += guideHTML(an, comboGuide(an));
     if (!rows.length) return secHtml || '<div class="hero-sub">No main combination reaches ' + an.M + ' points yet.</div>';
     // show the ones with real odds; if few, add the 2 nearest routes for context
     var shown = rows.filter(function (r) { return r.p == null || r.p >= 0.005; }).slice(0, 5);
@@ -1433,10 +1462,11 @@
     }
     return '<div class="combos">' + shown.map(function (r) {
       var w = r.p == null ? 0 : Math.max(2, Math.round(r.p * 100));
-      return '<div class="combo' + (r.p != null && r.p < 0.005 ? ' faint' : '') + '">' +
+      var open = ui.combo === r.raw;
+      return '<button type="button" class="combo' + (r.p != null && r.p < 0.005 ? ' faint' : '') + (open ? ' open' : '') + '" data-combo="' + esc(r.raw) + '" aria-expanded="' + open + '">' +
         '<div class="combo-top"><b>' + esc(r.name) + '</b><span class="num">' + (r.p == null ? '…' : r.p < 0.005 ? '<1%' : pct(r.p)) + '</span></div>' +
         '<div class="combo-bar"><i style="width:' + w + '%"></i></div>' +
-        '<div class="combo-sub">' + (an.scoring ? r.g + ' points · ' : '') + (r.d === 0 ? '1 tile away' : r.d + (r.d === 1 ? ' step' : ' steps')) + ' · ' + r.uk + ' helpful tiles</div></div>';
+        '<div class="combo-sub">' + (an.scoring ? r.g + ' points · ' : '') + (r.d === 0 ? '1 tile away' : r.d + (r.d === 1 ? ' step' : ' steps')) + ' · ' + r.uk + ' helpful tiles</div></button>' + (open ? guideHTML(an, comboGuide(an)) : '');
     }).join('') + (rows.length > shown.length ? '<div class="combo-sub">+' + (rows.length - shown.length) + ' more combinations, see Details</div>' : '') + secHtml + '</div>';
   }
   function renderHero(an) {
@@ -1745,6 +1775,11 @@
       act((has ? 'Remove ' : 'Got ') + FLOWER_NAME[fn], 'edit', function (cur) {
         if (has) removeOne(cur.myFlowers, fn); else cur.myFlowers.push(fn);
       }, { who: 'me' });
+      return;
+    }
+    if (d.combo != null) {
+      ui.combo = ui.combo === d.combo ? null : d.combo;
+      renderRack(lastAn); renderHero(lastAn);
       return;
     }
     if (d.opt != null) {
