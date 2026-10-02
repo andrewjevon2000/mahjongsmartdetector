@@ -89,7 +89,9 @@
   function showScanner(on) {
     $('liveStage').hidden = !on;
     $('scanCtl').hidden = !on;
-    $('scanBar').hidden = on || API.state().cur.hand.length > 0;
+    var empty = API.state().cur.hand.length === 0;
+    $('scanBar').hidden = on || !empty;
+    $('dockCam').hidden = on || empty;
     if (!on) { $('scanCount').hidden = true; $('liveFps').textContent = ''; }
   }
   function start() {

@@ -487,9 +487,11 @@
       var label = name(t) + (o ? ', if discarded: ' + vdLabel(o.vd, an) + ', ' + o.ukeire + ' useful tiles' : '');
       return '<button type="button" class="' + cls + '" data-t="' + t + '" aria-label="' + esc(label) + '">' +
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
-    }).join('') : '<p class="muted small" style="grid-column:1/-1;margin:0">No tiles yet. Tap <b>+ Type tiles</b> or photograph your hand.</p>';
+    }).join('') : '';
 
     if ($('liveStage').hidden) $('scanBar').hidden = n > 0;
+    // one scan button per screen: the panel's while the hand is empty, the dock's afterwards
+    $('dockCam').hidden = n === 0 || !$('liveStage').hidden;
     var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
     rack.classList.toggle('pending', !!ui.pending);
     if (ui.pending && n) {

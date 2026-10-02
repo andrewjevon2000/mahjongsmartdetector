@@ -296,7 +296,9 @@ details.panel[open] > summary::after { content: "−"; }
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(180deg, rgba(15, 44, 34, 0.0), rgba(15, 44, 34, 0.94) 22%);
 }
-.dock .inner { max-width: 760px; margin: 0 auto; display: grid; grid-template-columns: 1.3fr 1fr auto; gap: 8px; }
+.dock .inner { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; }
+.dock .inner > .btn { flex: 1 1 0; }
+.dock .inner > #dockUndo { flex: 0 0 auto; }
 .sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   background: #10301f; border-top: 1px solid var(--line-2);
@@ -2445,9 +2447,11 @@ body.view-open { overflow: hidden; }
       var label = name(t) + (o ? ', if discarded: ' + vdLabel(o.vd, an) + ', ' + o.ukeire + ' useful tiles' : '');
       return '<button type="button" class="' + cls + '" data-t="' + t + '" aria-label="' + esc(label) + '">' +
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
-    }).join('') : '<p class="muted small" style="grid-column:1/-1;margin:0">No tiles yet. Tap <b>+ Type tiles</b> or photograph your hand.</p>';
+    }).join('') : '';
 
     if ($('liveStage').hidden) $('scanBar').hidden = n > 0;
+    // one scan button per screen: the panel's while the hand is empty, the dock's afterwards
+    $('dockCam').hidden = n === 0 || !$('liveStage').hidden;
     var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
     rack.classList.toggle('pending', !!ui.pending);
     if (ui.pending && n) {
@@ -3867,7 +3871,9 @@ body.view-open { overflow: hidden; }
   function showScanner(on) {
     $('liveStage').hidden = !on;
     $('scanCtl').hidden = !on;
-    $('scanBar').hidden = on || API.state().cur.hand.length > 0;
+    var empty = API.state().cur.hand.length === 0;
+    $('scanBar').hidden = on || !empty;
+    $('dockCam').hidden = on || empty;
     if (!on) { $('scanCount').hidden = true; $('liveFps').textContent = ''; }
   }
   function start() {
