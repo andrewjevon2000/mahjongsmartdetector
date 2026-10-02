@@ -641,48 +641,48 @@ body.view-open { overflow: hidden; }
   <div class="vbody">
     <div class="form">
       <div class="field">
-        <label for="preset">Jenis permainan</label>
+        <label for="preset">Game type</label>
         <select id="preset">
           <option value="maje">Majé House Rules · Hong Kong</option>
-          <option value="riichi">Riichi Jepang · 13 tile</option>
-          <option value="tw">Taiwan · 16 tile</option>
-          <option value="custom">Atur sendiri</option>
+          <option value="riichi">Japanese Riichi · 13 tiles</option>
+          <option value="tw">Taiwanese · 16 tiles</option>
+          <option value="custom">Custom</option>
         </select>
       </div>
       <div class="field">
-        <label for="sets">Jumlah sets untuk Hu (+1 pair)</label>
-        <select id="sets"><option value="4">4 sets · tangan 13 tile</option><option value="5">5 sets · tangan 16 tile</option></select>
+        <label for="sets">Sets needed for Hu (+1 pair)</label>
+        <select id="sets"><option value="4">4 sets · 13-tile hand</option><option value="5">5 sets · 16-tile hand</option></select>
       </div>
-      <label class="check"><input type="checkbox" id="scoring"> Hitung poin (tabel Majé)</label>
+      <label class="check"><input type="checkbox" id="scoring"> Score points (Majé table)</label>
       <div class="field">
-        <label for="minPoints">Poin minimum untuk menang</label>
-        <select id="minPoints"><option value="3">3 poin · standar Majé</option><option value="2">2 poin</option><option value="1">1 poin</option><option value="0">0 · Chicken Hand boleh</option></select>
+        <label for="minPoints">Minimum points to win</label>
+        <select id="minPoints"><option value="3">3 points · Majé standard</option><option value="2">2 points</option><option value="1">1 point</option><option value="0">0 · Chicken Hand allowed</option></select>
       </div>
-      <label class="check"><input type="checkbox" id="sevenPairs"> Hitung 7 Pairs</label>
-      <label class="check"><input type="checkbox" id="orphans"> Hitung 13 Orphans</label>
+      <label class="check"><input type="checkbox" id="sevenPairs"> Allow 7 Pairs</label>
+      <label class="check"><input type="checkbox" id="orphans"> Allow 13 Orphans</label>
       <div class="field">
-        <label for="wallStart">Tile di dinding saat ronde mulai (setelah bagi tile)</label>
+        <label for="wallStart">Wall tiles at round start (after dealing)</label>
         <input type="number" id="wallStart" min="20" max="120" inputmode="numeric">
       </div>
       <div class="field">
-        <label for="wallLeft">Sisa tile di dinding sekarang (kosongkan = perkiraan otomatis)</label>
+        <label for="wallLeft">Wall tiles left now (leave blank = auto estimate)</label>
         <input type="number" id="wallLeft" min="0" max="140" inputmode="numeric">
       </div>
       <div class="field">
-        <label for="tier">Cara baca foto</label>
-        <select id="tier"><option value="default">Standar · lebih cepat</option><option value="complex">Teliti · lebih lama, lebih akurat</option></select>
+        <label for="tier">Photo reading mode</label>
+        <select id="tier"><option value="default">Standard · faster</option><option value="complex">Thorough · slower, more accurate</option></select>
       </div>
       <div class="row" id="resetRow">
-        <button class="btn" type="button" id="resetBtn">Mulai game baru</button>
+        <button class="btn" type="button" id="resetBtn">Start new game</button>
       </div>
-      <p class="note-line">Catatan game tersimpan di browser HP ini saja. Ganti HP atau hapus data browser berarti catatan hilang.</p>
+      <p class="note-line">Game records are stored in this phone's browser only. Switching phones or clearing browser data erases them.</p>
     </div>
   </div>
 </section>
 
 <div class="dock" id="dock">
   <div class="inner">
-    <button class="btn primary" type="button" id="dockCam">Scan tangan</button>
+    <button class="btn primary" type="button" id="dockCam">Scan hand</button>
     <button class="btn" type="button" id="dockPad">+ Type tiles</button>
     <button class="btn" type="button" id="dockUndo" aria-label="Undo last move">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
@@ -695,23 +695,23 @@ body.view-open { overflow: hidden; }
     <div class="sec-head">
       <h2>Type tiles</h2>
       <span class="spacer"></span>
-      <button class="btn small" type="button" id="sheetUndo">Urungkan</button>
-      <button class="btn small primary" type="button" id="sheetClose">Selesai</button>
+      <button class="btn small" type="button" id="sheetUndo">Undo</button>
+      <button class="btn small primary" type="button" id="sheetClose">Done</button>
     </div>
-    <div class="zones" id="zones" role="group" aria-label="Masukkan ke"></div>
+    <div class="zones" id="zones" role="group" aria-label="Add to"></div>
     <div id="meldBox" hidden>
       <div class="row" style="margin-bottom:8px">
         <span class="muted small">Set owner</span>
         <div class="seg" role="group" aria-label="Set owner" id="meldWho"></div>
       </div>
       <div class="row">
-        <div class="draft" id="draft"><span class="muted small">Ketuk 3 atau 4 tile di bawah</span></div>
+        <div class="draft" id="draft"><span class="muted small">Tap 3 or 4 tiles below</span></div>
       </div>
       <div class="row" style="margin-top:6px">
-        <label class="check small"><input type="checkbox" id="closedKong"> Kong tertutup (semua dari tangan)</label>
+        <label class="check small"><input type="checkbox" id="closedKong"> Concealed kong (all from hand)</label>
         <span class="spacer" style="flex:1"></span>
-        <button class="btn small" type="button" id="draftClear">Kosongkan</button>
-        <button class="btn small primary" type="button" id="draftSave" disabled>Simpan set</button>
+        <button class="btn small" type="button" id="draftClear">Clear</button>
+        <button class="btn small primary" type="button" id="draftSave" disabled>Save set</button>
       </div>
     </div>
     <p class="muted small" id="zoneHint"></p>
