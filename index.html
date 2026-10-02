@@ -450,6 +450,34 @@ body.view-open { overflow: hidden; }
 .menu-item.danger { color: var(--risk); }
 .top .iconbtn { width: 36px; height: 36px; font-size: 20px; }
 
+
+/* ---------- inline scanner ---------- */
+.scan-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.scanner { position: relative; height: clamp(120px, 24vh, 190px); border-radius: 14px; overflow: hidden; background: #000; }
+.scanner video, .scanner img, .scanner canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scanner canvas { pointer-events: none; }
+.scan-guide { position: absolute; left: 4%; right: 4%; top: 18%; bottom: 18%; border: 2px dashed rgba(240,207,126,0.55); border-radius: 10px; pointer-events: none; }
+.scan-hud { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+.scan-hud .num { font-size: 11px; color: #fff; background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 6px; }
+.scan-hud .count { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 600 18px var(--f-num); color: var(--brass-ink); background: var(--brass); box-shadow: 0 0 0 4px rgba(220,180,90,0.35); }
+.scan-ctl { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+.confirm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px; border-radius: 12px; background: rgba(220,180,90,0.12); border: 1px solid rgba(220,180,90,0.4); font-size: 14px; }
+.confirm-bar .spacer { flex: 1; }
+.rack.pending .slot .tile { box-shadow: inset 0 -2px 0 var(--ivory-edge), 0 0 0 1.5px rgba(220,180,90,0.6), 0 4px 0 var(--back); }
+.wind-pick { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.wind-pick button { appearance: none; border: 1px solid var(--line-2); background: var(--felt-2); color: inherit; border-radius: 14px; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
+.wind-pick button .t { width: 38px; }
+.wind-pick button small { color: var(--muted); font-size: 11px; }
+.wind-pick button[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); background: var(--felt-3); }
+.q-block { display: flex; flex-direction: column; gap: 8px; }
+.q-block .q { font-weight: 600; font-size: 15px; }
+.seg.full { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; }
+.seg.full button { padding: 10px 4px; }
+.win-result { border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.win-result.ok { background: var(--brass); color: var(--brass-ink); }
+.win-result.no { background: rgba(232,137,75,0.14); border: 1px solid var(--risk); }
+.win-result .big { font-family: var(--f-display); font-size: 34px; line-height: 1.1; }
+
 @media (min-width: 640px) {
   .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .abacus { gap: 10px 8px; }
@@ -479,6 +507,24 @@ body.view-open { overflow: hidden; }
       <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
     </div>
+    <div class="scan-bar" id="scanBar">
+      <button class="btn primary" type="button" id="liveStart">Scan hand</button>
+      <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
+      <input type="file" id="liveFile" accept="image/*" hidden>
+    </div>
+    <div class="scanner" id="liveStage" hidden>
+      <video id="liveVideo" playsinline muted autoplay></video>
+      <img id="liveImage" alt="Scanned photo" hidden>
+      <canvas id="liveCanvas" aria-hidden="true"></canvas>
+      <div class="scan-guide" aria-hidden="true"></div>
+      <div class="scan-hud"><span class="count" id="scanCount" hidden></span><span class="num" id="liveFps"></span></div>
+    </div>
+    <div class="scan-ctl" id="scanCtl" hidden>
+      <button class="btn primary" type="button" id="liveLock">Lock</button>
+      <button class="btn" type="button" id="liveStop">Cancel</button>
+    </div>
+    <p class="photo-msg" id="liveMsg" hidden></p>
+    <div class="confirm-bar" id="confirmBar" hidden></div>
     <div class="melds" id="myMelds"></div>
     <div class="rack" id="rack"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
@@ -514,33 +560,20 @@ body.view-open { overflow: hidden; }
     <div id="advice"></div>
   </div>
 </section>
-<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Camera">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Camera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
+<section class="view" id="view-setup" role="dialog" aria-modal="true" aria-label="New game">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>New game</h2></header>
   <div class="vbody">
-    <div class="form" id="livePanel">
-      <div class="live-controls" id="liveControls">
-      <div class="seg wrap" id="liveTargets" role="group" aria-label="Camera is looking at"></div>
-      <div class="live-stage" id="liveStage" hidden>
-        <video id="liveVideo" playsinline muted autoplay></video>
-        <img id="liveImage" alt="Detected photo" hidden>
-        <canvas id="liveCanvas" aria-hidden="true"></canvas>
-      </div>
-      <div class="photo-row">
-        <button class="btn primary" type="button" id="liveStart">Start camera</button>
-        <button class="btn" type="button" id="liveStop" hidden>Stop</button>
-        <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
-        <input type="file" id="liveFile" accept="image/*" hidden>
-        <label class="check small"><input type="checkbox" id="liveAuto" checked> Auto-record</label>
-      </div>
-      <div class="photo-row">
-        <button class="btn small" type="button" id="liveSnap" disabled>Save training photo</button>
-        <button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button>
-      </div>
-    </div>
-    <p class="photo-msg" id="liveMsg"></p>
-    <div class="readout" id="liveRead" hidden></div>
-      <div class="sub-head"><h3>Photo via Claude</h3></div>
-      <div class="photo-row">
+    <div><div class="eyebrow" style="margin-bottom:8px">Round Wind</div><div class="wind-pick" id="setupRound"></div></div>
+    <div><div class="eyebrow" style="margin-bottom:8px">My Seat Wind</div><div class="wind-pick" id="setupSeat"></div></div>
+    <button class="btn primary big" type="button" id="setupStart">Start game</button>
+  </div>
+</section>
+<section class="view" id="view-win" role="dialog" aria-modal="true" aria-label="Check HU">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Check HU</h2></header>
+  <div class="vbody" id="winBody"></div>
+</section>
+<div hidden id="claudePhoto">
+<div class="photo-row">
       <div class="seg" role="group" aria-label="What to photograph">
         <button type="button" id="scopeHand" aria-pressed="false">My hand</button>
         <button type="button" id="scopeTable" aria-pressed="true">Whole table</button>
@@ -558,10 +591,7 @@ body.view-open { overflow: hidden; }
     </div>
     <p class="photo-msg" id="photoMsg">Preparing photo reader…</p>
     <div class="readout" id="readout" hidden></div>
-      <p class="note-line">Tile model trained on the "Mahjong" dataset by Jon Chan (Roboflow Universe), CC BY 4.0. All detection runs on your phone; video never leaves the device.</p>
-    </div>
-  </div>
-</section>
+      </div>
 <section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Table">
   <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Table</h2></header>
   <div class="vbody">
@@ -573,8 +603,8 @@ body.view-open { overflow: hidden; }
   <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Winds &amp; Flowers</h2></header>
   <div class="vbody">
     <div class="round-row" id="roundRow">
-      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">東 East · Tong</option><option value="1">南 South · Nan</option><option value="2">西 West · Si</option><option value="3">北 North · Pei</option></select></label>
+      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">東 East · Tong (dealer)</option><option value="1">南 South · Nan</option><option value="2">西 West · Si</option><option value="3">北 North · Pei</option></select></label>
       <div class="mini"><span>My Flowers</span><div class="flowers" id="flowers"></div></div>
     </div>
   </div>
@@ -680,6 +710,8 @@ body.view-open { overflow: hidden; }
         <label for="tier">Photo reading mode</label>
         <select id="tier"><option value="default">Standard · faster</option><option value="complex">Thorough · slower, more accurate</option></select>
       </div>
+      <label class="check"><input type="checkbox" id="liveKeep"> Keep scan photos for model training</label>
+      <div class="row"><button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button></div>
       <div class="row" id="resetRow">
         <button class="btn" type="button" id="resetBtn">Start new game</button>
       </div>
@@ -741,7 +773,7 @@ body.view-open { overflow: hidden; }
   var SUITS = ['m', 'p', 's', 'z'];
   var SUIT_NAMES = ['Characters', 'Dots', 'Bamboo'];
   var SUIT_ONE = ['Character', 'Dot', 'Bamboo'];
-  var HONOR_NAMES = ['East', 'South', 'West', 'North', 'White Dragon', 'Green Dragon', 'Red Dragon'];
+  var HONOR_NAMES = ['East · Tong 東', 'South · Nan 南', 'West · Si 西', 'North · Pei 北', 'White Dragon', 'Green Dragon', 'Red Dragon'];
   var DRAGON_SHORT = ['White', 'Green', 'Red'];
   var HONOR_GLYPHS = ['東', '南', '西', '北', '白', '發', '中'];
   var INF = 99;
@@ -1253,7 +1285,7 @@ body.view-open { overflow: hidden; }
   function scoreStd(sets, pair, cfg, selfDraw, concealed, opts) {
     var p = [], tiles = [pair, pair];
     sets.forEach(function (s) { tiles = tiles.concat(setTiles(s)); });
-    var dragonP = 0, windP = 0, pongs = 0, kongs = 0, chows = 0;
+    var dragonP = 0, windP = 0, pongs = 0, kongs = 0, chows = 0, kongHint = (opts && opts.kongs) || 0;
     var seatT = 27 + (cfg.seatWind || 0), roundT = 27 + (cfg.roundWind || 0), seatP = false, roundP = false;
     sets.forEach(function (s) {
       if (s.type === 'chow') { chows++; return; }
@@ -1282,7 +1314,7 @@ body.view-open { overflow: hidden; }
     if (fl.allHonor) {
       p.push(['All Honor', 10]);
     } else {
-      if (kongs === 4) p.push(['Kong Hand', 12]);
+      if (kongs === 4 || (kongHint >= 4 && pongs === sets.length)) p.push(['Kong Hand', 12]);
       else if (pongs === sets.length) p.push(['All Pongs', 3]);
       var outside = isTermOrHonor(pair) && sets.every(function (s) { return setTiles(s).some(isTermOrHonor); });
       if (outside) p.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
@@ -1298,7 +1330,7 @@ body.view-open { overflow: hidden; }
   // c = tile tertutup lengkap (3S+2) termasuk tile menang. Hasil: poin terbaik dan rinciannya.
   function scoreHand(c, cfg, selfDraw, opts) {
     var melds = (cfg.melds || []).map(function (m) { return { type: meldType(m), t: meldMin(m), open: true }; });
-    var concealed = melds.length === 0 && !(cfg.openMelds > 0);
+    var concealed = opts && opts.concealed != null ? !!opts.concealed : melds.length === 0 && !(cfg.openMelds > 0);
     var S = setsNeeded(cfg), best = null;
     function consider(p) {
       var pts = total(p);
@@ -1932,7 +1964,8 @@ body.view-open { overflow: hidden; }
   var LBL = { me: 'You', right: 'Right', across: 'Across', left: 'Left' };
   var SEAT_OFFSET = { me: 0, right: 1, across: 2, left: 3 };
   var BEFORE = { me: 'left', right: 'me', across: 'right', left: 'across' }; // player before X (to X's left)
-  var WIND_NAMES = ['East', 'South', 'West', 'North'];
+  var WIND_NAMES = ['East · Tong 東', 'South · Nan 南', 'West · Si 西', 'North · Pei 北'];
+  var WIND_EN = ['East', 'South', 'West', 'North'], WIND_PY = ['Tong', 'Nan', 'Si', 'Pei'];
   var FLOWERS = [{ n: 1, g: '梅' }, { n: 2, g: '蘭' }, { n: 3, g: '菊' }, { n: 4, g: '竹' }];
   var PRESETS = {
     maje: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 83, scoring: true, minPoints: 3 },
@@ -2172,7 +2205,7 @@ body.view-open { overflow: hidden; }
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null
   };
 
   function act(label, type, fn, extra) {
@@ -2414,6 +2447,16 @@ body.view-open { overflow: hidden; }
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
     }).join('') : '<p class="muted small" style="grid-column:1/-1;margin:0">No tiles yet. Tap <b>+ Type tiles</b> or photograph your hand.</p>';
 
+    if ($('liveStage').hidden) $('scanBar').hidden = n > 0;
+    var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
+    rack.classList.toggle('pending', !!ui.pending);
+    if (ui.pending && n) {
+      var okCount = n === needN || n === needN + 1;
+      cb.innerHTML = '<span><b>' + n + ' tiles scanned</b>' + (okCount ? ' · correct?' : ' · need ' + needN) + '</span>' +
+        '<span class="small muted" style="flex-basis:100%">Tap a wrong tile to take it out; + Type tiles to add one.</span>' +
+        '<span class="spacer"></span><button class="btn small primary" type="button" data-act="confirm-scan">Confirm</button>';
+      cb.hidden = false;
+    } else { cb.hidden = true; cb.innerHTML = ''; }
     var myMelds = S.cur.melds.me;
     $('myMelds').innerHTML = myMelds.map(function (m) {
       return '<span class="meld" title="Open set">' + m.map(function (t) { return tileHTML(t, 'md'); }).join('') + '</span>';
@@ -2430,7 +2473,7 @@ body.view-open { overflow: hidden; }
       var t = ui.selHand, oo = optMap[t];
       var info = oo ? '<span class="small muted" style="flex-basis:100%">' + esc(name(t)) + ': ' + (oo.vd === 0 ? 'ready to win' : oo.vd >= 99 ? 'dead end' : oo.vd + ' steps') + ' · ' + oo.ukeire + ' useful tiles · risk ' + pct(oo.risk) + '</span>' : '';
       ra.innerHTML = info + (an.phase === 'discard' ? '<button class="btn primary" type="button" data-act="discard">Discard ' + esc(name(t)) + '</button>' : '') +
-        '<button class="btn" type="button" data-act="remove">Remove from hand</button>' +
+        '<button class="btn' + (ui.pending ? ' primary' : '') + '" type="button" data-act="remove">Remove from hand</button>' +
         '<button class="btn ghost" type="button" data-act="cancel">Cancel</button>';
       ra.hidden = false;
     } else {
@@ -2567,7 +2610,26 @@ body.view-open { overflow: hidden; }
       return;
     }
 
-    if (an.complete && an.validWin) {
+    var wr = S.cur.winResult;
+    if (wr) {
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (wr.from === 'wall' ? 'Self-draw' : 'From ' + LBL[wr.from] + ' discard') + '</span>' +
+        '<div class="hero-title">HU! ' + wr.points + ' points</div>' +
+        '<div class="chips">' + wr.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
+        '<div class="small">' + (wr.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[wr.from] + ' pays.') + '</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="new-game">New game</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (an.complete) {
+      var from0 = S.cur.lastIn && S.cur.lastIn.from ? S.cur.lastIn.from : 'wall';
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Your hand is complete</span>' +
+        '<div class="hero-title">HU?</div>' +
+        '<div class="small">Answer a few questions to get the real score.</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + from0 + '">Check score</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (false) {
       var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
       h += '<div class="win"><span class="eyebrow" style="color:inherit">Valid win · ' + (selfDraw ? 'self-draw' : 'from ' + LBL[S.cur.lastIn.from] + ' discard') + '</span>' +
         '<strong>Declare HU — ' + an.score.points + ' points</strong><ul>' +
@@ -3242,7 +3304,7 @@ body.view-open { overflow: hidden; }
     return '<div class="want">' + list.map(function (x) { return tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span>'; }).join('') +
       (tiles.length > list.length ? '<span class="num">+' + (tiles.length - list.length) + ' more</span>' : '') + '</div>';
   }
-  var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', inputPanel: 'camera', gamePanel: 'game' };
+  var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', gamePanel: 'game' };
   function openPanel(id) { openView(PANEL_VIEW[id] || id); }
   // Overlay view: one full screen above the main screen, closed with the back button or the phone back button.
   function openView(name) {
@@ -3325,20 +3387,33 @@ body.view-open { overflow: hidden; }
         '<div class="hero-sub num">' + have + ' / ' + need + ' tiles</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> below and point at your hand tiles</span></div>' +
-        '<div class="step"><i>2</i><span>Once 13 tiles are read, your hand is saved automatically</span></div>' +
-        '<div class="step"><i>3</i><span>See the winning combinations and their odds, then follow the discard suggestion</span></div></div>' + over;
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> and point at one row of tiles</span></div>' +
+        '<div class="step"><i>2</i><span>Check the scanned tiles and tap <b>Confirm</b></span></div>' +
+        '<div class="step"><i>3</i><span>See the winning combinations and their odds, then follow the next move</span></div></div>' + over;
       box.innerHTML = h;
       return;
     }
 
-    if (an.complete && an.validWin) {
-      var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
-      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (selfDraw ? 'Self-draw' : 'From ' + LBL[S.cur.lastIn.from] + ' discard') + '</span>' +
-        '<div class="hero-title">HU! ' + an.score.points + ' points</div>' +
-        '<div class="chips">' + an.score.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
-        '<div class="small">' + (selfDraw ? 'All three opponents pay.' : 'Only ' + LBL[S.cur.lastIn.from] + ' pays.') + '</div>' +
+    var wr = S.cur.winResult;
+    if (wr) {
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (wr.from === 'wall' ? 'Self-draw' : 'From ' + LBL[wr.from] + ' discard') + '</span>' +
+        '<div class="hero-title">HU! ' + wr.points + ' points</div>' +
+        '<div class="chips">' + wr.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
+        '<div class="small">' + (wr.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[wr.from] + ' pays.') + '</div>' +
         '<div class="hero-actions"><button class="btn big" type="button" data-act="new-game">New game</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (an.complete && ui.pending) {
+      box.innerHTML = '<div class="hero-head"><span class="eyebrow">Your hand looks complete</span></div><div class="hero-sub">Check the tiles above and tap <b>Confirm</b> to score your HU.</div>';
+      return;
+    }
+    if (an.complete && (an.validWin || !an.options)) {
+      var from0 = S.cur.lastIn && S.cur.lastIn.from ? S.cur.lastIn.from : 'wall';
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Your hand is complete</span>' +
+        '<div class="hero-title">HU?</div>' +
+        '<div class="small">Answer a few questions to get the real score.</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + from0 + '">Check score</button></div></div>';
       box.innerHTML = h;
       return;
     }
@@ -3354,9 +3429,9 @@ body.view-open { overflow: hidden; }
           else others.push(o);
         });
         if (hu) {
-          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard · ' + esc(name(cl.t)) + '</span><div class="hero-title">HU! ' + hu.points + ' points</div>' +
-            '<div class="small">' + esc(patternList(hu.patterns)) + '</div>' +
-            '<div class="hero-actions"><button class="btn big" type="button" data-claim="' + hu._i + '">Declare HU</button><button class="btn ghost" type="button" data-act="skip-claim">Skip</button></div></div>';
+          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard · ' + esc(name(cl.t)) + '</span><div class="hero-title">HU!</div>' +
+            '<div class="small">This tile completes your hand. Check the score before declaring.</div>' +
+            '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + cl.from + '" data-t="' + cl.t + '">Check score</button><button class="btn ghost" type="button" data-act="skip-claim">Skip</button></div></div>';
         } else if (better) {
           var lbl = { pong: 'Pong', kong: 'Kong', chi: 'Chi' }[better.type];
           h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard</span><div class="hero-title">' + lbl + '!</div>' +
@@ -3385,7 +3460,7 @@ body.view-open { overflow: hidden; }
     var best = an.best, rec = an.rec || best, mode = an.mode || 'attack';
     var bsim = simFor(an, rec.t);
     if (an.complete && !an.validWin) {
-      h += '<div class="hero-alt"><span>Hand complete, but only ' + an.score.points + ' of the minimum ' + an.M + ' points. Keep building a pattern.</span></div>';
+      h += '<div class="hero-alt"><span>Hand complete, but about ' + an.score.points + ' of the minimum ' + an.M + ' points.</span><span class="spacer"></span><button class="btn small" type="button" data-act="win-check" data-from="' + (S.cur.lastIn && S.cur.lastIn.from || 'wall') + '">Check score</button></div>';
     }
     var pwd = endOf(bsim, 'any');
     h += '<div class="hero-head"><span class="eyebrow">Winning chances</span><span class="hero-sub">if you discard ' + esc(name(rec.t)) + '</span></div>' +
@@ -3409,6 +3484,91 @@ body.view-open { overflow: hidden; }
     }
     h += over;
     box.innerHTML = h;
+  }
+
+  /* ---------- new game setup: winds first ---------- */
+  function windButtons(sel, kind) {
+    return [0, 1, 2, 3].map(function (w) {
+      return '<button type="button" data-' + kind + '="' + w + '" aria-pressed="' + (sel === w) + '">' + tileHTML(27 + w, 'md') +
+        '<span>' + WIND_EN[w] + '</span><small>' + WIND_PY[w] + ' ' + MJ.HONOR_GLYPHS[w] + (kind === 'seat' && w === 0 ? ' · dealer' : '') + '</small></button>';
+    }).join('');
+  }
+  function renderSetup() {
+    $('setupRound').innerHTML = windButtons(ui.setup.round, 'round');
+    $('setupSeat').innerHTML = windButtons(ui.setup.seat, 'seat');
+  }
+  function openSetup() {
+    ui.setup = { round: S.cfg.roundWind || 0, seat: S.cfg.seatWind || 0 };
+    renderSetup();
+    openView('setup');
+  }
+  function startNewGame() {
+    S.cfg.roundWind = ui.setup.round; S.cfg.seatWind = ui.setup.seat;
+    S = newRound(S.cfg);
+    simCache.clear(); ui.skipClaim = null; ui.pending = false; ui.win = null; ui.confirmReset = false;
+    var ro = $('readout'); if (ro) ro.hidden = true;
+    save(); render(); closeView();
+    toast('Round ' + WIND_EN[S.cfg.roundWind] + ' · Seat ' + WIND_EN[S.cfg.seatWind] + '. Scan your hand.');
+    if (window.SempoaScan && !$('liveStart').disabled) window.SempoaScan.start();
+  }
+
+  /* ---------- HU check: ask before scoring ---------- */
+  function openWin(from, claimT) {
+    ui.win = {
+      from: from || 'wall', claimT: claimT == null ? null : claimT,
+      open: S.cur.melds.me.length, kongs: S.cur.melds.me.filter(function (m) { return m.length === 4; }).length,
+      flowers: S.cur.myFlowers.length, match: flowerMatch(), lastTile: false, robKong: false
+    };
+    renderWin();
+    openView('win');
+  }
+  function winScore() {
+    var w = ui.win, c = MJ.toCounts(S.cur.hand);
+    if (w.claimT != null) c[w.claimT]++;
+    var cfg = Object.assign({}, cfgNow(), { flowers: w.flowers, flowerMatch: Math.min(w.match, w.flowers) });
+    return MJ.scoreHand(c, cfg, w.from === 'wall', { concealed: w.open === 0, kongs: w.kongs, lastTile: w.lastTile, robKong: w.robKong });
+  }
+  function segRow(key, values, labels) {
+    return '<div class="seg full" role="group">' + values.map(function (v, i) {
+      return '<button type="button" data-win="' + key + '" data-v="' + v + '" aria-pressed="' + (String(ui.win[key]) === String(v)) + '">' + (labels ? labels[i] : v) + '</button>';
+    }).join('') + '</div>';
+  }
+  function renderWin() {
+    var w = ui.win, sc = winScore(), M = MJ.minPts(cfgNow()), ok = sc.complete && sc.points >= M;
+    var h = '';
+    h += '<div class="q-block"><div class="q">Where did the winning tile come from?</div>' +
+      segRow('from', ['wall', 'right', 'across', 'left'], ['My draw', LBL.right, LBL.across, LBL.left]) + '</div>';
+    h += '<div class="q-block"><div class="q">Open sets taken from others (Pong / Chi / Kong)</div>' + segRow('open', [0, 1, 2, 3, 4]) + '</div>';
+    h += '<div class="q-block"><div class="q">Kongs (open or concealed)</div>' + segRow('kongs', [0, 1, 2, 3, 4]) + '</div>';
+    h += '<div class="q-block"><div class="q">Flowers you collected this game</div>' + segRow('flowers', [0, 1, 2, 3, 4, 5, 6, 7, 8]) + '</div>';
+    if (w.flowers > 0) h += '<div class="q-block"><div class="q">How many show your seat number (' + (S.cfg.seatWind + 1) + ')?</div>' + segRow('match', [0, 1, 2]) + '</div>';
+    h += '<div class="q-block"><label class="check"><input type="checkbox" data-wincheck="lastTile"' + (w.lastTile ? ' checked' : '') + '> Won on the last tile of the wall</label>' +
+      '<label class="check"><input type="checkbox" data-wincheck="robKong"' + (w.robKong ? ' checked' : '') + '> Robbed a Kong</label></div>';
+    if (!sc.complete) {
+      h += '<div class="win-result no"><b>This hand is not complete.</b><span class="small">Check the tiles in Your hand.</span></div>';
+    } else {
+      h += '<div class="win-result ' + (ok ? 'ok' : 'no') + '"><span class="eyebrow" style="color:inherit">' + (ok ? 'Valid HU' : 'Below the minimum of ' + M + ' points') + '</span>' +
+        '<div class="big">' + sc.points + ' points</div><div class="chips">' + sc.patterns.map(function (p) {
+          return '<span class="pill" style="color:inherit;border-color:currentColor">' + esc(p[0]) + ' ' + p[1] + '</span>';
+        }).join('') + '</div>' +
+        (ok ? '<div class="small">' + (w.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[w.from] + ' pays.') + '</div>' : '') + '</div>';
+    }
+    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="win-declare"' + (ok ? '' : ' disabled') + '>Declare HU</button></div>';
+    $('winBody').innerHTML = h;
+  }
+  function declareWin() {
+    var w = ui.win, sc = winScore();
+    act('HU · ' + sc.points + ' points (' + (w.from === 'wall' ? 'self-draw' : 'from ' + LBL[w.from]) + ')', 'win', function (cur) {
+      if (w.claimT != null) {
+        removeLast(cur.ponds[w.from], w.claimT);
+        cur.hand.push(w.claimT); cur.drawn = w.claimT;
+      }
+      cur.lastIn = { from: w.from };
+      cur.winResult = { points: sc.points, patterns: sc.patterns, from: w.from };
+    }, { who: 'me', tile: w.claimT });
+    ui.win = null;
+    closeView();
+    toast('HU! ' + sc.points + ' points');
   }
 
   /* ---------- events ---------- */
@@ -3436,13 +3596,13 @@ body.view-open { overflow: hidden; }
           ui.selHand = null; render(); return;
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
         case 'pad-hand': closeView(); openSheet('hand'); return;
-        case 'menu-new-game': ui.confirmReset = true; renderSettings(lastAn); openView('settings'); return;
+        case 'menu-new-game': openSetup(); return;
+        case 'confirm-scan': ui.pending = false; ui.selHand = null; render(); toast('Hand confirmed'); return;
+        case 'rescan': ui.pending = false; ui.selHand = null; if (window.SempoaScan) window.SempoaScan.start(); return;
+        case 'win-check': openWin(d.from, d.t != null && d.t !== '' ? +d.t : null); return;
+        case 'win-declare': declareWin(); return;
         case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); return;
-        case 'new-game':
-          S = newRound(S.cfg); simCache.clear(); ui.skipClaim = null;
-          save(); render(); openSheet('hand');
-          toast('New game. Enter your hand tiles.');
-          return;
+        case 'new-game': openSetup(); return;
         case 'toggle-opts': ui.showAllOpts = !ui.showAllOpts; renderAdvice(lastAn); return;
         case 'pond-remove':
           var sp = ui.selPond;
@@ -3460,6 +3620,9 @@ body.view-open { overflow: hidden; }
     }
     if (d.open) { openPanel(d.open); return; }
     if (d.view) { openView(d.view); return; }
+    if (d.round != null) { ui.setup.round = +d.round; renderSetup(); return; }
+    if (d.seat != null) { ui.setup.seat = +d.seat; renderSetup(); return; }
+    if (d.win) { ui.win[d.win] = d.win === 'from' ? d.v : +d.v; if (ui.win.match > ui.win.flowers) ui.win.match = ui.win.flowers; renderWin(); return; }
     if (el.hasAttribute('data-close-view')) { closeView(); return; }
     if (d.claim != null) { doClaim(+d.claim); return; }
     if (d.flower) {
@@ -3501,7 +3664,6 @@ body.view-open { overflow: hidden; }
       case 'dockPad': openSheet(); return;
       case 'sheetClose': closeSheet(); return;
       case 'dockUndo': case 'undoTop': case 'sheetUndo': undo(); return;
-      case 'dockCam': openView('camera'); return;
       case 'camBtn': $('camInput').click(); return;
       case 'galBtn': $('galInput').click(); return;
       case 'stopBtn': if (photoCtl) photoCtl.abort(); return;
@@ -3509,7 +3671,9 @@ body.view-open { overflow: hidden; }
       case 'scopeTable': ui.scope = 'table'; $('scopeTable').setAttribute('aria-pressed', 'true'); $('scopeHand').setAttribute('aria-pressed', 'false'); return;
       case 'draftClear': ui.draft = []; renderSheet(lastAn); return;
       case 'draftSave': saveMeld(); return;
-      case 'exampleNew':
+      case 'setupStart': startNewGame(); return;
+      case 'exampleNew': openSetup(); return;
+      case 'exampleNewOld':
         S = newRound(S.cfg);
         simCache.clear();
         save(); render(); closeView(); openSheet('hand');
@@ -3518,6 +3682,8 @@ body.view-open { overflow: hidden; }
       case 'resetBtn': ui.confirmReset = true; renderSettings(lastAn); return;
       case 'resetNo': ui.confirmReset = false; renderSettings(lastAn); return;
       case 'resetYes':
+        ui.confirmReset = false; openSetup(); return;
+      case 'resetYesOld':
         ui.confirmReset = false;
         S = newRound(S.cfg);
         simCache.clear();
@@ -3526,6 +3692,10 @@ body.view-open { overflow: hidden; }
         toast('New game started. Check your round and seat winds.');
         return;
     }
+  });
+  document.addEventListener('change', function (e) {
+    var k = e.target && e.target.dataset && e.target.dataset.wincheck;
+    if (k && ui.win) { ui.win[k] = e.target.checked; renderWin(); }
   });
   $('camInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
   $('galInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
@@ -3580,6 +3750,17 @@ body.view-open { overflow: hidden; }
       S.example = false;
       act(label, 'photo', function (cur) { cur.hand = list.slice(); cur.drawn = null; }, { who: 'me' });
     },
+    scanned: function (tiles, flowers) {
+      S.example = false;
+      act('Scan: hand (' + tiles.length + ' tiles)', 'photo', function (cur) {
+        cur.hand = tiles.slice(); cur.drawn = null; cur.winResult = null; cur.lastIn = { from: 'wall' };
+        if (flowers && flowers.length > cur.myFlowers.length) cur.myFlowers = flowers.slice(0, 8);
+      }, { who: 'me' });
+      ui.pending = true; ui.selHand = null;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast(tiles.length + ' tiles scanned · check and Confirm');
+    },
     setFlowers: function (list) {
       act('Camera: Flower ' + list.join(', '), 'edit', function (cur) { cur.myFlowers = list.slice(0, 8); }, { who: 'me' });
     },
@@ -3595,9 +3776,10 @@ body.view-open { overflow: hidden; }
 
 </script>
 <script>
-/* Sempoa Mahjong — kamera live.
- * Model deteksi tile (YOLO, format ONNX) jalan langsung di browser HP lewat onnxruntime-web.
- * Butuh halaman HTTPS biasa (mis. GitHub Pages); di dalam Artifact claude.ai kamera diblokir.
+/* Sempoa Mahjong — scan hand.
+ * A YOLO tile detector (ONNX) runs in the phone browser via onnxruntime-web.
+ * The scanner lives inside the "Your hand" panel: one short strip, a countdown, a Lock button.
+ * Needs a normal HTTPS page (e.g. GitHub Pages); camera is blocked inside claude.ai Artifacts.
  */
 (function () {
   'use strict';
@@ -3607,45 +3789,35 @@ body.view-open { overflow: hidden; }
   var ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.webgpu.min.js';
   var ORT_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
   var JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
-  var CONF = 0.45, IOU = 0.45, WINDOW = 6, NEED = 3, MIN_INTERVAL = 220;
+  var CONF = 0.45, IOU = 0.45, MIN_INTERVAL = 220;
+  var COUNTDOWN_MS = 3000, STABLE_FRAMES = 3;
   var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  var panel = $('livePanel');
-  if (!panel) return;
+  if (!$('liveStart')) return;
   var inArtifact = !!(window.claude && typeof window.claude.use === 'function');
   var canCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
 
   var st = {
-    target: 'hand', running: false, stream: null, session: null, meta: null, busy: false,
-    history: [], lastKey: null, appliedKey: null, stable: null, fps: 0, shots: [], wake: null,
-    modelState: 'idle' // idle | loading | ready | missing | error
+    running: false, stream: null, session: null, meta: null, busy: false, wake: null,
+    modelState: 'idle', // idle | loading | ready | missing | error
+    frames: [], countStart: 0, lastSeen: 0, done: false, shots: []
   };
 
   function msg(text, work) {
     var el = $('liveMsg');
-    el.textContent = text;
+    el.hidden = !text;
+    el.textContent = text || '';
     el.className = 'photo-msg' + (work ? ' work' : '');
   }
 
   if (inArtifact || !canCamera) {
-    $('liveControls').hidden = true;
+    $('liveStart').disabled = true;
     msg(inArtifact
-      ? 'Live camera is not available inside Claude. Open the GitHub Pages version to use the live camera; here you can still use Photo.'
-      : 'This browser does not allow camera access (HTTPS required). Open it via GitHub Pages.');
-    return;
+      ? 'Live scanning is not available inside Claude. Open the GitHub Pages version to scan.'
+      : 'This browser does not allow camera access (HTTPS required).');
   }
-  msg('Point the camera at your hand (tiles standing, facing the camera) or at one player’s discards. Results are recorded automatically once they are stable.');
 
-  /* ---------- target (yang sedang dilihat kamera) ---------- */
-  var TARGETS = [['hand', 'My hand'], ['right', 'Right discards'], ['across', 'Across discards'], ['left', 'Left discards'], ['me', 'My discards']];
-  function renderTargets() {
-    $('liveTargets').innerHTML = TARGETS.map(function (x) {
-      return '<button type="button" data-live-target="' + x[0] + '" aria-pressed="' + (st.target === x[0]) + '">' + x[1] + '</button>';
-    }).join('');
-  }
-  renderTargets();
-
-  /* ---------- muat library & model ---------- */
+  /* ---------- library & model ---------- */
   function loadScript(src) {
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
@@ -3662,40 +3834,51 @@ body.view-open { overflow: hidden; }
     return t >= 0 ? { tile: t } : null;
   }
   function loadModel() {
-    if (st.modelState === 'ready' || st.modelState === 'loading') return Promise.resolve();
+    if (st.modelState === 'ready') return Promise.resolve();
+    if (st.loading) return st.loading;
     st.modelState = 'loading';
     msg('Loading tile model…', true);
-    return fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
+    st.loading = fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw { missing: true };
       return r.json();
     }).then(function (meta) {
       st.meta = meta;
-      return loadScript(ORT_URL);
+      return window.ort ? null : loadScript(ORT_URL);
     }).then(function () {
       var ort = window.ort;
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1;
-      // iPhone: WebGPU di WebKit masih rawan menghentikan halaman; WASM lebih stabil.
+      // iPhone: WebGPU in WebKit can still kill the page; WASM is steadier.
       var providers = (!IOS && navigator.gpu) ? ['webgpu', 'wasm'] : ['wasm'];
       return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: providers, graphOptimizationLevel: 'all' })
         .catch(function () { return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: ['wasm'] }); });
     }).then(function (session) {
       st.session = session;
       st.modelState = 'ready';
-      msg('Model ready. Hold the camera steady for a second or two.');
+      msg('');
     }).catch(function (e) {
-      if (e && e.missing) {
-        st.modelState = 'missing';
-        msg('Tile model not installed yet. You can still use the camera to collect training photos.');
-      } else {
-        st.modelState = 'error';
-        msg('Could not load the model (' + (e && e.message ? e.message : 'connection') + '). Try reloading the page.');
-      }
-    });
+      st.modelState = e && e.missing ? 'missing' : 'error';
+      msg(e && e.missing ? 'Tile model not installed yet.' : 'Could not load the tile model. Check your connection and reload.');
+    }).then(function () { st.loading = null; });
+    return st.loading;
   }
 
-  /* ---------- kamera ---------- */
+  /* ---------- camera ---------- */
+  function showScanner(on) {
+    $('liveStage').hidden = !on;
+    $('scanCtl').hidden = !on;
+    $('scanBar').hidden = on || API.state().cur.hand.length > 0;
+    if (!on) { $('scanCount').hidden = true; $('liveFps').textContent = ''; }
+  }
   function start() {
+    if (st.running) return;
+    API.closeView && API.closeView();
+    st.done = false; st.frames = []; st.countStart = 0; st.lastSeen = 0;
+    $('liveImage').hidden = true; $('liveVideo').hidden = false;
+    clearCanvas();
+    showScanner(true);
+    msg('Fit one row of tiles inside the frame.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 960 }, height: { ideal: 540 } }, audio: false
     }).then(function (stream) {
@@ -3705,16 +3888,12 @@ body.view-open { overflow: hidden; }
       return v.play();
     }).then(function () {
       st.running = true;
-      $('liveImage').hidden = true; $('liveVideo').hidden = false;
-      $('liveStage').hidden = false;
-      $('liveStart').hidden = true;
-      $('liveStop').hidden = false;
-      $('liveSnap').disabled = false;
-      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { st.wake = w; }).catch(function () {}); } catch (e) { /* opsional */ }
+      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { st.wake = w; }).catch(function () {}); } catch (e) { /* optional */ }
       return loadModel();
     }).then(function () {
-      loop();
+      if (st.running && st.modelState === 'ready') loop();
     }).catch(function (e) {
+      stop();
       msg(e && e.name === 'NotAllowedError'
         ? 'Camera permission denied. Allow the camera for this site in your browser settings, then try again.'
         : 'Could not open the camera: ' + (e && e.message ? e.message : 'unknown error'));
@@ -3724,27 +3903,32 @@ body.view-open { overflow: hidden; }
     st.running = false;
     if (st.stream) st.stream.getTracks().forEach(function (t) { t.stop(); });
     st.stream = null;
-    if (st.wake) { try { st.wake.release(); } catch (e) { /* abaikan */ } st.wake = null; }
-    $('liveStage').hidden = true;
-    $('liveStart').hidden = false;
-    $('liveStop').hidden = true;
-    $('liveFps').textContent = '';
+    if (st.wake) { try { st.wake.release(); } catch (e) { /* ignore */ } st.wake = null; }
+    showScanner(false);
   }
 
-  /* ---------- deteksi ---------- */
+  /* ---------- detection ---------- */
   function dims(el) { return el.tagName === 'VIDEO' ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+  // The part of the source the user actually sees (object-fit: cover crop).
+  function visibleRect(el) {
+    var d = dims(el), box = $('liveStage').getBoundingClientRect();
+    var bw = box.width || d[0], bh = box.height || d[1];
+    var s = Math.max(bw / d[0], bh / d[1]);
+    var w = bw / s, h = bh / s;
+    return { x: (d[0] - w) / 2, y: (d[1] - h) / 2, w: w, h: h };
+  }
   var prepBuf = null;
   var prep = document.createElement('canvas');
   var prepCtx = prep.getContext('2d', { willReadFrequently: true });
-  function preprocess(video, size) {
-    var dd = dims(video), vw = dd[0], vh = dd[1];
-    var scale = Math.min(size / vw, size / vh);
-    var w = Math.round(vw * scale), h = Math.round(vh * scale);
+  function preprocess(el, size) {
+    var r = visibleRect(el);
+    var scale = Math.min(size / r.w, size / r.h);
+    var w = Math.round(r.w * scale), h = Math.round(r.h * scale);
     var dx = Math.floor((size - w) / 2), dy = Math.floor((size - h) / 2);
     prep.width = size; prep.height = size;
     prepCtx.fillStyle = 'rgb(114,114,114)';
     prepCtx.fillRect(0, 0, size, size);
-    prepCtx.drawImage(video, 0, 0, vw, vh, dx, dy, w, h);
+    prepCtx.drawImage(el, r.x, r.y, r.w, r.h, dx, dy, w, h);
     var px = prepCtx.getImageData(0, 0, size, size).data;
     var n = size * size;
     if (!prepBuf || prepBuf.length !== 3 * n) prepBuf = new Float32Array(3 * n);
@@ -3752,7 +3936,7 @@ body.view-open { overflow: hidden; }
     for (var i = 0, j = 0; i < n; i++, j += 4) {
       data[i] = px[j] / 255; data[i + n] = px[j + 1] / 255; data[i + 2 * n] = px[j + 2] / 255;
     }
-    return { data: data, scale: scale, dx: dx, dy: dy };
+    return { data: data, scale: scale, dx: dx, dy: dy, ox: r.x, oy: r.y };
   }
   function iou(a, b) {
     var x1 = Math.max(a.x1, b.x1), y1 = Math.max(a.y1, b.y1), x2 = Math.min(a.x2, b.x2), y2 = Math.min(a.y2, b.y2);
@@ -3760,10 +3944,10 @@ body.view-open { overflow: hidden; }
     var u = (a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter;
     return u > 0 ? inter / u : 0;
   }
-  // Keluaran YOLOv8/YOLO11 standar: [1, 4 + kelas, N] (cx, cy, w, h, skor kelas...)
+  // Standard YOLOv8/YOLO11 output: [1, 4 + classes, N] (cx, cy, w, h, class scores...)
   function decode(out, pre, nc) {
-    var dims = out.dims, d = out.data;
-    var N = dims[2], C = dims[1], boxes = [];
+    var dims2 = out.dims, d = out.data;
+    var N = dims2[2], C = dims2[1], boxes = [];
     for (var i = 0; i < N; i++) {
       var best = 0, cls = -1;
       for (var c = 4; c < C; c++) {
@@ -3773,8 +3957,8 @@ body.view-open { overflow: hidden; }
       if (best < CONF || cls < 0 || cls >= nc) continue;
       var cx = d[i], cy = d[N + i], w = d[2 * N + i], h = d[3 * N + i];
       boxes.push({
-        x1: (cx - w / 2 - pre.dx) / pre.scale, y1: (cy - h / 2 - pre.dy) / pre.scale,
-        x2: (cx + w / 2 - pre.dx) / pre.scale, y2: (cy + h / 2 - pre.dy) / pre.scale,
+        x1: (cx - w / 2 - pre.dx) / pre.scale + pre.ox, y1: (cy - h / 2 - pre.dy) / pre.scale + pre.oy,
+        x2: (cx + w / 2 - pre.dx) / pre.scale + pre.ox, y2: (cy + h / 2 - pre.dy) / pre.scale + pre.oy,
         score: best, cls: cls
       });
     }
@@ -3791,11 +3975,13 @@ body.view-open { overflow: hidden; }
     if (t >= 27) return ['E', 'S', 'W', 'N', 'Wh', 'G', 'R'][t - 27];
     return (t % 9 + 1) + 'CDB'[Math.floor(t / 9)];
   }
+  function clearCanvas() {
+    var cv = $('liveCanvas');
+    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  }
   function draw(dets, v) {
-    v = v || $('liveVideo');
     var cv = $('liveCanvas'), dd = dims(v);
     if (!dd[0] || !dd[1]) return;
-    // kanvas memakai ukuran piksel sumber; CSS yang menskalakannya ke layar
     cv.width = dd[0]; cv.height = dd[1];
     var ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, cv.width, cv.height);
@@ -3806,7 +3992,7 @@ body.view-open { overflow: hidden; }
       var x = b.x1, y = b.y1, w = b.x2 - b.x1, h = b.y2 - b.y1;
       ctx.strokeStyle = '#dcb45a';
       ctx.strokeRect(x, y, w, h);
-      var label = b.tile != null ? shortLabel(b.tile) : b.flower != null ? 'F' + b.flower : '?';
+      var label = b.tile != null ? shortLabel(b.tile) : 'F' + b.flower;
       var tw = ctx.measureText(label).width + 8 * u, th = 15 * u;
       var ly = y - th < 0 ? y : y - th;
       ctx.fillStyle = '#dcb45a';
@@ -3815,20 +4001,13 @@ body.view-open { overflow: hidden; }
       ctx.fillText(label, x + 4 * u, ly + th - 4 * u);
     });
   }
-
-  // Satu hasil per frame: daftar tile (diurutkan kiri ke kanan) + bunga.
   function frameResult(dets) {
     var tiles = [], flowers = [];
-    var hs = dets.map(function (b) { return b.y2 - b.y1; }).sort(function (a, b) { return a - b; });
-    var rowH = (hs[Math.floor(hs.length / 2)] || 1) * 1.1;
-    dets.slice().sort(function (a, b) {
-      var ra = Math.round((a.y1 + a.y2) / 2 / rowH), rb = Math.round((b.y1 + b.y2) / 2 / rowH);
-      return ra - rb || a.x1 - b.x1;
-    }).forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
+    dets.slice().sort(function (a, b) { return a.x1 - b.x1; })
+      .forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
     var key = tiles.slice().sort(function (a, b) { return a - b; }).join(',') + '|' + flowers.slice().sort().join(',');
     return { tiles: tiles, flowers: flowers, key: key };
   }
-
   function detect(el) {
     var size = st.meta.imgsz || 640, pre = preprocess(el, size), ort = window.ort, feeds = {};
     feeds[st.session.inputNames[0]] = new ort.Tensor('float32', pre.data, [1, 3, size, size]);
@@ -3842,7 +4021,82 @@ body.view-open { overflow: hidden; }
     });
   }
 
-  // Deteksi sekali dari foto (tanpa Claude, tanpa internet setelah model termuat).
+  /* ---------- countdown & capture ---------- */
+  function need() { return API.handNeed(); }
+  // Best reading among the frames seen so far: the most frequent reading, preferring full hands.
+  function bestReading() {
+    var counts = {}, byKey = {};
+    st.frames.forEach(function (f) { counts[f.key] = (counts[f.key] || 0) + 1; byKey[f.key] = f; });
+    var n = need(), best = null, bestScore = -1;
+    Object.keys(counts).forEach(function (k) {
+      var f = byKey[k], len = f.tiles.length;
+      var score = counts[k] + (len === n || len === n + 1 ? 3 : 0) + len * 0.01;
+      if (score > bestScore) { bestScore = score; best = f; }
+    });
+    return best;
+  }
+  function onFrame(r) {
+    var now = performance.now(), n = need();
+    if (r.tiles.length) st.lastSeen = now;
+    if (r.tiles.length >= 3) {
+      if (!st.countStart) st.countStart = now;
+      st.frames.push(r);
+      if (st.frames.length > 40) st.frames.shift();
+    } else if (st.countStart && now - st.lastSeen > 1200) {
+      st.countStart = 0; st.frames = [];           // tiles left the frame: start over
+    }
+    // finish early when the same full hand shows up a few frames in a row
+    var tail = st.frames.slice(-STABLE_FRAMES);
+    if (tail.length === STABLE_FRAMES && tail.every(function (f) { return f.key === tail[0].key; }) &&
+        (tail[0].tiles.length === n || tail[0].tiles.length === n + 1)) {
+      return capture(tail[0]);
+    }
+    var badge = $('scanCount');
+    if (st.countStart) {
+      var left = Math.max(0, COUNTDOWN_MS - (now - st.countStart));
+      badge.hidden = false;
+      badge.textContent = Math.ceil(left / 1000) || '✓';
+      if (left <= 0) return capture(bestReading());
+      msg(r.tiles.length + ' of ' + n + ' tiles · hold still');
+    } else {
+      badge.hidden = true;
+      msg('Fit one row of tiles inside the frame.');
+    }
+  }
+  function lock() {
+    var r = bestReading();
+    if (!r || !r.tiles.length) { API.toast('No tiles read yet. Point the camera at your hand.'); return; }
+    capture(r);
+  }
+  function capture(r) {
+    if (st.done || !r) return;
+    st.done = true;
+    if ($('liveKeep').checked) keepShot($('liveVideo'));
+    stop();
+    API.scanned(r.tiles, r.flowers);
+  }
+
+  function loop() {
+    if (!st.running || st.done) return;
+    var v = $('liveVideo');
+    if (st.modelState !== 'ready' || !v.videoWidth || st.busy) { requestAnimationFrame(loop); return; }
+    st.busy = true;
+    var t0 = performance.now();
+    detect(v).then(function (dets) {
+      if (!st.running) return;
+      draw(dets, v);
+      $('liveFps').textContent = dets.length + ' tiles';
+      onFrame(frameResult(dets));
+    }).catch(function (e) {
+      msg('Detection failed: ' + (e && e.message ? e.message : e));
+    }).then(function () {
+      st.busy = false;
+      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
+      if (st.running && !st.done) setTimeout(function () { requestAnimationFrame(loop); }, wait);
+    });
+  }
+
+  // One-shot detection on a picked photo (no Claude, works offline once the model is loaded).
   function detectFile(file) {
     if (!file) return;
     if (st.running) stop();
@@ -3850,137 +4104,36 @@ body.view-open { overflow: hidden; }
       if (st.modelState !== 'ready') return;
       var img = $('liveImage'), url = URL.createObjectURL(file);
       img.onload = function () {
-        $('liveVideo').hidden = true; img.hidden = false; $('liveStage').hidden = false;
+        $('liveVideo').hidden = true; img.hidden = false;
+        $('liveStage').hidden = false; $('scanBar').hidden = true;
         msg('Reading photo…', true);
-        var t0 = performance.now();
         detect(img).then(function (dets) {
           draw(dets, img);
-          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tiles';
-          msg(dets.length ? 'Done. Check the boxes on the photo; the result is below.' : 'No tiles detected. Try a closer, brighter photo.');
-          st.appliedKey = null; st.stable = null;
-          if (dets.length) apply(frameResult(dets));
+          if ($('liveKeep').checked) keepShot(img);
+          var r = frameResult(dets);
+          setTimeout(function () {
+            $('liveStage').hidden = true; $('scanBar').hidden = API.state().cur.hand.length > 0;
+            if (!dets.length) { msg('No tiles found. Try a closer, brighter photo.'); return; }
+            msg('');
+            API.scanned(r.tiles, r.flowers);
+          }, 900);
         }).catch(function (e) { msg('Detection failed: ' + (e && e.message ? e.message : e)); });
       };
       img.src = url;
     });
   }
 
-  function loop() {
-    if (!st.running) return;
-    var v = $('liveVideo');
-    if (st.modelState !== 'ready' || !v.videoWidth || st.busy) {
-      requestAnimationFrame(loop);
-      return;
-    }
-    st.busy = true;
-    var t0 = performance.now();
-    detect(v).then(function (dets) {
-      draw(dets, v);
-      onFrame(frameResult(dets));
-      var dt = performance.now() - t0;
-      st.fps = st.fps ? st.fps * 0.8 + (1000 / dt) * 0.2 : 1000 / dt;
-      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tiles';
-    }).catch(function (e) {
-      msg('Detection failed: ' + (e && e.message ? e.message : e));
-    }).then(function () {
-      st.busy = false;
-      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
-      if (st.running) setTimeout(function () { requestAnimationFrame(loop); }, wait);
-    });
-  }
-
-  /* ---------- stabilkan lalu catat ---------- */
-  function onFrame(r) {
-    st.history.push(r);
-    if (st.history.length > WINDOW) st.history.shift();
-    var counts = {};
-    st.history.forEach(function (h) { counts[h.key] = (counts[h.key] || 0) + 1; });
-    var bestKey = null, bestN = 0;
-    Object.keys(counts).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; bestKey = k; } });
-    if (bestN < NEED) return;
-    var stable = null;
-    for (var i = st.history.length - 1; i >= 0; i--) if (st.history[i].key === bestKey) { stable = st.history[i]; break; }
-    if (!stable || !stable.tiles.length) return;
-    if (st.stable && st.stable.key === stable.key) return;
-    st.stable = stable;
-    apply(stable);
-  }
-
-  function apply(r) {
-    var S = API.state(), an = API.lastAnalysis();
-    var auto = $('liveAuto').checked;
-    var box = $('liveRead');
-    var key = st.target + ':' + r.key;
-    if (st.appliedKey === key) return;
-    var h = '<div class="eyebrow">Camera sees · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
-      '<div>' + r.tiles.length + ' tiles: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
-    var did = null;
-    if (st.target === 'hand') {
-      var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
-      var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
-      if (!plus.length && !minus.length) {
-        did = 'same as recorded';
-      } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
-        // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
-        API.setHand(r.tiles, 'Camera: hand (' + r.tiles.length + ' tiles)');
-        did = 'saved automatically (' + r.tiles.length + ' tiles)';
-        backToMain('Hand saved (' + r.tiles.length + ' tiles)');
-      } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
-        API.recordDraw(plus[0]);
-        did = 'recorded: Draw ' + MJ.tileName(plus[0]);
-        backToMain('Drew ' + MJ.tileName(plus[0]) + ' · see advice');
-      } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
-        API.discard(minus[0]);
-        did = 'recorded: Discard ' + MJ.tileName(minus[0]);
-      } else if (auto && S.cur.hand.length === 0 && full) {
-        API.setHand(r.tiles, 'Camera: starting hand');
-        did = 'recorded as starting hand';
-        backToMain('Hand recorded · see winning combinations');
-      } else if (auto && S.cur.hand.length === 0) {
-        did = 'read ' + r.tiles.length + ' tiles, need ' + need + ' — move the camera until all tiles are in view';
-      } else {
-        h += '<div class="muted">Differs from the record: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Use camera result</button></div>';
-      }
-      if (r.flowers.length && r.flowers.length > S.cur.myFlowers.length) API.setFlowers(r.flowers);
-    } else {
-      var seat = st.target, old = S.cur.ponds[seat];
-      var added = API.multisetDiff(r.tiles, old), gone = API.multisetDiff(old, r.tiles);
-      if (!added.length) {
-        did = gone.length ? 'not all tiles visible, keeping the previous record' : 'same as recorded';
-      } else if (auto && !gone.length) {
-        added.forEach(function (t) { API.recordDiscard(seat, t); });
-        did = 'recorded: ' + API.label(seat) + ' discarded ' + API.tilesText(added);
-      } else {
-        h += '<div class="muted">Differs from the record: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Replace discards with camera result</button></div>';
-      }
-    }
-    if (did) { h += '<div class="muted">' + did + '</div>'; st.appliedKey = key; }
-    st.pending = r;
-    box.innerHTML = h;
-    box.hidden = false;
-  }
-
-  // Setelah tangan tercatat dari kamera, kembali ke layar utama supaya hasilnya langsung terlihat.
-  function backToMain(msg) {
-    setTimeout(function () { if (API.closeView) API.closeView(); API.toast(msg); }, 600);
-  }
-
-  /* ---------- foto latihan (untuk melatih ulang dengan tile mejamu) ---------- */
-  function snap() {
-    var v = $('liveVideo');
-    if (!v.videoWidth) return;
-    var cv = document.createElement('canvas');
-    cv.width = v.videoWidth; cv.height = v.videoHeight;
-    cv.getContext('2d').drawImage(v, 0, 0);
+  /* ---------- training photos (optional, from Settings) ---------- */
+  function keepShot(el) {
+    var d = dims(el), cv = document.createElement('canvas');
+    cv.width = d[0]; cv.height = d[1];
+    cv.getContext('2d').drawImage(el, 0, 0);
     cv.toBlob(function (b) {
       if (!b) return;
       if (st.shots.length >= 120) st.shots.shift();
-      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'table-' + Date.now() });
+      st.shots.push({ blob: b, name: 'hand-' + Date.now() });
       $('liveZip').disabled = false;
       $('liveZip').textContent = 'Download training photos (' + st.shots.length + ')';
-      API.toast('Training photo saved (' + st.shots.length + ')');
     }, 'image/jpeg', 0.9);
   }
   function downloadZip() {
@@ -3988,7 +4141,7 @@ body.view-open { overflow: hidden; }
     (window.JSZip ? Promise.resolve() : loadScript(JSZIP_URL)).then(function () {
       var zip = new window.JSZip();
       st.shots.forEach(function (s) { zip.file('images/' + s.name + '.jpg', s.blob); });
-      zip.file('README.txt', 'Photos of mahjong table tiles for retraining the Sempoa Mahjong model.\nSend this zip to Claude to be labelled and used to train the model.\n');
+      zip.file('README.txt', 'Mahjong hand photos for retraining the Sempoa Mahjong tile model.\nSend this zip to Claude to label and train on.\n');
       return zip.generateAsync({ type: 'blob' });
     }).then(function (blob) {
       var a = document.createElement('a');
@@ -3999,40 +4152,21 @@ body.view-open { overflow: hidden; }
     }).catch(function () { API.toast('Could not create the zip. Try again.'); });
   }
 
-  /* ---------- tombol ---------- */
+  /* ---------- buttons ---------- */
   document.addEventListener('click', function (e) {
     var el = e.target.closest('button');
     if (!el) return;
-    if (el.dataset.liveTarget) {
-      st.target = el.dataset.liveTarget;
-      st.history = []; st.stable = null;
-      renderTargets();
-      $('liveRead').hidden = true;
-      return;
-    }
-    if (el.dataset.liveApply && st.pending) {
-      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Camera: hand');
-      else API.setPond(st.target, st.pending.tiles);
-      st.appliedKey = st.target + ':' + st.pending.key;
-      $('liveRead').hidden = true;
-      return;
-    }
     switch (el.id) {
-      case 'liveStart': start(); return;
-      case 'liveStop': stop(); return;
-      case 'liveSnap': snap(); return;
-      case 'liveZip': downloadZip(); return;
+      case 'liveStart': case 'dockCam': if (!$('liveStart').disabled) start(); else API.toast($('liveMsg').textContent); return;
+      case 'liveStop': stop(); msg(''); return;
+      case 'liveLock': lock(); return;
       case 'liveFromPhoto': $('liveFile').click(); return;
+      case 'liveZip': downloadZip(); return;
     }
   });
   $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
   document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
-  // Layar Kamera dibuka dari tombol: langsung nyalakan kamera; ditutup: matikan.
-  document.addEventListener('sempoa:view', function (e) {
-    if (!e.detail || e.detail.name !== 'camera') return;
-    if (e.detail.open) { if (!st.running && st.modelState !== 'error') start(); }
-    else if (st.running) stop();
-  });
+  window.SempoaScan = { start: start };
 })();
 
 </script>

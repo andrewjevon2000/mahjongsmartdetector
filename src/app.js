@@ -6,7 +6,8 @@
   var LBL = { me: 'You', right: 'Right', across: 'Across', left: 'Left' };
   var SEAT_OFFSET = { me: 0, right: 1, across: 2, left: 3 };
   var BEFORE = { me: 'left', right: 'me', across: 'right', left: 'across' }; // player before X (to X's left)
-  var WIND_NAMES = ['East', 'South', 'West', 'North'];
+  var WIND_NAMES = ['East · Tong 東', 'South · Nan 南', 'West · Si 西', 'North · Pei 北'];
+  var WIND_EN = ['East', 'South', 'West', 'North'], WIND_PY = ['Tong', 'Nan', 'Si', 'Pei'];
   var FLOWERS = [{ n: 1, g: '梅' }, { n: 2, g: '蘭' }, { n: 3, g: '菊' }, { n: 4, g: '竹' }];
   var PRESETS = {
     maje: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 83, scoring: true, minPoints: 3 },
@@ -246,7 +247,7 @@
   var S = load() || exampleRound();
   var ui = {
     selHand: null, selPond: null, selMeld: null, openOpt: null, showAllOpts: false,
-    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null
+    zone: 'hand', meldWho: 'right', draft: [], scope: 'table', confirmReset: false, skipClaim: null, view: null, pending: false, win: null, setup: null
   };
 
   function act(label, type, fn, extra) {
@@ -488,6 +489,16 @@
         tileHTML(t) + (an.phase === 'discard' ? '<span class="q"' + q + '></span>' : '') + '</button>';
     }).join('') : '<p class="muted small" style="grid-column:1/-1;margin:0">No tiles yet. Tap <b>+ Type tiles</b> or photograph your hand.</p>';
 
+    if ($('liveStage').hidden) $('scanBar').hidden = n > 0;
+    var cb = $('confirmBar'), needN = 3 * MJ.setsNeeded(an.cfg) + 1;
+    rack.classList.toggle('pending', !!ui.pending);
+    if (ui.pending && n) {
+      var okCount = n === needN || n === needN + 1;
+      cb.innerHTML = '<span><b>' + n + ' tiles scanned</b>' + (okCount ? ' · correct?' : ' · need ' + needN) + '</span>' +
+        '<span class="small muted" style="flex-basis:100%">Tap a wrong tile to take it out; + Type tiles to add one.</span>' +
+        '<span class="spacer"></span><button class="btn small primary" type="button" data-act="confirm-scan">Confirm</button>';
+      cb.hidden = false;
+    } else { cb.hidden = true; cb.innerHTML = ''; }
     var myMelds = S.cur.melds.me;
     $('myMelds').innerHTML = myMelds.map(function (m) {
       return '<span class="meld" title="Open set">' + m.map(function (t) { return tileHTML(t, 'md'); }).join('') + '</span>';
@@ -504,7 +515,7 @@
       var t = ui.selHand, oo = optMap[t];
       var info = oo ? '<span class="small muted" style="flex-basis:100%">' + esc(name(t)) + ': ' + (oo.vd === 0 ? 'ready to win' : oo.vd >= 99 ? 'dead end' : oo.vd + ' steps') + ' · ' + oo.ukeire + ' useful tiles · risk ' + pct(oo.risk) + '</span>' : '';
       ra.innerHTML = info + (an.phase === 'discard' ? '<button class="btn primary" type="button" data-act="discard">Discard ' + esc(name(t)) + '</button>' : '') +
-        '<button class="btn" type="button" data-act="remove">Remove from hand</button>' +
+        '<button class="btn' + (ui.pending ? ' primary' : '') + '" type="button" data-act="remove">Remove from hand</button>' +
         '<button class="btn ghost" type="button" data-act="cancel">Cancel</button>';
       ra.hidden = false;
     } else {
@@ -641,7 +652,26 @@
       return;
     }
 
-    if (an.complete && an.validWin) {
+    var wr = S.cur.winResult;
+    if (wr) {
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (wr.from === 'wall' ? 'Self-draw' : 'From ' + LBL[wr.from] + ' discard') + '</span>' +
+        '<div class="hero-title">HU! ' + wr.points + ' points</div>' +
+        '<div class="chips">' + wr.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
+        '<div class="small">' + (wr.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[wr.from] + ' pays.') + '</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="new-game">New game</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (an.complete) {
+      var from0 = S.cur.lastIn && S.cur.lastIn.from ? S.cur.lastIn.from : 'wall';
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Your hand is complete</span>' +
+        '<div class="hero-title">HU?</div>' +
+        '<div class="small">Answer a few questions to get the real score.</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + from0 + '">Check score</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (false) {
       var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
       h += '<div class="win"><span class="eyebrow" style="color:inherit">Valid win · ' + (selfDraw ? 'self-draw' : 'from ' + LBL[S.cur.lastIn.from] + ' discard') + '</span>' +
         '<strong>Declare HU — ' + an.score.points + ' points</strong><ul>' +
@@ -1316,7 +1346,7 @@
     return '<div class="want">' + list.map(function (x) { return tileHTML(x.t, 'sm') + '<span class="num">×' + x.n + '</span>'; }).join('') +
       (tiles.length > list.length ? '<span class="num">+' + (tiles.length - list.length) + ' more</span>' : '') + '</div>';
   }
-  var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', inputPanel: 'camera', gamePanel: 'game' };
+  var PANEL_VIEW = { detailPanel: 'detail', tablePanel: 'table', gamePanel: 'game' };
   function openPanel(id) { openView(PANEL_VIEW[id] || id); }
   // Overlay view: one full screen above the main screen, closed with the back button or the phone back button.
   function openView(name) {
@@ -1399,20 +1429,33 @@
         '<div class="hero-sub num">' + have + ' / ' + need + ' tiles</div></div>' +
         '<div class="progress big"><i style="width:' + Math.min(100, Math.round(have / need * 100)) + '%"></i></div>' +
         '<div class="steps">' +
-        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> below and point at your hand tiles</span></div>' +
-        '<div class="step"><i>2</i><span>Once 13 tiles are read, your hand is saved automatically</span></div>' +
-        '<div class="step"><i>3</i><span>See the winning combinations and their odds, then follow the discard suggestion</span></div></div>' + over;
+        '<div class="step' + (have >= need ? ' done' : '') + '"><i>1</i><span>Tap <b>Scan hand</b> and point at one row of tiles</span></div>' +
+        '<div class="step"><i>2</i><span>Check the scanned tiles and tap <b>Confirm</b></span></div>' +
+        '<div class="step"><i>3</i><span>See the winning combinations and their odds, then follow the next move</span></div></div>' + over;
       box.innerHTML = h;
       return;
     }
 
-    if (an.complete && an.validWin) {
-      var selfDraw = !S.cur.lastIn || S.cur.lastIn.from === 'wall';
-      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (selfDraw ? 'Self-draw' : 'From ' + LBL[S.cur.lastIn.from] + ' discard') + '</span>' +
-        '<div class="hero-title">HU! ' + an.score.points + ' points</div>' +
-        '<div class="chips">' + an.score.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
-        '<div class="small">' + (selfDraw ? 'All three opponents pay.' : 'Only ' + LBL[S.cur.lastIn.from] + ' pays.') + '</div>' +
+    var wr = S.cur.winResult;
+    if (wr) {
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + (wr.from === 'wall' ? 'Self-draw' : 'From ' + LBL[wr.from] + ' discard') + '</span>' +
+        '<div class="hero-title">HU! ' + wr.points + ' points</div>' +
+        '<div class="chips">' + wr.patterns.map(function (p) { return '<span class="pill" style="border-color:rgba(42,31,6,.35);color:inherit">' + esc(p[0]) + ' ' + p[1] + '</span>'; }).join('') + '</div>' +
+        '<div class="small">' + (wr.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[wr.from] + ' pays.') + '</div>' +
         '<div class="hero-actions"><button class="btn big" type="button" data-act="new-game">New game</button></div></div>';
+      box.innerHTML = h;
+      return;
+    }
+    if (an.complete && ui.pending) {
+      box.innerHTML = '<div class="hero-head"><span class="eyebrow">Your hand looks complete</span></div><div class="hero-sub">Check the tiles above and tap <b>Confirm</b> to score your HU.</div>';
+      return;
+    }
+    if (an.complete && (an.validWin || !an.options)) {
+      var from0 = S.cur.lastIn && S.cur.lastIn.from ? S.cur.lastIn.from : 'wall';
+      h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">Your hand is complete</span>' +
+        '<div class="hero-title">HU?</div>' +
+        '<div class="small">Answer a few questions to get the real score.</div>' +
+        '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + from0 + '">Check score</button></div></div>';
       box.innerHTML = h;
       return;
     }
@@ -1428,9 +1471,9 @@
           else others.push(o);
         });
         if (hu) {
-          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard · ' + esc(name(cl.t)) + '</span><div class="hero-title">HU! ' + hu.points + ' points</div>' +
-            '<div class="small">' + esc(patternList(hu.patterns)) + '</div>' +
-            '<div class="hero-actions"><button class="btn big" type="button" data-claim="' + hu._i + '">Declare HU</button><button class="btn ghost" type="button" data-act="skip-claim">Skip</button></div></div>';
+          h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard · ' + esc(name(cl.t)) + '</span><div class="hero-title">HU!</div>' +
+            '<div class="small">This tile completes your hand. Check the score before declaring.</div>' +
+            '<div class="hero-actions"><button class="btn big" type="button" data-act="win-check" data-from="' + cl.from + '" data-t="' + cl.t + '">Check score</button><button class="btn ghost" type="button" data-act="skip-claim">Skip</button></div></div>';
         } else if (better) {
           var lbl = { pong: 'Pong', kong: 'Kong', chi: 'Chi' }[better.type];
           h += '<div class="claim-card"><span class="eyebrow" style="color:inherit">' + LBL[cl.from] + ' discard</span><div class="hero-title">' + lbl + '!</div>' +
@@ -1459,7 +1502,7 @@
     var best = an.best, rec = an.rec || best, mode = an.mode || 'attack';
     var bsim = simFor(an, rec.t);
     if (an.complete && !an.validWin) {
-      h += '<div class="hero-alt"><span>Hand complete, but only ' + an.score.points + ' of the minimum ' + an.M + ' points. Keep building a pattern.</span></div>';
+      h += '<div class="hero-alt"><span>Hand complete, but about ' + an.score.points + ' of the minimum ' + an.M + ' points.</span><span class="spacer"></span><button class="btn small" type="button" data-act="win-check" data-from="' + (S.cur.lastIn && S.cur.lastIn.from || 'wall') + '">Check score</button></div>';
     }
     var pwd = endOf(bsim, 'any');
     h += '<div class="hero-head"><span class="eyebrow">Winning chances</span><span class="hero-sub">if you discard ' + esc(name(rec.t)) + '</span></div>' +
@@ -1483,6 +1526,91 @@
     }
     h += over;
     box.innerHTML = h;
+  }
+
+  /* ---------- new game setup: winds first ---------- */
+  function windButtons(sel, kind) {
+    return [0, 1, 2, 3].map(function (w) {
+      return '<button type="button" data-' + kind + '="' + w + '" aria-pressed="' + (sel === w) + '">' + tileHTML(27 + w, 'md') +
+        '<span>' + WIND_EN[w] + '</span><small>' + WIND_PY[w] + ' ' + MJ.HONOR_GLYPHS[w] + (kind === 'seat' && w === 0 ? ' · dealer' : '') + '</small></button>';
+    }).join('');
+  }
+  function renderSetup() {
+    $('setupRound').innerHTML = windButtons(ui.setup.round, 'round');
+    $('setupSeat').innerHTML = windButtons(ui.setup.seat, 'seat');
+  }
+  function openSetup() {
+    ui.setup = { round: S.cfg.roundWind || 0, seat: S.cfg.seatWind || 0 };
+    renderSetup();
+    openView('setup');
+  }
+  function startNewGame() {
+    S.cfg.roundWind = ui.setup.round; S.cfg.seatWind = ui.setup.seat;
+    S = newRound(S.cfg);
+    simCache.clear(); ui.skipClaim = null; ui.pending = false; ui.win = null; ui.confirmReset = false;
+    var ro = $('readout'); if (ro) ro.hidden = true;
+    save(); render(); closeView();
+    toast('Round ' + WIND_EN[S.cfg.roundWind] + ' · Seat ' + WIND_EN[S.cfg.seatWind] + '. Scan your hand.');
+    if (window.SempoaScan && !$('liveStart').disabled) window.SempoaScan.start();
+  }
+
+  /* ---------- HU check: ask before scoring ---------- */
+  function openWin(from, claimT) {
+    ui.win = {
+      from: from || 'wall', claimT: claimT == null ? null : claimT,
+      open: S.cur.melds.me.length, kongs: S.cur.melds.me.filter(function (m) { return m.length === 4; }).length,
+      flowers: S.cur.myFlowers.length, match: flowerMatch(), lastTile: false, robKong: false
+    };
+    renderWin();
+    openView('win');
+  }
+  function winScore() {
+    var w = ui.win, c = MJ.toCounts(S.cur.hand);
+    if (w.claimT != null) c[w.claimT]++;
+    var cfg = Object.assign({}, cfgNow(), { flowers: w.flowers, flowerMatch: Math.min(w.match, w.flowers) });
+    return MJ.scoreHand(c, cfg, w.from === 'wall', { concealed: w.open === 0, kongs: w.kongs, lastTile: w.lastTile, robKong: w.robKong });
+  }
+  function segRow(key, values, labels) {
+    return '<div class="seg full" role="group">' + values.map(function (v, i) {
+      return '<button type="button" data-win="' + key + '" data-v="' + v + '" aria-pressed="' + (String(ui.win[key]) === String(v)) + '">' + (labels ? labels[i] : v) + '</button>';
+    }).join('') + '</div>';
+  }
+  function renderWin() {
+    var w = ui.win, sc = winScore(), M = MJ.minPts(cfgNow()), ok = sc.complete && sc.points >= M;
+    var h = '';
+    h += '<div class="q-block"><div class="q">Where did the winning tile come from?</div>' +
+      segRow('from', ['wall', 'right', 'across', 'left'], ['My draw', LBL.right, LBL.across, LBL.left]) + '</div>';
+    h += '<div class="q-block"><div class="q">Open sets taken from others (Pong / Chi / Kong)</div>' + segRow('open', [0, 1, 2, 3, 4]) + '</div>';
+    h += '<div class="q-block"><div class="q">Kongs (open or concealed)</div>' + segRow('kongs', [0, 1, 2, 3, 4]) + '</div>';
+    h += '<div class="q-block"><div class="q">Flowers you collected this game</div>' + segRow('flowers', [0, 1, 2, 3, 4, 5, 6, 7, 8]) + '</div>';
+    if (w.flowers > 0) h += '<div class="q-block"><div class="q">How many show your seat number (' + (S.cfg.seatWind + 1) + ')?</div>' + segRow('match', [0, 1, 2]) + '</div>';
+    h += '<div class="q-block"><label class="check"><input type="checkbox" data-wincheck="lastTile"' + (w.lastTile ? ' checked' : '') + '> Won on the last tile of the wall</label>' +
+      '<label class="check"><input type="checkbox" data-wincheck="robKong"' + (w.robKong ? ' checked' : '') + '> Robbed a Kong</label></div>';
+    if (!sc.complete) {
+      h += '<div class="win-result no"><b>This hand is not complete.</b><span class="small">Check the tiles in Your hand.</span></div>';
+    } else {
+      h += '<div class="win-result ' + (ok ? 'ok' : 'no') + '"><span class="eyebrow" style="color:inherit">' + (ok ? 'Valid HU' : 'Below the minimum of ' + M + ' points') + '</span>' +
+        '<div class="big">' + sc.points + ' points</div><div class="chips">' + sc.patterns.map(function (p) {
+          return '<span class="pill" style="color:inherit;border-color:currentColor">' + esc(p[0]) + ' ' + p[1] + '</span>';
+        }).join('') + '</div>' +
+        (ok ? '<div class="small">' + (w.from === 'wall' ? 'All three opponents pay.' : 'Only ' + LBL[w.from] + ' pays.') + '</div>' : '') + '</div>';
+    }
+    h += '<div class="hero-actions"><button class="btn primary big" type="button" data-act="win-declare"' + (ok ? '' : ' disabled') + '>Declare HU</button></div>';
+    $('winBody').innerHTML = h;
+  }
+  function declareWin() {
+    var w = ui.win, sc = winScore();
+    act('HU · ' + sc.points + ' points (' + (w.from === 'wall' ? 'self-draw' : 'from ' + LBL[w.from]) + ')', 'win', function (cur) {
+      if (w.claimT != null) {
+        removeLast(cur.ponds[w.from], w.claimT);
+        cur.hand.push(w.claimT); cur.drawn = w.claimT;
+      }
+      cur.lastIn = { from: w.from };
+      cur.winResult = { points: sc.points, patterns: sc.patterns, from: w.from };
+    }, { who: 'me', tile: w.claimT });
+    ui.win = null;
+    closeView();
+    toast('HU! ' + sc.points + ' points');
   }
 
   /* ---------- events ---------- */
@@ -1510,13 +1638,13 @@
           ui.selHand = null; render(); return;
         case 'cancel': ui.selHand = null; renderRack(lastAn); return;
         case 'pad-hand': closeView(); openSheet('hand'); return;
-        case 'menu-new-game': ui.confirmReset = true; renderSettings(lastAn); openView('settings'); return;
+        case 'menu-new-game': openSetup(); return;
+        case 'confirm-scan': ui.pending = false; ui.selHand = null; render(); toast('Hand confirmed'); return;
+        case 'rescan': ui.pending = false; ui.selHand = null; if (window.SempoaScan) window.SempoaScan.start(); return;
+        case 'win-check': openWin(d.from, d.t != null && d.t !== '' ? +d.t : null); return;
+        case 'win-declare': declareWin(); return;
         case 'skip-claim': if (lastAn && lastAn.claim) ui.skipClaim = claimKey(lastAn.claim); renderHero(lastAn); return;
-        case 'new-game':
-          S = newRound(S.cfg); simCache.clear(); ui.skipClaim = null;
-          save(); render(); openSheet('hand');
-          toast('New game. Enter your hand tiles.');
-          return;
+        case 'new-game': openSetup(); return;
         case 'toggle-opts': ui.showAllOpts = !ui.showAllOpts; renderAdvice(lastAn); return;
         case 'pond-remove':
           var sp = ui.selPond;
@@ -1534,6 +1662,9 @@
     }
     if (d.open) { openPanel(d.open); return; }
     if (d.view) { openView(d.view); return; }
+    if (d.round != null) { ui.setup.round = +d.round; renderSetup(); return; }
+    if (d.seat != null) { ui.setup.seat = +d.seat; renderSetup(); return; }
+    if (d.win) { ui.win[d.win] = d.win === 'from' ? d.v : +d.v; if (ui.win.match > ui.win.flowers) ui.win.match = ui.win.flowers; renderWin(); return; }
     if (el.hasAttribute('data-close-view')) { closeView(); return; }
     if (d.claim != null) { doClaim(+d.claim); return; }
     if (d.flower) {
@@ -1575,7 +1706,6 @@
       case 'dockPad': openSheet(); return;
       case 'sheetClose': closeSheet(); return;
       case 'dockUndo': case 'undoTop': case 'sheetUndo': undo(); return;
-      case 'dockCam': openView('camera'); return;
       case 'camBtn': $('camInput').click(); return;
       case 'galBtn': $('galInput').click(); return;
       case 'stopBtn': if (photoCtl) photoCtl.abort(); return;
@@ -1583,7 +1713,9 @@
       case 'scopeTable': ui.scope = 'table'; $('scopeTable').setAttribute('aria-pressed', 'true'); $('scopeHand').setAttribute('aria-pressed', 'false'); return;
       case 'draftClear': ui.draft = []; renderSheet(lastAn); return;
       case 'draftSave': saveMeld(); return;
-      case 'exampleNew':
+      case 'setupStart': startNewGame(); return;
+      case 'exampleNew': openSetup(); return;
+      case 'exampleNewOld':
         S = newRound(S.cfg);
         simCache.clear();
         save(); render(); closeView(); openSheet('hand');
@@ -1592,6 +1724,8 @@
       case 'resetBtn': ui.confirmReset = true; renderSettings(lastAn); return;
       case 'resetNo': ui.confirmReset = false; renderSettings(lastAn); return;
       case 'resetYes':
+        ui.confirmReset = false; openSetup(); return;
+      case 'resetYesOld':
         ui.confirmReset = false;
         S = newRound(S.cfg);
         simCache.clear();
@@ -1600,6 +1734,10 @@
         toast('New game started. Check your round and seat winds.');
         return;
     }
+  });
+  document.addEventListener('change', function (e) {
+    var k = e.target && e.target.dataset && e.target.dataset.wincheck;
+    if (k && ui.win) { ui.win[k] = e.target.checked; renderWin(); }
   });
   $('camInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
   $('galInput').addEventListener('change', function (e) { readPhotos(e.target.files); });
@@ -1653,6 +1791,17 @@
     setHand: function (list, label) {
       S.example = false;
       act(label, 'photo', function (cur) { cur.hand = list.slice(); cur.drawn = null; }, { who: 'me' });
+    },
+    scanned: function (tiles, flowers) {
+      S.example = false;
+      act('Scan: hand (' + tiles.length + ' tiles)', 'photo', function (cur) {
+        cur.hand = tiles.slice(); cur.drawn = null; cur.winResult = null; cur.lastIn = { from: 'wall' };
+        if (flowers && flowers.length > cur.myFlowers.length) cur.myFlowers = flowers.slice(0, 8);
+      }, { who: 'me' });
+      ui.pending = true; ui.selHand = null;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast(tiles.length + ' tiles scanned · check and Confirm');
     },
     setFlowers: function (list) {
       act('Camera: Flower ' + list.join(', '), 'edit', function (cur) { cur.myFlowers = list.slice(0, 8); }, { who: 'me' });

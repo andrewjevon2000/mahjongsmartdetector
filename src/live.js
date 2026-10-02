@@ -1,6 +1,7 @@
-/* Sempoa Mahjong — kamera live.
- * Model deteksi tile (YOLO, format ONNX) jalan langsung di browser HP lewat onnxruntime-web.
- * Butuh halaman HTTPS biasa (mis. GitHub Pages); di dalam Artifact claude.ai kamera diblokir.
+/* Sempoa Mahjong — scan hand.
+ * A YOLO tile detector (ONNX) runs in the phone browser via onnxruntime-web.
+ * The scanner lives inside the "Your hand" panel: one short strip, a countdown, a Lock button.
+ * Needs a normal HTTPS page (e.g. GitHub Pages); camera is blocked inside claude.ai Artifacts.
  */
 (function () {
   'use strict';
@@ -10,45 +11,35 @@
   var ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.webgpu.min.js';
   var ORT_BASE = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
   var JSZIP_URL = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
-  var CONF = 0.45, IOU = 0.45, WINDOW = 6, NEED = 3, MIN_INTERVAL = 220;
+  var CONF = 0.45, IOU = 0.45, MIN_INTERVAL = 220;
+  var COUNTDOWN_MS = 3000, STABLE_FRAMES = 3;
   var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  var panel = $('livePanel');
-  if (!panel) return;
+  if (!$('liveStart')) return;
   var inArtifact = !!(window.claude && typeof window.claude.use === 'function');
   var canCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
 
   var st = {
-    target: 'hand', running: false, stream: null, session: null, meta: null, busy: false,
-    history: [], lastKey: null, appliedKey: null, stable: null, fps: 0, shots: [], wake: null,
-    modelState: 'idle' // idle | loading | ready | missing | error
+    running: false, stream: null, session: null, meta: null, busy: false, wake: null,
+    modelState: 'idle', // idle | loading | ready | missing | error
+    frames: [], countStart: 0, lastSeen: 0, done: false, shots: []
   };
 
   function msg(text, work) {
     var el = $('liveMsg');
-    el.textContent = text;
+    el.hidden = !text;
+    el.textContent = text || '';
     el.className = 'photo-msg' + (work ? ' work' : '');
   }
 
   if (inArtifact || !canCamera) {
-    $('liveControls').hidden = true;
+    $('liveStart').disabled = true;
     msg(inArtifact
-      ? 'Live camera is not available inside Claude. Open the GitHub Pages version to use the live camera; here you can still use Photo.'
-      : 'This browser does not allow camera access (HTTPS required). Open it via GitHub Pages.');
-    return;
+      ? 'Live scanning is not available inside Claude. Open the GitHub Pages version to scan.'
+      : 'This browser does not allow camera access (HTTPS required).');
   }
-  msg('Point the camera at your hand (tiles standing, facing the camera) or at one player’s discards. Results are recorded automatically once they are stable.');
 
-  /* ---------- target (yang sedang dilihat kamera) ---------- */
-  var TARGETS = [['hand', 'My hand'], ['right', 'Right discards'], ['across', 'Across discards'], ['left', 'Left discards'], ['me', 'My discards']];
-  function renderTargets() {
-    $('liveTargets').innerHTML = TARGETS.map(function (x) {
-      return '<button type="button" data-live-target="' + x[0] + '" aria-pressed="' + (st.target === x[0]) + '">' + x[1] + '</button>';
-    }).join('');
-  }
-  renderTargets();
-
-  /* ---------- muat library & model ---------- */
+  /* ---------- library & model ---------- */
   function loadScript(src) {
     return new Promise(function (resolve, reject) {
       var s = document.createElement('script');
@@ -65,40 +56,51 @@
     return t >= 0 ? { tile: t } : null;
   }
   function loadModel() {
-    if (st.modelState === 'ready' || st.modelState === 'loading') return Promise.resolve();
+    if (st.modelState === 'ready') return Promise.resolve();
+    if (st.loading) return st.loading;
     st.modelState = 'loading';
     msg('Loading tile model…', true);
-    return fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
+    st.loading = fetch('model/meta.json', { cache: 'no-cache' }).then(function (r) {
       if (!r.ok) throw { missing: true };
       return r.json();
     }).then(function (meta) {
       st.meta = meta;
-      return loadScript(ORT_URL);
+      return window.ort ? null : loadScript(ORT_URL);
     }).then(function () {
       var ort = window.ort;
       ort.env.wasm.wasmPaths = ORT_BASE;
       ort.env.wasm.numThreads = 1;
-      // iPhone: WebGPU di WebKit masih rawan menghentikan halaman; WASM lebih stabil.
+      // iPhone: WebGPU in WebKit can still kill the page; WASM is steadier.
       var providers = (!IOS && navigator.gpu) ? ['webgpu', 'wasm'] : ['wasm'];
       return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: providers, graphOptimizationLevel: 'all' })
         .catch(function () { return ort.InferenceSession.create(st.meta.model || 'model/mahjong.onnx', { executionProviders: ['wasm'] }); });
     }).then(function (session) {
       st.session = session;
       st.modelState = 'ready';
-      msg('Model ready. Hold the camera steady for a second or two.');
+      msg('');
     }).catch(function (e) {
-      if (e && e.missing) {
-        st.modelState = 'missing';
-        msg('Tile model not installed yet. You can still use the camera to collect training photos.');
-      } else {
-        st.modelState = 'error';
-        msg('Could not load the model (' + (e && e.message ? e.message : 'connection') + '). Try reloading the page.');
-      }
-    });
+      st.modelState = e && e.missing ? 'missing' : 'error';
+      msg(e && e.missing ? 'Tile model not installed yet.' : 'Could not load the tile model. Check your connection and reload.');
+    }).then(function () { st.loading = null; });
+    return st.loading;
   }
 
-  /* ---------- kamera ---------- */
+  /* ---------- camera ---------- */
+  function showScanner(on) {
+    $('liveStage').hidden = !on;
+    $('scanCtl').hidden = !on;
+    $('scanBar').hidden = on || API.state().cur.hand.length > 0;
+    if (!on) { $('scanCount').hidden = true; $('liveFps').textContent = ''; }
+  }
   function start() {
+    if (st.running) return;
+    API.closeView && API.closeView();
+    st.done = false; st.frames = []; st.countStart = 0; st.lastSeen = 0;
+    $('liveImage').hidden = true; $('liveVideo').hidden = false;
+    clearCanvas();
+    showScanner(true);
+    msg('Fit one row of tiles inside the frame.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 960 }, height: { ideal: 540 } }, audio: false
     }).then(function (stream) {
@@ -108,16 +110,12 @@
       return v.play();
     }).then(function () {
       st.running = true;
-      $('liveImage').hidden = true; $('liveVideo').hidden = false;
-      $('liveStage').hidden = false;
-      $('liveStart').hidden = true;
-      $('liveStop').hidden = false;
-      $('liveSnap').disabled = false;
-      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { st.wake = w; }).catch(function () {}); } catch (e) { /* opsional */ }
+      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (w) { st.wake = w; }).catch(function () {}); } catch (e) { /* optional */ }
       return loadModel();
     }).then(function () {
-      loop();
+      if (st.running && st.modelState === 'ready') loop();
     }).catch(function (e) {
+      stop();
       msg(e && e.name === 'NotAllowedError'
         ? 'Camera permission denied. Allow the camera for this site in your browser settings, then try again.'
         : 'Could not open the camera: ' + (e && e.message ? e.message : 'unknown error'));
@@ -127,27 +125,32 @@
     st.running = false;
     if (st.stream) st.stream.getTracks().forEach(function (t) { t.stop(); });
     st.stream = null;
-    if (st.wake) { try { st.wake.release(); } catch (e) { /* abaikan */ } st.wake = null; }
-    $('liveStage').hidden = true;
-    $('liveStart').hidden = false;
-    $('liveStop').hidden = true;
-    $('liveFps').textContent = '';
+    if (st.wake) { try { st.wake.release(); } catch (e) { /* ignore */ } st.wake = null; }
+    showScanner(false);
   }
 
-  /* ---------- deteksi ---------- */
+  /* ---------- detection ---------- */
   function dims(el) { return el.tagName === 'VIDEO' ? [el.videoWidth, el.videoHeight] : [el.naturalWidth, el.naturalHeight]; }
+  // The part of the source the user actually sees (object-fit: cover crop).
+  function visibleRect(el) {
+    var d = dims(el), box = $('liveStage').getBoundingClientRect();
+    var bw = box.width || d[0], bh = box.height || d[1];
+    var s = Math.max(bw / d[0], bh / d[1]);
+    var w = bw / s, h = bh / s;
+    return { x: (d[0] - w) / 2, y: (d[1] - h) / 2, w: w, h: h };
+  }
   var prepBuf = null;
   var prep = document.createElement('canvas');
   var prepCtx = prep.getContext('2d', { willReadFrequently: true });
-  function preprocess(video, size) {
-    var dd = dims(video), vw = dd[0], vh = dd[1];
-    var scale = Math.min(size / vw, size / vh);
-    var w = Math.round(vw * scale), h = Math.round(vh * scale);
+  function preprocess(el, size) {
+    var r = visibleRect(el);
+    var scale = Math.min(size / r.w, size / r.h);
+    var w = Math.round(r.w * scale), h = Math.round(r.h * scale);
     var dx = Math.floor((size - w) / 2), dy = Math.floor((size - h) / 2);
     prep.width = size; prep.height = size;
     prepCtx.fillStyle = 'rgb(114,114,114)';
     prepCtx.fillRect(0, 0, size, size);
-    prepCtx.drawImage(video, 0, 0, vw, vh, dx, dy, w, h);
+    prepCtx.drawImage(el, r.x, r.y, r.w, r.h, dx, dy, w, h);
     var px = prepCtx.getImageData(0, 0, size, size).data;
     var n = size * size;
     if (!prepBuf || prepBuf.length !== 3 * n) prepBuf = new Float32Array(3 * n);
@@ -155,7 +158,7 @@
     for (var i = 0, j = 0; i < n; i++, j += 4) {
       data[i] = px[j] / 255; data[i + n] = px[j + 1] / 255; data[i + 2 * n] = px[j + 2] / 255;
     }
-    return { data: data, scale: scale, dx: dx, dy: dy };
+    return { data: data, scale: scale, dx: dx, dy: dy, ox: r.x, oy: r.y };
   }
   function iou(a, b) {
     var x1 = Math.max(a.x1, b.x1), y1 = Math.max(a.y1, b.y1), x2 = Math.min(a.x2, b.x2), y2 = Math.min(a.y2, b.y2);
@@ -163,10 +166,10 @@
     var u = (a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter;
     return u > 0 ? inter / u : 0;
   }
-  // Keluaran YOLOv8/YOLO11 standar: [1, 4 + kelas, N] (cx, cy, w, h, skor kelas...)
+  // Standard YOLOv8/YOLO11 output: [1, 4 + classes, N] (cx, cy, w, h, class scores...)
   function decode(out, pre, nc) {
-    var dims = out.dims, d = out.data;
-    var N = dims[2], C = dims[1], boxes = [];
+    var dims2 = out.dims, d = out.data;
+    var N = dims2[2], C = dims2[1], boxes = [];
     for (var i = 0; i < N; i++) {
       var best = 0, cls = -1;
       for (var c = 4; c < C; c++) {
@@ -176,8 +179,8 @@
       if (best < CONF || cls < 0 || cls >= nc) continue;
       var cx = d[i], cy = d[N + i], w = d[2 * N + i], h = d[3 * N + i];
       boxes.push({
-        x1: (cx - w / 2 - pre.dx) / pre.scale, y1: (cy - h / 2 - pre.dy) / pre.scale,
-        x2: (cx + w / 2 - pre.dx) / pre.scale, y2: (cy + h / 2 - pre.dy) / pre.scale,
+        x1: (cx - w / 2 - pre.dx) / pre.scale + pre.ox, y1: (cy - h / 2 - pre.dy) / pre.scale + pre.oy,
+        x2: (cx + w / 2 - pre.dx) / pre.scale + pre.ox, y2: (cy + h / 2 - pre.dy) / pre.scale + pre.oy,
         score: best, cls: cls
       });
     }
@@ -194,11 +197,13 @@
     if (t >= 27) return ['E', 'S', 'W', 'N', 'Wh', 'G', 'R'][t - 27];
     return (t % 9 + 1) + 'CDB'[Math.floor(t / 9)];
   }
+  function clearCanvas() {
+    var cv = $('liveCanvas');
+    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  }
   function draw(dets, v) {
-    v = v || $('liveVideo');
     var cv = $('liveCanvas'), dd = dims(v);
     if (!dd[0] || !dd[1]) return;
-    // kanvas memakai ukuran piksel sumber; CSS yang menskalakannya ke layar
     cv.width = dd[0]; cv.height = dd[1];
     var ctx = cv.getContext('2d');
     ctx.clearRect(0, 0, cv.width, cv.height);
@@ -209,7 +214,7 @@
       var x = b.x1, y = b.y1, w = b.x2 - b.x1, h = b.y2 - b.y1;
       ctx.strokeStyle = '#dcb45a';
       ctx.strokeRect(x, y, w, h);
-      var label = b.tile != null ? shortLabel(b.tile) : b.flower != null ? 'F' + b.flower : '?';
+      var label = b.tile != null ? shortLabel(b.tile) : 'F' + b.flower;
       var tw = ctx.measureText(label).width + 8 * u, th = 15 * u;
       var ly = y - th < 0 ? y : y - th;
       ctx.fillStyle = '#dcb45a';
@@ -218,20 +223,13 @@
       ctx.fillText(label, x + 4 * u, ly + th - 4 * u);
     });
   }
-
-  // Satu hasil per frame: daftar tile (diurutkan kiri ke kanan) + bunga.
   function frameResult(dets) {
     var tiles = [], flowers = [];
-    var hs = dets.map(function (b) { return b.y2 - b.y1; }).sort(function (a, b) { return a - b; });
-    var rowH = (hs[Math.floor(hs.length / 2)] || 1) * 1.1;
-    dets.slice().sort(function (a, b) {
-      var ra = Math.round((a.y1 + a.y2) / 2 / rowH), rb = Math.round((b.y1 + b.y2) / 2 / rowH);
-      return ra - rb || a.x1 - b.x1;
-    }).forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
+    dets.slice().sort(function (a, b) { return a.x1 - b.x1; })
+      .forEach(function (b) { if (b.tile != null) tiles.push(b.tile); else if (b.flower != null) flowers.push(b.flower); });
     var key = tiles.slice().sort(function (a, b) { return a - b; }).join(',') + '|' + flowers.slice().sort().join(',');
     return { tiles: tiles, flowers: flowers, key: key };
   }
-
   function detect(el) {
     var size = st.meta.imgsz || 640, pre = preprocess(el, size), ort = window.ort, feeds = {};
     feeds[st.session.inputNames[0]] = new ort.Tensor('float32', pre.data, [1, 3, size, size]);
@@ -245,7 +243,82 @@
     });
   }
 
-  // Deteksi sekali dari foto (tanpa Claude, tanpa internet setelah model termuat).
+  /* ---------- countdown & capture ---------- */
+  function need() { return API.handNeed(); }
+  // Best reading among the frames seen so far: the most frequent reading, preferring full hands.
+  function bestReading() {
+    var counts = {}, byKey = {};
+    st.frames.forEach(function (f) { counts[f.key] = (counts[f.key] || 0) + 1; byKey[f.key] = f; });
+    var n = need(), best = null, bestScore = -1;
+    Object.keys(counts).forEach(function (k) {
+      var f = byKey[k], len = f.tiles.length;
+      var score = counts[k] + (len === n || len === n + 1 ? 3 : 0) + len * 0.01;
+      if (score > bestScore) { bestScore = score; best = f; }
+    });
+    return best;
+  }
+  function onFrame(r) {
+    var now = performance.now(), n = need();
+    if (r.tiles.length) st.lastSeen = now;
+    if (r.tiles.length >= 3) {
+      if (!st.countStart) st.countStart = now;
+      st.frames.push(r);
+      if (st.frames.length > 40) st.frames.shift();
+    } else if (st.countStart && now - st.lastSeen > 1200) {
+      st.countStart = 0; st.frames = [];           // tiles left the frame: start over
+    }
+    // finish early when the same full hand shows up a few frames in a row
+    var tail = st.frames.slice(-STABLE_FRAMES);
+    if (tail.length === STABLE_FRAMES && tail.every(function (f) { return f.key === tail[0].key; }) &&
+        (tail[0].tiles.length === n || tail[0].tiles.length === n + 1)) {
+      return capture(tail[0]);
+    }
+    var badge = $('scanCount');
+    if (st.countStart) {
+      var left = Math.max(0, COUNTDOWN_MS - (now - st.countStart));
+      badge.hidden = false;
+      badge.textContent = Math.ceil(left / 1000) || '✓';
+      if (left <= 0) return capture(bestReading());
+      msg(r.tiles.length + ' of ' + n + ' tiles · hold still');
+    } else {
+      badge.hidden = true;
+      msg('Fit one row of tiles inside the frame.');
+    }
+  }
+  function lock() {
+    var r = bestReading();
+    if (!r || !r.tiles.length) { API.toast('No tiles read yet. Point the camera at your hand.'); return; }
+    capture(r);
+  }
+  function capture(r) {
+    if (st.done || !r) return;
+    st.done = true;
+    if ($('liveKeep').checked) keepShot($('liveVideo'));
+    stop();
+    API.scanned(r.tiles, r.flowers);
+  }
+
+  function loop() {
+    if (!st.running || st.done) return;
+    var v = $('liveVideo');
+    if (st.modelState !== 'ready' || !v.videoWidth || st.busy) { requestAnimationFrame(loop); return; }
+    st.busy = true;
+    var t0 = performance.now();
+    detect(v).then(function (dets) {
+      if (!st.running) return;
+      draw(dets, v);
+      $('liveFps').textContent = dets.length + ' tiles';
+      onFrame(frameResult(dets));
+    }).catch(function (e) {
+      msg('Detection failed: ' + (e && e.message ? e.message : e));
+    }).then(function () {
+      st.busy = false;
+      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
+      if (st.running && !st.done) setTimeout(function () { requestAnimationFrame(loop); }, wait);
+    });
+  }
+
+  // One-shot detection on a picked photo (no Claude, works offline once the model is loaded).
   function detectFile(file) {
     if (!file) return;
     if (st.running) stop();
@@ -253,137 +326,36 @@
       if (st.modelState !== 'ready') return;
       var img = $('liveImage'), url = URL.createObjectURL(file);
       img.onload = function () {
-        $('liveVideo').hidden = true; img.hidden = false; $('liveStage').hidden = false;
+        $('liveVideo').hidden = true; img.hidden = false;
+        $('liveStage').hidden = false; $('scanBar').hidden = true;
         msg('Reading photo…', true);
-        var t0 = performance.now();
         detect(img).then(function (dets) {
           draw(dets, img);
-          $('liveFps').textContent = Math.round(performance.now() - t0) + ' ms · ' + dets.length + ' tiles';
-          msg(dets.length ? 'Done. Check the boxes on the photo; the result is below.' : 'No tiles detected. Try a closer, brighter photo.');
-          st.appliedKey = null; st.stable = null;
-          if (dets.length) apply(frameResult(dets));
+          if ($('liveKeep').checked) keepShot(img);
+          var r = frameResult(dets);
+          setTimeout(function () {
+            $('liveStage').hidden = true; $('scanBar').hidden = API.state().cur.hand.length > 0;
+            if (!dets.length) { msg('No tiles found. Try a closer, brighter photo.'); return; }
+            msg('');
+            API.scanned(r.tiles, r.flowers);
+          }, 900);
         }).catch(function (e) { msg('Detection failed: ' + (e && e.message ? e.message : e)); });
       };
       img.src = url;
     });
   }
 
-  function loop() {
-    if (!st.running) return;
-    var v = $('liveVideo');
-    if (st.modelState !== 'ready' || !v.videoWidth || st.busy) {
-      requestAnimationFrame(loop);
-      return;
-    }
-    st.busy = true;
-    var t0 = performance.now();
-    detect(v).then(function (dets) {
-      draw(dets, v);
-      onFrame(frameResult(dets));
-      var dt = performance.now() - t0;
-      st.fps = st.fps ? st.fps * 0.8 + (1000 / dt) * 0.2 : 1000 / dt;
-      $('liveFps').textContent = st.fps.toFixed(1) + ' fps · ' + dets.length + ' tiles';
-    }).catch(function (e) {
-      msg('Detection failed: ' + (e && e.message ? e.message : e));
-    }).then(function () {
-      st.busy = false;
-      var wait = Math.max(0, MIN_INTERVAL - (performance.now() - t0));
-      if (st.running) setTimeout(function () { requestAnimationFrame(loop); }, wait);
-    });
-  }
-
-  /* ---------- stabilkan lalu catat ---------- */
-  function onFrame(r) {
-    st.history.push(r);
-    if (st.history.length > WINDOW) st.history.shift();
-    var counts = {};
-    st.history.forEach(function (h) { counts[h.key] = (counts[h.key] || 0) + 1; });
-    var bestKey = null, bestN = 0;
-    Object.keys(counts).forEach(function (k) { if (counts[k] > bestN) { bestN = counts[k]; bestKey = k; } });
-    if (bestN < NEED) return;
-    var stable = null;
-    for (var i = st.history.length - 1; i >= 0; i--) if (st.history[i].key === bestKey) { stable = st.history[i]; break; }
-    if (!stable || !stable.tiles.length) return;
-    if (st.stable && st.stable.key === stable.key) return;
-    st.stable = stable;
-    apply(stable);
-  }
-
-  function apply(r) {
-    var S = API.state(), an = API.lastAnalysis();
-    var auto = $('liveAuto').checked;
-    var box = $('liveRead');
-    var key = st.target + ':' + r.key;
-    if (st.appliedKey === key) return;
-    var h = '<div class="eyebrow">Camera sees · ' + TARGETS.filter(function (x) { return x[0] === st.target; })[0][1] + '</div>' +
-      '<div>' + r.tiles.length + ' tiles: ' + API.tilesText(r.tiles) + (r.flowers.length ? ' · Flower ' + r.flowers.join(', ') : '') + '</div>';
-    var did = null;
-    if (st.target === 'hand') {
-      var plus = API.multisetDiff(r.tiles, S.cur.hand), minus = API.multisetDiff(S.cur.hand, r.tiles);
-      var need = API.handNeed(), full = r.tiles.length === need || r.tiles.length === need + 1;
-      if (!plus.length && !minus.length) {
-        did = 'same as recorded';
-      } else if (auto && full && S.cur.hand.length > 0 && !(plus.length === 1 && !minus.length) && !(minus.length === 1 && !plus.length)) {
-        // terbaca lengkap (13/14 tile) dan berbeda dari catatan: langsung ganti, tanpa tombol
-        API.setHand(r.tiles, 'Camera: hand (' + r.tiles.length + ' tiles)');
-        did = 'saved automatically (' + r.tiles.length + ' tiles)';
-        backToMain('Hand saved (' + r.tiles.length + ' tiles)');
-      } else if (auto && plus.length === 1 && !minus.length && an && an.phase === 'draw') {
-        API.recordDraw(plus[0]);
-        did = 'recorded: Draw ' + MJ.tileName(plus[0]);
-        backToMain('Drew ' + MJ.tileName(plus[0]) + ' · see advice');
-      } else if (auto && minus.length === 1 && !plus.length && an && an.phase === 'discard') {
-        API.discard(minus[0]);
-        did = 'recorded: Discard ' + MJ.tileName(minus[0]);
-      } else if (auto && S.cur.hand.length === 0 && full) {
-        API.setHand(r.tiles, 'Camera: starting hand');
-        did = 'recorded as starting hand';
-        backToMain('Hand recorded · see winning combinations');
-      } else if (auto && S.cur.hand.length === 0) {
-        did = 'read ' + r.tiles.length + ' tiles, need ' + need + ' — move the camera until all tiles are in view';
-      } else {
-        h += '<div class="muted">Differs from the record: ' + (plus.length ? '+' + API.tilesText(plus) : '') + (plus.length && minus.length ? ' · ' : '') + (minus.length ? '−' + API.tilesText(minus) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="hand">Use camera result</button></div>';
-      }
-      if (r.flowers.length && r.flowers.length > S.cur.myFlowers.length) API.setFlowers(r.flowers);
-    } else {
-      var seat = st.target, old = S.cur.ponds[seat];
-      var added = API.multisetDiff(r.tiles, old), gone = API.multisetDiff(old, r.tiles);
-      if (!added.length) {
-        did = gone.length ? 'not all tiles visible, keeping the previous record' : 'same as recorded';
-      } else if (auto && !gone.length) {
-        added.forEach(function (t) { API.recordDiscard(seat, t); });
-        did = 'recorded: ' + API.label(seat) + ' discarded ' + API.tilesText(added);
-      } else {
-        h += '<div class="muted">Differs from the record: +' + API.tilesText(added) + (gone.length ? ' · −' + API.tilesText(gone) : '') + '</div>' +
-          '<div class="row"><button class="btn small primary" type="button" data-live-apply="pond">Replace discards with camera result</button></div>';
-      }
-    }
-    if (did) { h += '<div class="muted">' + did + '</div>'; st.appliedKey = key; }
-    st.pending = r;
-    box.innerHTML = h;
-    box.hidden = false;
-  }
-
-  // Setelah tangan tercatat dari kamera, kembali ke layar utama supaya hasilnya langsung terlihat.
-  function backToMain(msg) {
-    setTimeout(function () { if (API.closeView) API.closeView(); API.toast(msg); }, 600);
-  }
-
-  /* ---------- foto latihan (untuk melatih ulang dengan tile mejamu) ---------- */
-  function snap() {
-    var v = $('liveVideo');
-    if (!v.videoWidth) return;
-    var cv = document.createElement('canvas');
-    cv.width = v.videoWidth; cv.height = v.videoHeight;
-    cv.getContext('2d').drawImage(v, 0, 0);
+  /* ---------- training photos (optional, from Settings) ---------- */
+  function keepShot(el) {
+    var d = dims(el), cv = document.createElement('canvas');
+    cv.width = d[0]; cv.height = d[1];
+    cv.getContext('2d').drawImage(el, 0, 0);
     cv.toBlob(function (b) {
       if (!b) return;
       if (st.shots.length >= 120) st.shots.shift();
-      st.shots.push({ blob: b, w: cv.width, h: cv.height, name: 'table-' + Date.now() });
+      st.shots.push({ blob: b, name: 'hand-' + Date.now() });
       $('liveZip').disabled = false;
       $('liveZip').textContent = 'Download training photos (' + st.shots.length + ')';
-      API.toast('Training photo saved (' + st.shots.length + ')');
     }, 'image/jpeg', 0.9);
   }
   function downloadZip() {
@@ -391,7 +363,7 @@
     (window.JSZip ? Promise.resolve() : loadScript(JSZIP_URL)).then(function () {
       var zip = new window.JSZip();
       st.shots.forEach(function (s) { zip.file('images/' + s.name + '.jpg', s.blob); });
-      zip.file('README.txt', 'Photos of mahjong table tiles for retraining the Sempoa Mahjong model.\nSend this zip to Claude to be labelled and used to train the model.\n');
+      zip.file('README.txt', 'Mahjong hand photos for retraining the Sempoa Mahjong tile model.\nSend this zip to Claude to label and train on.\n');
       return zip.generateAsync({ type: 'blob' });
     }).then(function (blob) {
       var a = document.createElement('a');
@@ -402,38 +374,19 @@
     }).catch(function () { API.toast('Could not create the zip. Try again.'); });
   }
 
-  /* ---------- tombol ---------- */
+  /* ---------- buttons ---------- */
   document.addEventListener('click', function (e) {
     var el = e.target.closest('button');
     if (!el) return;
-    if (el.dataset.liveTarget) {
-      st.target = el.dataset.liveTarget;
-      st.history = []; st.stable = null;
-      renderTargets();
-      $('liveRead').hidden = true;
-      return;
-    }
-    if (el.dataset.liveApply && st.pending) {
-      if (el.dataset.liveApply === 'hand') API.setHand(st.pending.tiles, 'Camera: hand');
-      else API.setPond(st.target, st.pending.tiles);
-      st.appliedKey = st.target + ':' + st.pending.key;
-      $('liveRead').hidden = true;
-      return;
-    }
     switch (el.id) {
-      case 'liveStart': start(); return;
-      case 'liveStop': stop(); return;
-      case 'liveSnap': snap(); return;
-      case 'liveZip': downloadZip(); return;
+      case 'liveStart': case 'dockCam': if (!$('liveStart').disabled) start(); else API.toast($('liveMsg').textContent); return;
+      case 'liveStop': stop(); msg(''); return;
+      case 'liveLock': lock(); return;
       case 'liveFromPhoto': $('liveFile').click(); return;
+      case 'liveZip': downloadZip(); return;
     }
   });
   $('liveFile').addEventListener('change', function (e) { detectFile(e.target.files && e.target.files[0]); e.target.value = ''; });
   document.addEventListener('visibilitychange', function () { if (document.hidden && st.running) stop(); });
-  // Layar Kamera dibuka dari tombol: langsung nyalakan kamera; ditutup: matikan.
-  document.addEventListener('sempoa:view', function (e) {
-    if (!e.detail || e.detail.name !== 'camera') return;
-    if (e.detail.open) { if (!st.running && st.modelState !== 'error') start(); }
-    else if (st.running) stop();
-  });
+  window.SempoaScan = { start: start };
 })();

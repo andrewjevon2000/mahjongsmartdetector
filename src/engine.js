@@ -9,7 +9,7 @@
   var SUITS = ['m', 'p', 's', 'z'];
   var SUIT_NAMES = ['Characters', 'Dots', 'Bamboo'];
   var SUIT_ONE = ['Character', 'Dot', 'Bamboo'];
-  var HONOR_NAMES = ['East', 'South', 'West', 'North', 'White Dragon', 'Green Dragon', 'Red Dragon'];
+  var HONOR_NAMES = ['East · Tong 東', 'South · Nan 南', 'West · Si 西', 'North · Pei 北', 'White Dragon', 'Green Dragon', 'Red Dragon'];
   var DRAGON_SHORT = ['White', 'Green', 'Red'];
   var HONOR_GLYPHS = ['東', '南', '西', '北', '白', '發', '中'];
   var INF = 99;
@@ -521,7 +521,7 @@
   function scoreStd(sets, pair, cfg, selfDraw, concealed, opts) {
     var p = [], tiles = [pair, pair];
     sets.forEach(function (s) { tiles = tiles.concat(setTiles(s)); });
-    var dragonP = 0, windP = 0, pongs = 0, kongs = 0, chows = 0;
+    var dragonP = 0, windP = 0, pongs = 0, kongs = 0, chows = 0, kongHint = (opts && opts.kongs) || 0;
     var seatT = 27 + (cfg.seatWind || 0), roundT = 27 + (cfg.roundWind || 0), seatP = false, roundP = false;
     sets.forEach(function (s) {
       if (s.type === 'chow') { chows++; return; }
@@ -550,7 +550,7 @@
     if (fl.allHonor) {
       p.push(['All Honor', 10]);
     } else {
-      if (kongs === 4) p.push(['Kong Hand', 12]);
+      if (kongs === 4 || (kongHint >= 4 && pongs === sets.length)) p.push(['Kong Hand', 12]);
       else if (pongs === sets.length) p.push(['All Pongs', 3]);
       var outside = isTermOrHonor(pair) && sets.every(function (s) { return setTiles(s).some(isTermOrHonor); });
       if (outside) p.push(fl.hasHonor ? ['Mix Orphans', 3] : ['Pure Orphans', 5]);
@@ -566,7 +566,7 @@
   // c = tile tertutup lengkap (3S+2) termasuk tile menang. Hasil: poin terbaik dan rinciannya.
   function scoreHand(c, cfg, selfDraw, opts) {
     var melds = (cfg.melds || []).map(function (m) { return { type: meldType(m), t: meldMin(m), open: true }; });
-    var concealed = melds.length === 0 && !(cfg.openMelds > 0);
+    var concealed = opts && opts.concealed != null ? !!opts.concealed : melds.length === 0 && !(cfg.openMelds > 0);
     var S = setsNeeded(cfg), best = null;
     function consider(p) {
       var pts = total(p);

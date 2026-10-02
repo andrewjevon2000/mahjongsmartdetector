@@ -442,6 +442,34 @@ body.view-open { overflow: hidden; }
 .menu-item.danger { color: var(--risk); }
 .top .iconbtn { width: 36px; height: 36px; font-size: 20px; }
 
+
+/* ---------- inline scanner ---------- */
+.scan-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.scanner { position: relative; height: clamp(120px, 24vh, 190px); border-radius: 14px; overflow: hidden; background: #000; }
+.scanner video, .scanner img, .scanner canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scanner canvas { pointer-events: none; }
+.scan-guide { position: absolute; left: 4%; right: 4%; top: 18%; bottom: 18%; border: 2px dashed rgba(240,207,126,0.55); border-radius: 10px; pointer-events: none; }
+.scan-hud { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+.scan-hud .num { font-size: 11px; color: #fff; background: rgba(0,0,0,0.45); padding: 2px 6px; border-radius: 6px; }
+.scan-hud .count { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 600 18px var(--f-num); color: var(--brass-ink); background: var(--brass); box-shadow: 0 0 0 4px rgba(220,180,90,0.35); }
+.scan-ctl { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+.confirm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px; border-radius: 12px; background: rgba(220,180,90,0.12); border: 1px solid rgba(220,180,90,0.4); font-size: 14px; }
+.confirm-bar .spacer { flex: 1; }
+.rack.pending .slot .tile { box-shadow: inset 0 -2px 0 var(--ivory-edge), 0 0 0 1.5px rgba(220,180,90,0.6), 0 4px 0 var(--back); }
+.wind-pick { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.wind-pick button { appearance: none; border: 1px solid var(--line-2); background: var(--felt-2); color: inherit; border-radius: 14px; padding: 10px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
+.wind-pick button .t { width: 38px; }
+.wind-pick button small { color: var(--muted); font-size: 11px; }
+.wind-pick button[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); background: var(--felt-3); }
+.q-block { display: flex; flex-direction: column; gap: 8px; }
+.q-block .q { font-weight: 600; font-size: 15px; }
+.seg.full { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; }
+.seg.full button { padding: 10px 4px; }
+.win-result { border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.win-result.ok { background: var(--brass); color: var(--brass-ink); }
+.win-result.no { background: rgba(232,137,75,0.14); border: 1px solid var(--risk); }
+.win-result .big { font-family: var(--f-display); font-size: 34px; line-height: 1.1; }
+
 @media (min-width: 640px) {
   .seats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .abacus { gap: 10px 8px; }
@@ -471,6 +499,24 @@ body.view-open { overflow: hidden; }
       <span class="spacer"></span>
       <span class="muted small num" id="handCount"></span>
     </div>
+    <div class="scan-bar" id="scanBar">
+      <button class="btn primary" type="button" id="liveStart">Scan hand</button>
+      <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
+      <input type="file" id="liveFile" accept="image/*" hidden>
+    </div>
+    <div class="scanner" id="liveStage" hidden>
+      <video id="liveVideo" playsinline muted autoplay></video>
+      <img id="liveImage" alt="Scanned photo" hidden>
+      <canvas id="liveCanvas" aria-hidden="true"></canvas>
+      <div class="scan-guide" aria-hidden="true"></div>
+      <div class="scan-hud"><span class="count" id="scanCount" hidden></span><span class="num" id="liveFps"></span></div>
+    </div>
+    <div class="scan-ctl" id="scanCtl" hidden>
+      <button class="btn primary" type="button" id="liveLock">Lock</button>
+      <button class="btn" type="button" id="liveStop">Cancel</button>
+    </div>
+    <p class="photo-msg" id="liveMsg" hidden></p>
+    <div class="confirm-bar" id="confirmBar" hidden></div>
     <div class="melds" id="myMelds"></div>
     <div class="rack" id="rack"></div>
     <div class="rack-actions" id="rackActions" hidden></div>
@@ -506,33 +552,20 @@ body.view-open { overflow: hidden; }
     <div id="advice"></div>
   </div>
 </section>
-<section class="view" id="view-camera" role="dialog" aria-modal="true" aria-label="Camera">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Camera</h2><span class="spacer"></span><span class="muted small num" id="liveFps"></span></header>
+<section class="view" id="view-setup" role="dialog" aria-modal="true" aria-label="New game">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>New game</h2></header>
   <div class="vbody">
-    <div class="form" id="livePanel">
-      <div class="live-controls" id="liveControls">
-      <div class="seg wrap" id="liveTargets" role="group" aria-label="Camera is looking at"></div>
-      <div class="live-stage" id="liveStage" hidden>
-        <video id="liveVideo" playsinline muted autoplay></video>
-        <img id="liveImage" alt="Detected photo" hidden>
-        <canvas id="liveCanvas" aria-hidden="true"></canvas>
-      </div>
-      <div class="photo-row">
-        <button class="btn primary" type="button" id="liveStart">Start camera</button>
-        <button class="btn" type="button" id="liveStop" hidden>Stop</button>
-        <button class="btn" type="button" id="liveFromPhoto">Detect from photo</button>
-        <input type="file" id="liveFile" accept="image/*" hidden>
-        <label class="check small"><input type="checkbox" id="liveAuto" checked> Auto-record</label>
-      </div>
-      <div class="photo-row">
-        <button class="btn small" type="button" id="liveSnap" disabled>Save training photo</button>
-        <button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button>
-      </div>
-    </div>
-    <p class="photo-msg" id="liveMsg"></p>
-    <div class="readout" id="liveRead" hidden></div>
-      <div class="sub-head"><h3>Photo via Claude</h3></div>
-      <div class="photo-row">
+    <div><div class="eyebrow" style="margin-bottom:8px">Round Wind</div><div class="wind-pick" id="setupRound"></div></div>
+    <div><div class="eyebrow" style="margin-bottom:8px">My Seat Wind</div><div class="wind-pick" id="setupSeat"></div></div>
+    <button class="btn primary big" type="button" id="setupStart">Start game</button>
+  </div>
+</section>
+<section class="view" id="view-win" role="dialog" aria-modal="true" aria-label="Check HU">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Check HU</h2></header>
+  <div class="vbody" id="winBody"></div>
+</section>
+<div hidden id="claudePhoto">
+<div class="photo-row">
       <div class="seg" role="group" aria-label="What to photograph">
         <button type="button" id="scopeHand" aria-pressed="false">My hand</button>
         <button type="button" id="scopeTable" aria-pressed="true">Whole table</button>
@@ -550,10 +583,7 @@ body.view-open { overflow: hidden; }
     </div>
     <p class="photo-msg" id="photoMsg">Preparing photo reader…</p>
     <div class="readout" id="readout" hidden></div>
-      <p class="note-line">Tile model trained on the "Mahjong" dataset by Jon Chan (Roboflow Universe), CC BY 4.0. All detection runs on your phone; video never leaves the device.</p>
-    </div>
-  </div>
-</section>
+      </div>
 <section class="view" id="view-table" role="dialog" aria-modal="true" aria-label="Table">
   <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Table</h2></header>
   <div class="vbody">
@@ -565,8 +595,8 @@ body.view-open { overflow: hidden; }
   <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Winds &amp; Flowers</h2></header>
   <div class="vbody">
     <div class="round-row" id="roundRow">
-      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">East</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
-      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">East (dealer)</option><option value="1">South</option><option value="2">West</option><option value="3">North</option></select></label>
+      <label class="mini"><span>Round Wind</span><select id="roundWind"><option value="0">東 East · Tong</option><option value="1">南 South · Nan</option><option value="2">西 West · Si</option><option value="3">北 North · Pei</option></select></label>
+      <label class="mini"><span>My Seat Wind</span><select id="seatWind"><option value="0">東 East · Tong (dealer)</option><option value="1">南 South · Nan</option><option value="2">西 West · Si</option><option value="3">北 North · Pei</option></select></label>
       <div class="mini"><span>My Flowers</span><div class="flowers" id="flowers"></div></div>
     </div>
   </div>
@@ -672,6 +702,8 @@ body.view-open { overflow: hidden; }
         <label for="tier">Photo reading mode</label>
         <select id="tier"><option value="default">Standard · faster</option><option value="complex">Thorough · slower, more accurate</option></select>
       </div>
+      <label class="check"><input type="checkbox" id="liveKeep"> Keep scan photos for model training</label>
+      <div class="row"><button class="btn small" type="button" id="liveZip" disabled>Download training photos (0)</button></div>
       <div class="row" id="resetRow">
         <button class="btn" type="button" id="resetBtn">Start new game</button>
       </div>
