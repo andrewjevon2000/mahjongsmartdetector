@@ -10,7 +10,7 @@
   var WIND_EN = ['East', 'South', 'West', 'North'], WIND_PY = ['Tong', 'Nan', 'Si', 'Pei'];
   var FLOWERS = [{ n: 1, g: '梅' }, { n: 2, g: '蘭' }, { n: 3, g: '菊' }, { n: 4, g: '竹' }];
   var PRESETS = {
-    maje: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 83, scoring: true, minPoints: 3 },
+    hongkong: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 83, scoring: true, minPoints: 3 },
     riichi: { sets: 4, sevenPairs: true, thirteenOrphans: true, wallStart: 70, scoring: false, minPoints: 0 },
     tw: { sets: 5, sevenPairs: false, thirteenOrphans: false, wallStart: 55, scoring: false, minPoints: 0 }
   };
@@ -46,7 +46,7 @@
     return out;
   }
   function tilesCode(list) { return list.map(MJ.tileStr).join(' '); }
-  // "2 3 4 Characters · 5 Dots · Red Dragon ×2" — tile names as in the Majé book
+  // "2 3 4 Characters · 5 Dots · Red Dragon ×2" — standard English tile names
   function tilesText(list) {
     var by = [[], [], []], hon = {}, parts = [];
     list.slice().sort(function (a, b) { return a - b; }).forEach(function (t) {
@@ -178,13 +178,14 @@
     };
   }
   function defaultCfg() {
-    return Object.assign({ preset: 'maje', tier: 'default', seatWind: 0, roundWind: 0 }, PRESETS.maje);
+    return Object.assign({ preset: 'hongkong', tier: 'default', seatWind: 0, roundWind: 0 }, PRESETS.hongkong);
   }
   function normalize(st) {
     var c = st.cfg || {};
     if (c.preset === 'hk' || c.scoring == null) {
       c = Object.assign(defaultCfg(), { tier: c.tier || 'default' });
     }
+    if (c.preset === 'maje') c.preset = 'hongkong';
     if (c.seatWind == null) c.seatWind = 0;
     if (c.roundWind == null) c.roundWind = 0;
     st.cfg = c;
@@ -991,7 +992,7 @@
     var kind = meldKind(m);
     var sorted = kind === 'chi' ? m.slice().sort(function (a, b) { return a - b; }) : m.slice();
     if (kind === 'chi' && claimed && BEFORE[who] !== claimed.from) {
-      toast('Majé rule: chi only from the player on your left. Recorded anyway, double-check if wrong.');
+      toast('House rule: chi only from the player on your left. Recorded anyway, double-check if wrong.');
     }
     act(LBL[who] + ' ' + kind + ' ' + meldText(sorted) + (claimed ? ' (from ' + LBL[claimed.from] + ')' : '') + (closed ? ' concealed' : ''), 'meld', function (cur) {
       if (claimed) removeLast(cur.ponds[claimed.from], claimed.t);

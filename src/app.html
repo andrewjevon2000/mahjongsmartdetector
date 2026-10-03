@@ -317,7 +317,7 @@ details.panel[open] > summary::after { content: "−"; }
   max-width: calc(100% - 32px);
 }
 .note-line { font-size: 12px; color: var(--faint); }
-/* ---------- Majé: ronde, bunga, pola, klaim ---------- */
+/* ---------- rounds, flowers, patterns, claims ---------- */
 .round-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
 .mini { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
 .mini select { background: var(--felt); border: 1px solid var(--line-2); border-radius: 10px; padding: 6px 8px; min-height: 36px; font-size: 14px; color: var(--text); }
@@ -595,7 +595,7 @@ body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px
       <button class="menu-item" type="button" data-view="history">Previous moves</button>
       <button class="menu-item" type="button" data-view="abacus">Tile counter <small>how many of each are left</small></button>
       <button class="menu-item" type="button" data-view="game">Winds &amp; Flowers</button>
-      <button class="menu-item" type="button" data-view="rules">Majé Rules</button>
+      <button class="menu-item" type="button" data-view="rules">Rules</button>
       <button class="menu-item" type="button" data-view="settings">Settings</button>
       <button class="menu-item danger" type="button" data-act="menu-new-game">New game</button>
     </div>
@@ -676,8 +676,8 @@ body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px
     <div class="hist" id="hist"></div>
   </div>
 </section>
-<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Majé Rules">
-  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Majé Rules</h2></header>
+<section class="view" id="view-rules" role="dialog" aria-modal="true" aria-label="Rules">
+  <header class="vhead"><button class="iconbtn back" type="button" data-close-view aria-label="Back">‹</button><h2>Rules</h2></header>
   <div class="vbody">
     <div class="rules">
       <ul>
@@ -719,7 +719,7 @@ body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px
           <li>Patterns of different kinds still add up, e.g. Little Dragon 5 + Half Flush 3 = 8.</li>
         </ul>
       </div>
-      <p class="note-line">A Concealed Hand won by self-draw counts as Self Draw. Robbing a Kong and Last Tile are not scored automatically. The pair in All Chow is read as a 2–8 tile (the "simple" in the book).</p>
+      <p class="note-line">A Concealed Hand won by self-draw counts as Self Draw. Robbing a Kong and Last Tile are not scored automatically. The pair in All Chow is read as a 2–8 tile (a "simple" tile).</p>
     </div>
   </div>
 </section>
@@ -730,7 +730,7 @@ body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px
       <div class="field">
         <label for="preset">Game type</label>
         <select id="preset">
-          <option value="maje">Majé House Rules · Hong Kong</option>
+          <option value="hongkong">Hong Kong · 13 tiles</option>
           <option value="riichi">Japanese Riichi · 13 tiles</option>
           <option value="tw">Taiwanese · 16 tiles</option>
           <option value="custom">Custom</option>
@@ -740,10 +740,10 @@ body.in-turn #rack .slot.best .tile::before { top: -5px; width: 6px; height: 6px
         <label for="sets">Sets needed for Hu (+1 pair)</label>
         <select id="sets"><option value="4">4 sets · 13-tile hand</option><option value="5">5 sets · 16-tile hand</option></select>
       </div>
-      <label class="check"><input type="checkbox" id="scoring"> Score points (Majé table)</label>
+      <label class="check"><input type="checkbox" id="scoring"> Score points (fan table)</label>
       <div class="field">
         <label for="minPoints">Minimum points to win</label>
-        <select id="minPoints"><option value="3">3 points · Majé standard</option><option value="2">2 points</option><option value="1">1 point</option><option value="0">0 · Chicken Hand allowed</option></select>
+        <select id="minPoints"><option value="3">3 points · standard</option><option value="2">2 points</option><option value="1">1 point</option><option value="0">0 · Chicken Hand allowed</option></select>
       </div>
       <label class="check"><input type="checkbox" id="sevenPairs"> Allow 7 Pairs</label>
       <label class="check"><input type="checkbox" id="orphans"> Allow 13 Orphans</label>

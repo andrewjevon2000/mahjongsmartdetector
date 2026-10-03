@@ -142,12 +142,12 @@ const sim = MJ.simulate(hand13, cfg4, unseen, 15, 400, 7);
 console.log('sim 400x15 ms', Date.now() - t0, 'win any', sim.any[15].toFixed(3), 'tsumo', sim.tsumo[15].toFixed(3), 'tenpai', sim.tenpai[15].toFixed(3));
 
 
-// --- poin Majé House Rules ---
-const MAJE = { sets: 4, melds: [], sevenPairs: true, thirteenOrphans: true, scoring: true, minPoints: 3,
+// --- Hong Kong scoring ---
+const HK = { sets: 4, melds: [], sevenPairs: true, thirteenOrphans: true, scoring: true, minPoints: 3,
   seatWind: 1, roundWind: 1, flowers: 1, flowerMatch: 0 }; // kursi & ronde Selatan, 1 bunga tidak cocok
 const T = (list) => list.map(MJ.parseTile);
 function pts(hand, cfgOver, selfDraw) {
-  const cfg = Object.assign({}, MAJE, cfgOver || {});
+  const cfg = Object.assign({}, HK, cfgOver || {});
   const sc = MJ.scoreHand(H(hand), cfg, !!selfDraw);
   return sc.points + ' ' + sc.patterns.map(p => p[0] + ':' + p[1]).join(',');
 }
@@ -193,7 +193,7 @@ eq('weak open hand: lower threat', weakOpp.threat < sameShape, true);
 eq('weak open hand: note explains', weakOpp.notes.join(' ').includes('hard to reach'), true);
 // keputusan: tangan masih jauh, lawan sangat siap -> bertahan, buang yang paling aman
 const anFold = MJ.analyze({
-  hand: MJ.parseHand('147m258p369s1234z5s'), visible: new Array(34).fill(0), cfg: MAJE, drawsLeft: 8,
+  hand: MJ.parseHand('147m258p369s1234z5s'), visible: new Array(34).fill(0), cfg: HK, drawsLeft: 8,
   opps: { right: { pond: P(['9m','2p','7m','1z','3p','8m','5p','4m','9p','2z','6m']), melds: [P(['1s','1s','1s']), P(['4s','5s','6s']), P(['7s','8s','9s'])], alert: true, seatWind: 1 },
           across: { pond: [], melds: [] }, left: { pond: [], melds: [] } }
 });
@@ -202,7 +202,7 @@ eq('fold picks the lowest-risk tile', anFold.rec.risk <= Math.min(...anFold.opti
 eq('fold avoids bamboo', MJ.tileStr(anFold.rec.t).endsWith('s'), false);
 console.log('fold rec', MJ.tileStr(anFold.rec.t), 'risk', anFold.rec.risk.toFixed(3), 'vs attack', MJ.tileStr(anFold.best.t), anFold.best.risk.toFixed(3));
 // tidak ada ancaman -> serang
-const anAtk = MJ.analyze({ hand: MJ.parseHand('234m67m345p79p23s55s'), visible: new Array(34).fill(0), cfg: MAJE, drawsLeft: 12,
+const anAtk = MJ.analyze({ hand: MJ.parseHand('234m67m345p79p23s55s'), visible: new Array(34).fill(0), cfg: HK, drawsLeft: 12,
   opps: { right: { pond: P(['1z','9m']), melds: [] }, across: { pond: P(['2z']), melds: [] }, left: { pond: P(['3z']), melds: [] } } });
 eq('early game -> attack', anAtk.mode, 'attack');
 
@@ -211,38 +211,38 @@ eq('one chi + 4 discards is not a flush read', oneChi.reads.length, 0);
 
 // jarak menang sah: tangan tenpai tanpa poin, dengan kursi Selatan dan bunga (tanpa bonus)
 const openChicken = { melds: [T(['1m','2m','3m'])] };
-const cfgOpen = Object.assign({}, MAJE, openChicken);
+const cfgOpen = Object.assign({}, HK, openChicken);
 const hOpen = H('456p789s111z5p'); // tunggu 5p, tapi 0 poin (terbuka, dari buangan)
 eq('open chicken plain tenpai', MJ.shanten(hOpen, cfgOpen), 0);
 eq('open chicken not valid tenpai', MJ.validDistance(hOpen, cfgOpen, new Array(34).fill(4)) > 0, true);
 const hFlush = H('123555789s2226z'); // half flush tiao, tunggu 6z / tanki
-eq('half flush valid tenpai', MJ.validDistance(hFlush, MAJE, new Array(34).fill(4)), 0);
+eq('half flush valid tenpai', MJ.validDistance(hFlush, HK, new Array(34).fill(4)), 0);
 eq('scoring off = shanten', MJ.validDistance(hOpen, Object.assign({}, cfgOpen, { scoring: false }), new Array(34).fill(4)), 0);
 // jalur pong honor: dua naga di tangan, butuh satu lagi untuk pong
 const hDragon = H('123m456p789s77z4s5s');
-const routes = MJ.buildRoutes(Object.assign({}, MAJE, { melds: [], flowers: 1 }));
+const routes = MJ.buildRoutes(Object.assign({}, HK, { melds: [], flowers: 1 }));
 console.log('routes (concealed, 1 flower):', routes.map(r => r.name + '=' + r.g).join(' | '));
 
 // klaim: pong naga yang membuat tangan sah
-const claim = MJ.claimOptions({ hand: MJ.parseHand('123m456p77z45s99s1z'), visible: new Array(34).fill(0), cfg: Object.assign({}, MAJE) }, 33, 'right');
+const claim = MJ.claimOptions({ hand: MJ.parseHand('123m456p77z45s99s1z'), visible: new Array(34).fill(0), cfg: Object.assign({}, HK) }, 33, 'right');
 console.log('claim on 7z:', JSON.stringify(claim.map(x => ({ type: x.type, vd: x.vd, cur: x.cur, better: x.better }))));
 
 // benchmark simulasi dengan poin
 const hSim = H('234m67m345p7p23s55s');
 const uSim = MJ.unseenCounts(hSim, new Array(34).fill(0)).unseen;
 let t1 = Date.now();
-const simP = MJ.simulate(hSim, MAJE, uSim, 15, 300, 11);
-console.log('sim maje 300x15 ms', Date.now() - t1, 'any', simP.any[15].toFixed(3), 'tsumo', simP.tsumo[15].toFixed(3), 'avg pts', simP.avgPoints.toFixed(2), 'patterns', JSON.stringify(simP.patterns));
+const simP = MJ.simulate(hSim, HK, uSim, 15, 300, 11);
+console.log('sim hk 300x15 ms', Date.now() - t1, 'any', simP.any[15].toFixed(3), 'tsumo', simP.tsumo[15].toFixed(3), 'avg pts', simP.avgPoints.toFixed(2), 'patterns', JSON.stringify(simP.patterns));
 let t2 = Date.now();
-const anP = MJ.analyze({ hand: MJ.parseHand('234m67m345p79p23s55s'), visible: new Array(34).fill(0), ponds: { right: [], across: [], left: [] }, cfg: MAJE, drawsLeft: 12 });
-console.log('analyze maje ms', Date.now() - t2, 'best', MJ.tileStr(anP.best.t), 'vd', anP.best.vd, 'uk', anP.best.ukeire, 'routes', anP.routeList.slice(0, 4).map(r => r.name + ' d' + r.d + ' g' + r.g).join(' | '));
+const anP = MJ.analyze({ hand: MJ.parseHand('234m67m345p79p23s55s'), visible: new Array(34).fill(0), ponds: { right: [], across: [], left: [] }, cfg: HK, drawsLeft: 12 });
+console.log('analyze hk ms', Date.now() - t2, 'best', MJ.tileStr(anP.best.t), 'vd', anP.best.vd, 'uk', anP.best.ukeire, 'routes', anP.routeList.slice(0, 4).map(r => r.name + ' d' + r.d + ' g' + r.g).join(' | '));
 
 
 // peluang per kombinasi: tiap jalur yang terpenuhi dicatat; yang terbesar harus <= peluang menang total
 {
   const hs = H('234m67m345p7p23s55s');
   const us = MJ.unseenCounts(hs, new Array(34).fill(0)).unseen;
-  const r = MJ.simulate(hs, MAJE, us, 12, 200, 5);
+  const r = MJ.simulate(hs, HK, us, 12, 200, 5);
   const names = Object.keys(r.routes);
   eq('routes recorded', names.length > 0, true);
   eq('route prob <= total', Math.max(...names.map(n => r.routes[n])) <= r.any[r.draws] + 1e-9, true);
@@ -252,7 +252,7 @@ console.log('analyze maje ms', Date.now() - t2, 'best', MJ.tileStr(anP.best.t), 
 
 // combination guide: Half Flush Bamboo on a mostly-bamboo hand -> drop the non-bamboo tiles
 {
-  const cfgG = Object.assign({}, MAJE);
+  const cfgG = Object.assign({}, HK);
   const hg = H('123s456s789s55s3m7p6z');
   const routes = MJ.buildRoutes(cfgG);
   const hf = routes.find(r => r.name === 'Half Flush Bamboo');

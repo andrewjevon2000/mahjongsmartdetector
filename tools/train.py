@@ -34,7 +34,7 @@ def tile_code(name: str):
 
 
 def prepare(zip_path: Path) -> tuple[Path, list[str]]:
-    data_dir = ROOT / "datasets" / "maje"
+    data_dir = ROOT / "datasets" / "mahjong"
     if data_dir.exists():
         shutil.rmtree(data_dir)
     data_dir.mkdir(parents=True)
@@ -73,10 +73,10 @@ def main():
     model = YOLO("yolo11n.pt")
     model.train(
         data=str(data_yaml), imgsz=imgsz, epochs=epochs, batch=16, device="mps",
-        patience=10, project=str(ROOT / "runs"), name="maje", exist_ok=True,
+        patience=10, project=str(ROOT / "runs"), name="mahjong", exist_ok=True,
         workers=6, plots=False, verbose=False,
     )
-    best = ROOT / "runs" / "maje" / "weights" / "best.pt"
+    best = ROOT / "runs" / "mahjong" / "weights" / "best.pt"
     metrics = YOLO(str(best)).val(data=str(data_yaml), imgsz=imgsz, device="mps", plots=False, verbose=False)
     onnx_path = YOLO(str(best)).export(format="onnx", imgsz=imgsz, opset=17, simplify=True, dynamic=False)
 

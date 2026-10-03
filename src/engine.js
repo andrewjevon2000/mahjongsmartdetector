@@ -1,7 +1,7 @@
 /* Sempoa Mahjong — mesin hitung.
  * Tile id 0..33: 0-8 = 1m-9m (wan), 9-17 = 1p-9p (tong), 18-26 = 1s-9s (tiao),
- * 27-33 = 1z-7z (East, South, West, North, White, Green, Red Dragon). Nama mengikuti buku Majé.
- * Poin mengikuti Majé House Rules (Hong Kong). Semua fungsi murni; dipakai di halaman dan di tes node.
+ * 27-33 = 1z-7z (East, South, West, North, White, Green, Red Dragon). Standard English tile names.
+ * Points follow common Hong Kong scoring. Semua fungsi murni; dipakai di halaman dan di tes node.
  */
 (function (root) {
   'use strict';
@@ -346,7 +346,7 @@
     return v;
   }
 
-  // Nama pola untuk pong honor, pakai istilah Majé: Dragon, Seat Wind, Round Wind.
+  // Nama pola untuk pong honor, common terms: Dragon, Seat Wind, Round Wind.
   function honorRouteName(t, cfg) {
     if (t >= 31) return 'Dragon (' + DRAGON_SHORT[t - 31] + ')';
     var seat = t === 27 + (cfg.seatWind || 0), round = t === 27 + (cfg.roundWind || 0);
@@ -465,7 +465,7 @@
     return best;
   }
 
-  /* ---------- Hitung poin (Majé House Rules) ---------- */
+  /* ---------- Hitung poin (Hong Kong scoring) ---------- */
 
   var EXTRA = { 'Self Draw': 1, 'Concealed Hand': 1, 'No Flower': 1, 'Suitable Flower': 1, 'Last Tile': 1, 'Robbing a Kong': 1 };
   // Kombinasi tambahan (poin kecil yang menempel pada tangan utama): ditampilkan setelah kombinasi utama.
